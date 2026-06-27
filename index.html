@@ -17,25 +17,21 @@
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Manrope',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;font-size:14px;}
 
-  /* TOPBAR */
   .topbar{background:var(--dark);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
   .topbar-logo{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:18px;color:var(--gold);letter-spacing:-0.3px;}
   .topbar-logo span{color:var(--white);}
   .topbar-user{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,0.75);font-size:13px;}
   .avatar{width:30px;height:30px;border-radius:50%;background:var(--gold);color:var(--dark);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
 
-  /* NAV */
   .nav{background:var(--dark2);padding:0 24px;display:flex;gap:4px;border-bottom:1px solid rgba(255,255,255,0.06);}
   .nav-tab{padding:10px 16px;color:rgba(255,255,255,0.55);font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:color 0.15s,border-color 0.15s;user-select:none;}
   .nav-tab:hover{color:rgba(255,255,255,0.85);}
   .nav-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
 
-  /* LAYOUT */
   .main{padding:24px;max-width:1500px;}
   .view{display:none;}
   .view.active{display:block;}
 
-  /* STATS */
   .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
   .stat-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;}
   .stat-label{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase;margin-bottom:6px;}
@@ -44,14 +40,12 @@
   .stat-value.green{color:var(--green);}
   .stat-value.red{color:var(--red);}
 
-  /* TOOLBAR */
   .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
   .toolbar-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
   .search-box{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;font-family:inherit;color:var(--dark);width:220px;outline:none;transition:border-color 0.15s;}
   .search-box:focus{border-color:var(--gold);}
   .filter-select{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;color:var(--dark);outline:none;cursor:pointer;}
 
-  /* BUTTONS */
   .btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:opacity 0.15s,transform 0.1s;text-decoration:none;}
   .btn:hover{opacity:0.88;}
   .btn:active{transform:scale(0.98);}
@@ -61,7 +55,6 @@
   .btn-blue{background:var(--blue);color:var(--white);}
   .btn-sm{padding:5px 10px;font-size:12px;border-radius:6px;}
 
-  /* TABLE */
   .table-wrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:auto;max-height:62vh;box-shadow:var(--shadow);}
   table{width:100%;border-collapse:collapse;font-size:13px;white-space:nowrap;}
   thead{position:sticky;top:0;z-index:2;}
@@ -73,7 +66,6 @@
   tbody td{padding:10px 14px;color:var(--dark);border-right:1px solid var(--line);}
   tbody td:last-child{border-right:none;}
 
-  /* BADGES */
   .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:0.02em;}
   .badge-green{background:#D4F0E8;color:#0E5C46;}
   .badge-amber{background:#FEF3D5;color:#8A5A00;}
@@ -81,12 +73,9 @@
   .badge-red{background:#F9DADA;color:#7C1F1F;}
   .badge-gray{background:#E8ECF0;color:#3A4B58;}
   .badge-gold{background:var(--gold-s);color:#7A5500;}
-  .badge-yn-y{background:#D4F0E8;color:#0E5C46;}
-  .badge-yn-n{background:#E8ECF0;color:#3A4B58;}
 
   .actions{display:flex;gap:5px;}
 
-  /* MODAL */
   .modal-overlay{position:fixed;inset:0;background:rgba(10,20,30,0.55);z-index:500;display:none;align-items:center;justify-content:center;}
   .modal-overlay.open{display:flex;}
   .modal{background:var(--panel);border-radius:14px;padding:28px;width:100%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,0.25);max-height:90vh;overflow-y:auto;}
@@ -100,11 +89,8 @@
   .form-control:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,168,51,0.12);}
   textarea.form-control{resize:vertical;min-height:100px;}
   .form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
-
-  /* TWO-COL FORM GRID */
   .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 
-  /* UPLOAD */
   .upload-card{background:var(--panel);border:2px dashed var(--line);border-radius:14px;padding:48px;text-align:center;max-width:520px;margin:0 auto;transition:border-color 0.2s;}
   .upload-card.drag-over{border-color:var(--gold);background:var(--gold-s);}
   .upload-icon{font-size:40px;margin-bottom:14px;color:var(--gold);}
@@ -116,7 +102,6 @@
   .preview-info{font-size:13px;color:var(--muted);margin-bottom:10px;}
   .preview-info strong{color:var(--dark);}
 
-  /* REPORTS */
   .report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;}
   .report-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);}
   .report-card-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;color:var(--dark);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--line);}
@@ -126,7 +111,6 @@
   .report-bar-fill{height:100%;border-radius:4px;background:var(--gold);transition:width 0.6s ease;}
   .report-bar-count{font-size:12px;font-weight:700;color:var(--dark);min-width:24px;text-align:right;}
 
-  /* TOAST */
   .toast-wrap{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px;}
   .toast{background:var(--dark);color:var(--white);padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,0.3);display:flex;align-items:center;gap:8px;animation:slideIn 0.25s ease;}
   .toast.success{border-left:3px solid var(--gold);}
@@ -139,8 +123,6 @@
   @keyframes spin{to{transform:rotate(360deg);}}
   .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,0.7);z-index:900;display:none;align-items:center;justify-content:center;font-weight:600;color:var(--dark);gap:10px;}
   .loading-overlay.show{display:flex;}
-
-  /* CAS SHIELD section header */
   .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
   .section-badge{background:var(--gold-s);color:#7A5500;border:1px solid var(--gold);padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:0.04em;}
 </style>
@@ -165,7 +147,7 @@
 
 <main class="main">
 
-  <!-- ── DASHBOARD ── -->
+  <!-- DASHBOARD -->
   <div class="view active" id="view-dashboard">
     <div class="stats-row">
       <div class="stat-card"><div class="stat-label">Total Students</div><div class="stat-value" id="stat-total">—</div></div>
@@ -175,14 +157,12 @@
       <div class="stat-card"><div class="stat-label">Visa Refused</div><div class="stat-value red" id="stat-refused">—</div></div>
       <div class="stat-card"><div class="stat-label">Payment Pending</div><div class="stat-value gold" id="stat-payment">—</div></div>
     </div>
-
     <div class="toolbar">
       <div class="toolbar-left">
         <input class="search-box" id="search-input" type="text" placeholder="Search name, ID, course…" oninput="filterTable()">
         <select class="filter-select" id="filter-agent" onchange="filterTable()"><option value="">All Agents</option></select>
         <select class="filter-select" id="filter-level" onchange="filterTable()">
-          <option value="">All Levels</option>
-          <option>UG</option><option>PG</option><option>PHD</option>
+          <option value="">All Levels</option><option>UG</option><option>PG</option><option>PHD</option>
         </select>
         <select class="filter-select" id="filter-offer" onchange="filterTable()">
           <option value="">All Offer Statuses</option>
@@ -195,7 +175,6 @@
       </div>
       <button class="btn btn-dark btn-sm" onclick="loadStudents()">⟳ Refresh</button>
     </div>
-
     <div class="table-wrap">
       <table id="student-table">
         <thead>
@@ -213,7 +192,7 @@
     </div>
   </div>
 
-  <!-- ── CAS SHIELD ── -->
+  <!-- CAS SHIELD -->
   <div class="view" id="view-casshield">
     <div class="section-header">
       <div class="section-title" style="margin-bottom:0">CAS Shield Tracker</div>
@@ -252,7 +231,7 @@
     </div>
   </div>
 
-  <!-- ── UPLOAD ── -->
+  <!-- UPLOAD -->
   <div class="view" id="view-upload">
     <div class="section-title">Import Student Data</div>
     <div class="upload-card" id="drop-zone"
@@ -260,8 +239,8 @@
       ondragleave="this.classList.remove('drag-over')"
       ondrop="handleDrop(event)">
       <div class="upload-icon">📂</div>
-      <div class="upload-title">Drop your CSV or Excel file here</div>
-      <div class="upload-sub">Columns must match the Google Sheet headers exactly.<br>Existing records will not be duplicated (matched by Student ID).</div>
+      <div class="upload-title">Drop your CSV file here</div>
+      <div class="upload-sub">Columns must match the Google Sheet headers exactly.<br>Existing records matched by Student ID will be updated.</div>
       <input type="file" id="csv-file" accept=".csv,.xlsx,.xls" onchange="handleFileSelect(event)">
       <button class="btn btn-gold" onclick="document.getElementById('csv-file').click()">Choose file</button>
     </div>
@@ -277,7 +256,7 @@
     </div>
   </div>
 
-  <!-- ── REPORTS ── -->
+  <!-- REPORTS -->
   <div class="view" id="view-reports">
     <div class="section-title">Real-time Reports</div>
     <div class="report-grid" id="report-grid">
@@ -388,7 +367,7 @@
     </div>
     <div class="form-actions">
       <button class="btn btn-outline" onclick="closeModal('modal-feedback')">Cancel</button>
-      <button class="btn btn-gold" onclick="submitFeedback()">Generate Doc &amp; Save</button>
+      <button class="btn btn-gold" onclick="submitFeedback()">Generate Doc & Save</button>
     </div>
   </div>
 </div>
@@ -397,8 +376,11 @@
 <div class="loading-overlay" id="loading"><div class="spinner"></div><span id="loading-msg">Processing…</span></div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby3U3qhoGW6ltANBtK568O1G_WbmmTgQ5RhjGQlJy47CWYj7yitz-JpP7Mj3KC2H-CCNQ/exec';
+// ══════════════════════════════════════════════════════
+//  ⚠️  IMPORTANT: Update this URL after every new deployment
+//  Go to Apps Script → Deploy → Manage Deployments → copy URL
+// ══════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQKGqxg_2O1wjJ60MciyUTkcplju-_SjkEJDaJxRAoE6jiJSIqqYqvh9dmozd98kr5BQ/exec';
 
 const SHEET_COLUMNS = [
   'LEVEL','DOB','STUDENT ID','STUDENT NAME','COURSE','PRE-SCREENING CALL STATUS',
@@ -408,23 +390,13 @@ const SHEET_COLUMNS = [
   'APPLICATION SUBMITTED DATE','SUBMITTED BY'
 ];
 
-const CAS_SHIELD_COLUMNS = [
-  'Applicant ID','Applicant Name','Agent (Name)','Nationality','Country of Domicile',
-  'Course Name','CAP APFS','CAP SEQN','Ledger Debtor Balance','Phone Number','Email',
-  'Team Member','Team Comment','Study Gap Y/N','Same Level Studies Y/N',
-  'Visa Refusal Y/N','Ready for PCI','Information check on CAS Shield completed? Y/N',
-  'Pre-CAS questionnaire on CAS shield Completed? Y/N','PCI Invite','Notes'
-];
-
-// ── STATE ───────────────────────────────────────────────────────────
-let allStudents  = [];
-let allCASData   = [];
+let allStudents   = [];
+let allCASData    = [];
 let parsedCSVData = [];
 let activeStudentId = null;
 let activeCASId     = null;
-let currentUser  = { name:'Admin', initials:'AD' };
+let currentUser   = { name:'Admin', initials:'AD' };
 
-// ── INIT ────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('user-name').textContent     = currentUser.name;
   document.getElementById('user-initials').textContent = currentUser.initials;
@@ -433,7 +405,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function signOut() { showToast('Signed out','success'); }
 
-// ── NAV ─────────────────────────────────────────────────────────────
 function switchView(id, tab) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -443,7 +414,7 @@ function switchView(id, tab) {
   if (id === 'casshield') loadCASShield();
 }
 
-// ── API ─────────────────────────────────────────────────────────────
+// ── API HELPERS ─────────────────────────────────────────
 async function appsScriptGet(action, params={}) {
   const url = new URL(APPS_SCRIPT_URL);
   url.searchParams.set('action', action);
@@ -462,17 +433,19 @@ async function appsScriptPost(action, body={}) {
   return res.json();
 }
 
-// ── LOAD STUDENTS ───────────────────────────────────────────────────
+// ── LOAD STUDENTS ────────────────────────────────────────
 async function loadStudents() {
   try {
     showLoading('Fetching students…');
     const data = await appsScriptGet('getStudents');
+    if (!data.success) throw new Error(data.error || 'Unknown error');
     allStudents = data.students || [];
     renderTable(allStudents);
     updateStats(allStudents);
     populateAgentFilter(allStudents);
+    showToast('Data loaded from Google Sheet ✓', 'success');
   } catch(e) {
-    showToast('Using demo data ('+e.message+')','error');
+    showToast('Using demo data — ' + e.message, 'error');
     allStudents = getMockStudents();
     renderTable(allStudents);
     updateStats(allStudents);
@@ -496,7 +469,7 @@ function populateAgentFilter(students) {
   agents.forEach(a => { const o=document.createElement('option'); o.textContent=a; sel.appendChild(o); });
 }
 
-// ── RENDER MAIN TABLE ────────────────────────────────────────────────
+// ── RENDER TABLE ─────────────────────────────────────────
 function renderTable(students) {
   const tbody = document.getElementById('table-body');
   if (!students.length) {
@@ -539,7 +512,7 @@ function renderTable(students) {
 function badge(val) {
   if (!val || val==='—') return '<span class="badge badge-gray">—</span>';
   const v = val.toLowerCase();
-  if (v.match(/approved|received|unconditional|issued|paid|complete|yes/)) return `<span class="badge badge-green">${val}</span>`;
+  if (v.match(/approved|received|unconditional|issued|paid|complete|yes|granted/)) return `<span class="badge badge-green">${val}</span>`;
   if (v.match(/refused|rejected|failed/))   return `<span class="badge badge-red">${val}</span>`;
   if (v.match(/pending|awaiting|submitted|conditional/)) return `<span class="badge badge-amber">${val}</span>`;
   if (v.match(/partial|progress/))          return `<span class="badge badge-blue">${val}</span>`;
@@ -562,15 +535,17 @@ function filterTable() {
   ));
 }
 
-// ── CAS SHIELD ───────────────────────────────────────────────────────
+// ── CAS SHIELD ───────────────────────────────────────────
 async function loadCASShield() {
   try {
     showLoading('Fetching CAS Shield data…');
     const data = await appsScriptGet('getCASShield');
+    if (!data.success) throw new Error(data.error || 'Unknown error');
     allCASData = data.records || [];
     renderCASTable(allCASData);
+    showToast('CAS Shield data loaded ✓', 'success');
   } catch(e) {
-    showToast('CAS Shield load failed: '+e.message,'error');
+    showToast('CAS Shield load failed — ' + e.message, 'error');
     allCASData = getMockCASData();
     renderCASTable(allCASData);
   } finally { hideLoading(); }
@@ -579,7 +554,7 @@ async function loadCASShield() {
 function renderCASTable(records) {
   const tbody = document.getElementById('cas-table-body');
   if (!records.length) {
-    tbody.innerHTML='<tr><td colspan="15" class="empty-state">No CAS Shield records found.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="15" class="empty-state">No CAS Shield records found. Add students first.</td></tr>';
     return;
   }
   tbody.innerHTML = records.map(r => {
@@ -611,10 +586,10 @@ function renderCASTable(records) {
 function ynBadge(val, mode='') {
   if (!val) return '<span class="badge badge-gray">—</span>';
   const v = val.toLowerCase().trim();
-  if (v==='yes' || v==='y') return mode==='warn'
+  if (v==='yes'||v==='y') return mode==='warn'
     ? '<span class="badge badge-red">Yes</span>'
     : '<span class="badge badge-green">Yes</span>';
-  if (v==='no'  || v==='n') return '<span class="badge badge-gray">No</span>';
+  if (v==='no'||v==='n') return '<span class="badge badge-gray">No</span>';
   return `<span class="badge badge-gray">${val}</span>`;
 }
 
@@ -625,9 +600,9 @@ function filterCASTable() {
   const info = document.getElementById('cas-filter-info').value;
   renderCASTable(allCASData.filter(r =>
     (!q    || [r['Applicant Name'],r['Applicant ID'],r['Agent (Name)']].some(f=>(f||'').toLowerCase().includes(q))) &&
-    (!pci  || (r['Ready for PCI']||'')=== pci) &&
-    (!visa || (r['Visa Refusal Y/N']||'')=== visa) &&
-    (!info || (r['Information check on CAS Shield completed? Y/N']||'')=== info)
+    (!pci  || (r['Ready for PCI']||'')===pci) &&
+    (!visa || (r['Visa Refusal Y/N']||'')===visa) &&
+    (!info || (r['Information check on CAS Shield completed? Y/N']||'')===info)
   ));
 }
 
@@ -636,14 +611,14 @@ function openCASModal(applicantId) {
   if (!r) return;
   activeCASId = applicantId;
   document.getElementById('cas-modal-subtitle').textContent = (r['Applicant Name']||'') + ' · ' + applicantId;
-  document.getElementById('cas-pci').value           = r['Ready for PCI'] || 'No';
-  document.getElementById('cas-visa-refusal').value  = r['Visa Refusal Y/N'] || 'No';
-  document.getElementById('cas-info-check').value    = r['Information check on CAS Shield completed? Y/N'] || 'No';
-  document.getElementById('cas-precas-q').value      = r['Pre-CAS questionnaire on CAS shield Completed? Y/N'] || 'No';
-  document.getElementById('cas-study-gap').value     = r['Study Gap Y/N'] || 'No';
-  document.getElementById('cas-same-level').value    = r['Same Level Studies Y/N'] || 'No';
-  document.getElementById('cas-pci-invite').value    = r['PCI Invite'] || '';
-  document.getElementById('cas-comment').value       = r['Team Comment'] || '';
+  document.getElementById('cas-pci').value          = r['Ready for PCI'] || 'No';
+  document.getElementById('cas-visa-refusal').value = r['Visa Refusal Y/N'] || 'No';
+  document.getElementById('cas-info-check').value   = r['Information check on CAS Shield completed? Y/N'] || 'No';
+  document.getElementById('cas-precas-q').value     = r['Pre-CAS questionnaire on CAS shield Completed? Y/N'] || 'No';
+  document.getElementById('cas-study-gap').value    = r['Study Gap Y/N'] || 'No';
+  document.getElementById('cas-same-level').value   = r['Same Level Studies Y/N'] || 'No';
+  document.getElementById('cas-pci-invite').value   = r['PCI Invite'] || '';
+  document.getElementById('cas-comment').value      = r['Team Comment'] || '';
   openModal('modal-cas-update');
 }
 
@@ -661,7 +636,9 @@ async function submitCASUpdate() {
     updatedBy: currentUser.name
   };
   try {
-    await appsScriptPost('updateCASShield', updates);
+    showLoading('Saving CAS Shield update…');
+    const result = await appsScriptPost('updateCASShield', updates);
+    if (!result.success) throw new Error(result.error);
     const r = allCASData.find(r=>r['Applicant ID']===activeCASId);
     if (r) Object.assign(r, updates);
     filterCASTable();
@@ -669,10 +646,10 @@ async function submitCASUpdate() {
     showToast('CAS Shield record updated ✓','success');
   } catch(e) {
     showToast('Update failed: '+e.message,'error');
-  }
+  } finally { hideLoading(); }
 }
 
-// ── STATUS MODAL ────────────────────────────────────────────────────
+// ── STATUS MODAL ─────────────────────────────────────────
 const STATUS_OPTIONS = {
   'OFFER STATUS':  ['Pending','Conditional','Unconditional','Received','Rejected'],
   'CAS STATUS':    ['Not Applied','Pending','Issued','Rejected'],
@@ -713,18 +690,19 @@ async function submitStatusUpdate() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Saving…';
   try {
-    await appsScriptPost('updateStatus',{studentId:activeStudentId,field,value,notes,updatedBy:currentUser.name});
+    const result = await appsScriptPost('updateStatus',{studentId:activeStudentId,field,value,notes,updatedBy:currentUser.name});
+    if (!result.success) throw new Error(result.error);
     const s = allStudents.find(s=>s['STUDENT ID']===activeStudentId);
     if (s) s[field] = value;
     filterTable();
     closeModal('modal-status');
-    showToast('Updated successfully ✓','success');
+    showToast('Updated in Google Sheet ✓','success');
   } catch(e) {
     showToast('Update failed: '+e.message,'error');
   } finally { btn.disabled=false; btn.textContent='Save'; }
 }
 
-// ── FEEDBACK MODAL ───────────────────────────────────────────────────
+// ── FEEDBACK MODAL ────────────────────────────────────────
 function openFeedbackModal(studentId) {
   const s = allStudents.find(s=>s['STUDENT ID']===studentId);
   activeStudentId = studentId;
@@ -738,29 +716,30 @@ function openFeedbackModal(studentId) {
 async function submitFeedback() {
   const text = document.getElementById('feedback-text').value.trim();
   if (!text) { showToast('Please write some feedback first.','error'); return; }
-  showLoading('Generating feedback doc…');
+  showLoading('Generating feedback doc in Google Drive…');
   closeModal('modal-feedback');
   try {
     const result = await appsScriptPost('generateFeedbackDoc',{
-      studentId: activeStudentId,
-      date: document.getElementById('feedback-date').value,
-      performance: document.getElementById('feedback-performance').value,
-      feedback: text,
+      studentId:    activeStudentId,
+      date:         document.getElementById('feedback-date').value,
+      performance:  document.getElementById('feedback-performance').value,
+      feedback:     text,
       recommendations: document.getElementById('feedback-recs').value,
-      staffName: currentUser.name
+      staffName:    currentUser.name
     });
+    if (!result.success) throw new Error(result.error);
     if (result.docUrl) {
       const s = allStudents.find(s=>s['STUDENT ID']===activeStudentId);
       if (s) s['MOCK PRE-CAS'] = result.docUrl;
       filterTable();
     }
-    showToast('Feedback doc created & linked in Sheet ✓','success');
+    showToast('Feedback doc created & saved to Drive ✓','success');
   } catch(e) {
     showToast('Failed: '+e.message,'error');
   } finally { hideLoading(); }
 }
 
-// ── CSV UPLOAD ────────────────────────────────────────────────────────
+// ── CSV UPLOAD ─────────────────────────────────────────────
 function handleFileSelect(e) { parseFile(e.target.files[0]); }
 function handleDrop(e) {
   e.preventDefault();
@@ -774,7 +753,7 @@ function parseFile(file) {
     error:(err)=>showToast('Parse error: '+err.message,'error')
   });
 }
-function showPreview(filename,data) {
+function showPreview(filename, data) {
   if (!data.length){showToast('No data rows found.','error');return;}
   document.getElementById('preview-filename').textContent = filename;
   document.getElementById('preview-rows').textContent     = data.length;
@@ -783,31 +762,35 @@ function showPreview(filename,data) {
   document.getElementById('preview-tbody').innerHTML=data.slice(0,5).map(row=>'<tr>'+headers.map(h=>`<td>${row[h]||''}</td>`).join('')+'</tr>').join('');
   document.getElementById('upload-preview').classList.add('show');
 }
-function clearUpload(){
+function clearUpload() {
   parsedCSVData=[];
   document.getElementById('csv-file').value='';
   document.getElementById('upload-preview').classList.remove('show');
 }
-async function confirmUpload(){
+async function confirmUpload() {
   if (!parsedCSVData.length) return;
   const btn=document.getElementById('confirm-upload-btn');
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Uploading…';
   try {
-    const r=await appsScriptPost('uploadCSV',{rows:parsedCSVData});
-    showToast(`Imported ${r.added||0} new, updated ${r.updated||0} records.`,'success');
+    const r = await appsScriptPost('uploadCSV',{rows:parsedCSVData});
+    if (!r.success) throw new Error(r.error);
+    showToast(`Imported ${r.added||0} new, updated ${r.updated||0} records ✓`,'success');
     clearUpload(); loadStudents();
-  } catch(e){ showToast('Upload failed: '+e.message,'error'); }
+  } catch(e) { showToast('Upload failed: '+e.message,'error'); }
   finally { btn.disabled=false; btn.textContent='Upload to Google Sheet'; }
 }
 
-// ── REPORTS ────────────────────────────────────────────────────────────
+// ── REPORTS ──────────────────────────────────────────────
 async function loadReports() {
-  const grid=document.getElementById('report-grid');
+  const grid = document.getElementById('report-grid');
   grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><span class="spinner" style="border-top-color:var(--gold)"></span></div>';
   try {
-    const data=await appsScriptGet('getReport');
+    const data = await appsScriptGet('getReport');
+    if (!data.success) throw new Error(data.error);
     renderReports(data.report);
-  } catch { renderReports(buildLocalReport(allStudents)); }
+  } catch {
+    renderReports(buildLocalReport(allStudents));
+  }
 }
 function buildLocalReport(students) {
   const count=(f,v)=>students.filter(s=>s[f]===v).length;
@@ -816,18 +799,16 @@ function buildLocalReport(students) {
     cas:{'Not Applied':count('CAS STATUS','Not Applied'),Pending:count('CAS STATUS','Pending'),Issued:count('CAS STATUS','Issued'),Rejected:count('CAS STATUS','Rejected')},
     visa:{'Not Applied':count('VISA STATUS','Not Applied'),Pending:count('VISA STATUS','Pending'),Approved:count('VISA STATUS','Approved'),Refused:count('VISA STATUS','Refused')},
     payment:{Unpaid:count('PAYMENT','Unpaid'),'Partially Paid':count('PAYMENT','Partially Paid'),Paid:count('PAYMENT','Paid'),Refunded:count('PAYMENT','Refunded')},
-    scholarship:{None:count('SCHOLARSHIP','None'),Partial:count('SCHOLARSHIP','Partial'),Full:count('SCHOLARSHIP','Full')},
   };
 }
 function renderReports(report) {
-  const grid=document.getElementById('report-grid');
+  const grid = document.getElementById('report-grid');
   if (!report){grid.innerHTML='<div class="empty-state" style="grid-column:1/-1">No data.</div>';return;}
   const sections=[
     {title:'Offer Status',data:report.offer},
     {title:'CAS Status',data:report.cas},
     {title:'Visa Status',data:report.visa},
     {title:'Payment',data:report.payment},
-    {title:'Scholarship',data:report.scholarship},
   ];
   grid.innerHTML=sections.map(sec=>{
     const total=Object.values(sec.data||{}).reduce((a,b)=>a+b,0);
@@ -843,20 +824,20 @@ function renderReports(report) {
   }).join('');
 }
 
-// ── MODALS ──────────────────────────────────────────────────────────────
+// ── MODALS ────────────────────────────────────────────────
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(o=>
   o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); })
 );
 
-// ── HELPERS ─────────────────────────────────────────────────────────────
+// ── HELPERS ───────────────────────────────────────────────
 function showLoading(msg){
   document.getElementById('loading-msg').textContent=msg||'Processing…';
   document.getElementById('loading').classList.add('show');
 }
-function hideLoading(){document.getElementById('loading').classList.remove('show');}
-function showToast(msg,type='success'){
+function hideLoading(){ document.getElementById('loading').classList.remove('show'); }
+function showToast(msg, type='success') {
   const wrap=document.getElementById('toast-wrap');
   const t=document.createElement('div');
   t.className='toast '+type;
@@ -865,8 +846,8 @@ function showToast(msg,type='success'){
   setTimeout(()=>t.remove(),4000);
 }
 
-// ── MOCK DATA ────────────────────────────────────────────────────────────
-function getMockStudents(){
+// ── MOCK DATA (fallback when Sheet unreachable) ───────────
+function getMockStudents() {
   return [
     {'STUDENT ID':'R2U001','STUDENT NAME':'Priya Sharma','LEVEL':'PG','COURSE':'MSc Computer Science','AGENT':'Agent A','PRE-SCREENING CALL STATUS':'Scheduled','OFFER STATUS':'Received','SCHOLARSHIP':'Partial','PAYMENT':'Paid','CAS SHIELD':'Completed','CAS STATUS':'Pending','VISA STATUS':'Not Applied','SUBMITTED BY':'Admin'},
     {'STUDENT ID':'R2U002','STUDENT NAME':'Amit Patel','LEVEL':'UG','COURSE':'BA Business Management','AGENT':'Agent B','PRE-SCREENING CALL STATUS':'Called – Interested','OFFER STATUS':'Conditional','SCHOLARSHIP':'None','PAYMENT':'Partially Paid','CAS SHIELD':'In Progress','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','SUBMITTED BY':'Admin'},
@@ -875,10 +856,10 @@ function getMockStudents(){
     {'STUDENT ID':'R2U005','STUDENT NAME':'Meena Joshi','LEVEL':'UG','COURSE':'BSc Nursing','AGENT':'Agent B','PRE-SCREENING CALL STATUS':'Called – Not Interested','OFFER STATUS':'Rejected','SCHOLARSHIP':'None','PAYMENT':'Refunded','CAS SHIELD':'Not Started','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','SUBMITTED BY':'Admin'},
   ];
 }
-function getMockCASData(){
+function getMockCASData() {
   return [
-    {'Applicant ID':'R2U001','Applicant Name':'Priya Sharma','Agent (Name)':'Agent A','Nationality':'Nepali','Country of Domicile':'Nepal','Course Name':'MSc Computer Science','CAP APFS':'APFS001','CAP SEQN':'001','Team Member':'Sagar','Team Comment':'27.06.2026 - Ready for PCI','Study Gap Y/N':'No','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'Yes','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'Yes','PCI Invite':'2026-07-01','Notes':''},
-    {'Applicant ID':'R2U002','Applicant Name':'Amit Patel','Agent (Name)':'Agent B','Nationality':'Indian','Country of Domicile':'India','Course Name':'BA Business Management','CAP APFS':'APFS002','CAP SEQN':'002','Team Member':'Admin','Team Comment':'','Study Gap Y/N':'Yes','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'No','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'No','PCI Invite':'','Notes':'Study gap explanation needed'},
+    {'Applicant ID':'R2U001','Applicant Name':'Priya Sharma','Agent (Name)':'Agent A','Nationality':'Nepali','Course Name':'MSc Computer Science','CAP APFS':'APFS001','Team Member':'Sagar','Team Comment':'27.06.2026 - Ready for PCI','Study Gap Y/N':'No','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'Yes','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'Yes','PCI Invite':'2026-07-01'},
+    {'Applicant ID':'R2U002','Applicant Name':'Amit Patel','Agent (Name)':'Agent B','Nationality':'Indian','Course Name':'BA Business Management','CAP APFS':'APFS002','Team Member':'Admin','Team Comment':'','Study Gap Y/N':'Yes','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'No','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'No','PCI Invite':''},
   ];
 }
 </script>
