@@ -9,7 +9,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
 tailwind.config = {
   theme: {
@@ -30,6 +29,21 @@ tailwind.config = {
 }
 </script>
 <style>
+/* ── RESET & BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body { font-family: 'Inter', sans-serif; background: #F7F8FA; color: #1a2533; -webkit-font-smoothing: antialiased; }
+
+/* ── SCROLLBARS ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D9E0; border-radius: 99px; }
+
+/* ── VIEWS ── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── CSS VARS ── */
 :root {
   --navy: #0F1F2D;
   --navy2: #16273A;
@@ -37,382 +51,413 @@ tailwind.config = {
   --gold-soft: #FBF3DD;
   --gold-dim: #A07C20;
   --gold-gradient: linear-gradient(135deg, #D4A833 0%, #F0C84A 50%, #A07C20 100%);
-  --shadow-card: 0 1px 3px rgba(15,31,45,.06), 0 4px 16px rgba(15,31,45,.04);
-  --shadow-hover: 0 4px 20px rgba(15,31,45,.10), 0 1px 4px rgba(15,31,45,.06);
-  --shadow-drawer: -24px 0 64px rgba(15,31,45,.22);
-  --radius-card: 16px;
-  --radius-btn: 10px;
+  --border: #E4E8EE;
+  --border-light: #EEF1F5;
+  --shadow-xs: 0 1px 2px rgba(15,31,45,.04), 0 1px 8px rgba(15,31,45,.04);
+  --shadow-sm: 0 1px 3px rgba(15,31,45,.06), 0 4px 12px rgba(15,31,45,.05);
+  --shadow-md: 0 4px 16px rgba(15,31,45,.09), 0 1px 4px rgba(15,31,45,.05);
+  --shadow-lg: 0 8px 32px rgba(15,31,45,.14), 0 2px 8px rgba(15,31,45,.06);
+  --shadow-drawer: -20px 0 60px rgba(15,31,45,.18);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
 }
-*, *::before, *::after { box-sizing: border-box; }
-html, body { font-family: 'Inter', sans-serif; }
 
-/* ── SCROLLBARS ── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 99px; }
+/* ── ANIMATIONS ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes loginSlideUp { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
 
-/* ── VIEWS ── */
-.view { display: none; }
-.view.active { display: block; }
-
-/* ── GLOBAL SEARCH OVERLAY ── */
+/* ════════════════════════════════════
+   GLOBAL SEARCH OVERLAY
+════════════════════════════════════ */
 #cmd-overlay {
   position: fixed; inset: 0; z-index: 9990;
-  background: rgba(15,31,45,.65);
-  backdrop-filter: blur(8px);
+  background: rgba(15,31,45,.55);
+  backdrop-filter: blur(6px);
   display: flex; align-items: flex-start; justify-content: center;
-  padding-top: 14vh;
+  padding-top: 13vh;
   opacity: 0; pointer-events: none;
-  transition: opacity .2s ease;
+  transition: opacity .18s ease;
 }
 #cmd-overlay.cmd-open { opacity: 1; pointer-events: all; }
 #cmd-box {
-  width: 100%; max-width: 580px;
+  width: 100%; max-width: 560px;
   background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 32px 80px rgba(15,31,45,.35);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(15,31,45,.06);
   overflow: hidden;
-  transform: translateY(-12px) scale(.97);
-  transition: transform .22s cubic-bezier(.22,1,.36,1);
+  transform: translateY(-10px) scale(.98);
+  transition: transform .2s cubic-bezier(.22,1,.36,1);
 }
 #cmd-overlay.cmd-open #cmd-box { transform: none; }
 #cmd-input-wrap {
   display: flex; align-items: center; gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid #F1F5F9;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--border-light);
 }
 #cmd-input {
-  flex: 1; font-size: 15px; font-family: inherit;
-  border: none; outline: none; color: #1E293B; background: transparent;
+  flex: 1; font-size: 14px; font-family: inherit;
+  border: none; outline: none; color: #1a2533; background: transparent;
+  font-weight: 500;
 }
-#cmd-input::placeholder { color: #94A3B8; }
-#cmd-results { max-height: 380px; overflow-y: auto; }
+#cmd-input::placeholder { color: #9BAAB8; font-weight: 400; }
+#cmd-results { max-height: 360px; overflow-y: auto; }
 .cmd-section-label {
-  font-size: 10px; font-weight: 700; color: #94A3B8;
+  font-size: 10px; font-weight: 700; color: #9BAAB8;
   text-transform: uppercase; letter-spacing: .1em;
-  padding: 12px 20px 6px;
+  padding: 12px 18px 5px;
 }
 .cmd-item {
   display: flex; align-items: center; gap: 12px;
-  padding: 11px 20px; cursor: pointer;
-  transition: background .12s;
+  padding: 10px 18px; cursor: pointer;
+  transition: background .1s;
 }
-.cmd-item:hover, .cmd-item.cmd-active { background: var(--gold-soft); }
+.cmd-item:hover, .cmd-item.cmd-active { background: #F7F8FA; }
 .cmd-item-icon {
-  width: 32px; height: 32px; border-radius: 9px;
-  background: #F1F5F9; display: flex; align-items: center;
-  justify-content: center; font-size: 14px; flex-shrink: 0;
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--gold-soft); display: flex; align-items: center;
+  justify-content: center; font-size: 13px; flex-shrink: 0;
 }
-.cmd-item-name { font-size: 13px; font-weight: 600; color: #1E293B; }
-.cmd-item-meta { font-size: 11px; color: #94A3B8; margin-top: 1px; }
+.cmd-item-name { font-size: 13px; font-weight: 600; color: #1a2533; }
+.cmd-item-meta { font-size: 11px; color: #9BAAB8; margin-top: 1px; }
 .cmd-footer {
-  border-top: 1px solid #F1F5F9;
-  padding: 10px 20px;
-  display: flex; align-items: center; gap: 16px;
-  font-size: 11px; color: #94A3B8;
+  border-top: 1px solid var(--border-light);
+  padding: 9px 18px;
+  display: flex; align-items: center; gap: 14px;
+  font-size: 11px; color: #9BAAB8;
 }
 .cmd-key {
-  background: #F1F5F9; border: 1px solid #E2E8F0;
-  border-radius: 5px; padding: 2px 7px;
+  background: #F7F8FA; border: 1px solid var(--border);
+  border-radius: 4px; padding: 1px 6px;
   font-family: monospace; font-size: 10px; color: #64748B;
 }
 
-/* ── SIDEBAR ── */
+/* ════════════════════════════════════
+   SIDEBAR
+════════════════════════════════════ */
 #sidebar {
   background: var(--navy);
-  position: fixed; inset-y: 0; left: 0; width: 230px;
+  position: fixed; inset-y: 0; left: 0; width: 220px;
   z-index: 40; display: flex; flex-direction: column;
-  border-right: 1px solid rgba(255,255,255,.05);
 }
 .sidebar-logo-wrap {
-  height: 64px; display: flex; align-items: center;
-  gap: 10px; padding: 0 18px;
-  border-bottom: 1px solid rgba(255,255,255,.07);
+  height: 60px; display: flex; align-items: center;
+  gap: 10px; padding: 0 16px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
   flex-shrink: 0;
 }
 .sidebar-logo {
-  width: 34px; height: 34px; border-radius: 9px;
+  width: 32px; height: 32px; border-radius: 8px;
   background: var(--gold-gradient);
   display: flex; align-items: center; justify-content: center;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 800; font-size: 12px; color: var(--navy);
+  font-weight: 800; font-size: 11px; color: var(--navy);
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(212,168,51,.35);
+  box-shadow: 0 2px 8px rgba(212,168,51,.3);
 }
-.sidebar-brand { line-height: 1.25; }
-.sidebar-brand-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 13.5px; color: #fff; }
-.sidebar-brand-tag { font-size: 9px; font-weight: 700; color: rgba(255,255,255,.35); letter-spacing: .12em; text-transform: uppercase; }
+.sidebar-brand-name { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 13px; color: #fff; line-height: 1.3; }
+.sidebar-brand-tag { font-size: 9px; font-weight: 600; color: rgba(255,255,255,.28); letter-spacing: .1em; text-transform: uppercase; }
 
 .nav-group-label {
-  font-size: 9.5px; font-weight: 700; color: rgba(255,255,255,.25);
+  font-size: 9px; font-weight: 700; color: rgba(255,255,255,.22);
   text-transform: uppercase; letter-spacing: .12em;
-  padding: 16px 18px 6px;
+  padding: 14px 16px 5px;
 }
 .nav-link {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 14px; border-radius: 10px;
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 12px; border-radius: 8px;
   font-size: 12.5px; font-weight: 600;
-  color: rgba(255,255,255,.45);
+  color: rgba(255,255,255,.4);
   cursor: pointer;
-  transition: all .15s ease;
+  transition: all .13s ease;
   user-select: none;
-  margin: 1px 8px;
+  margin: 1px 6px;
+  letter-spacing: -.01em;
 }
-.nav-link:hover { background: rgba(255,255,255,.07); color: rgba(255,255,255,.85); }
+.nav-link:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.8); }
 .nav-link.active {
-  background: linear-gradient(135deg, rgba(212,168,51,.18) 0%, rgba(212,168,51,.08) 100%);
+  background: rgba(212,168,51,.12);
   color: var(--gold);
-  box-shadow: inset 0 0 0 1px rgba(212,168,51,.2);
+  box-shadow: inset 0 0 0 1px rgba(212,168,51,.18);
 }
-.nav-link .nav-icon { opacity: .7; flex-shrink: 0; }
+.nav-link .nav-icon { opacity: .6; flex-shrink: 0; }
 .nav-link.active .nav-icon { opacity: 1; }
-.nav-link .nav-badge {
-  margin-left: auto; font-size: 10px; font-weight: 700;
-  background: rgba(212,168,51,.2); color: var(--gold);
-  border-radius: 6px; padding: 2px 6px;
-}
 
 .user-pill {
-  margin: 8px; border-radius: 12px;
-  background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.08);
-  padding: 10px 11px;
-  display: flex; align-items: center; gap: 9px;
+  margin: 6px; border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  padding: 9px 10px;
+  display: flex; align-items: center; gap: 8px;
 }
 .user-avatar {
-  width: 32px; height: 32px; border-radius: 50%;
+  width: 30px; height: 30px; border-radius: 50%;
   background: var(--gold-gradient);
-  color: var(--navy); font-weight: 800; font-size: 11px;
+  color: var(--navy); font-weight: 800; font-size: 10px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(212,168,51,.35);
+  box-shadow: 0 2px 6px rgba(212,168,51,.3);
 }
 .user-info { flex: 1; min-width: 0; }
-.user-name { font-size: 12px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.user-role { font-size: 10px; color: rgba(255,255,255,.35); }
+.user-name { font-size: 11.5px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-size: 10px; color: rgba(255,255,255,.3); margin-top: 1px; }
 .signout-btn {
-  width: 26px; height: 26px; border-radius: 7px;
-  background: rgba(255,255,255,.06); border: none;
+  width: 24px; height: 24px; border-radius: 6px;
+  background: rgba(255,255,255,.05); border: none;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  color: rgba(255,255,255,.3); transition: all .15s; flex-shrink: 0;
+  color: rgba(255,255,255,.28); transition: all .13s; flex-shrink: 0;
 }
-.signout-btn:hover { background: rgba(239,68,68,.2); color: #F87171; }
+.signout-btn:hover { background: rgba(239,68,68,.18); color: #FCA5A5; }
 
-/* ── HEADER ── */
+/* ════════════════════════════════════
+   HEADER
+════════════════════════════════════ */
 #app-header {
   position: sticky; top: 0; z-index: 30;
-  background: rgba(255,255,255,.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(15,31,45,.07);
-  height: 64px;
+  background: rgba(247,248,250,.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border-light);
+  height: 60px;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 28px;
+  padding: 0 24px;
 }
+.header-page-name {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700; font-size: 15px; color: #1a2533; letter-spacing: -.02em; line-height: 1;
+}
+.header-page-sub { font-size: 11px; color: #9BAAB8; font-weight: 400; margin-top: 2px; }
+
 .header-search-trigger {
-  display: flex; align-items: center; gap: 10px;
-  background: #F8FAFC; border: 1px solid #E9EEF4;
-  border-radius: 10px; padding: 8px 14px;
-  cursor: pointer; transition: all .15s;
-  color: #94A3B8; font-size: 13px;
-  min-width: 220px;
+  display: flex; align-items: center; gap: 9px;
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 7px 12px;
+  cursor: pointer; transition: all .13s;
+  color: #9BAAB8; font-size: 12.5px;
+  min-width: 210px;
+  box-shadow: var(--shadow-xs);
 }
-.header-search-trigger:hover { border-color: var(--gold); background: var(--gold-soft); }
-.cmd-hint {
-  margin-left: auto; display: flex; gap: 3px; align-items: center;
-}
+.header-search-trigger:hover { border-color: #C8B56A; background: var(--gold-soft); }
+.cmd-hint { margin-left: auto; display: flex; gap: 3px; align-items: center; }
 .kbd {
-  font-size: 10px; background: #E9EEF4; border: 1px solid #D1D9E0;
-  border-radius: 4px; padding: 1px 5px; color: #94A3B8;
+  font-size: 10px; background: #F1F5F9; border: 1px solid var(--border);
+  border-radius: 3px; padding: 1px 5px; color: #9BAAB8;
   font-family: monospace; line-height: 1.5;
 }
-.header-actions { display: flex; align-items: center; gap: 8px; }
+
 .icon-btn {
-  width: 36px; height: 36px; border-radius: 9px;
-  border: 1px solid #E9EEF4; background: #fff;
+  width: 34px; height: 34px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: #fff;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; color: #64748B;
-  transition: all .15s;
+  transition: all .13s; box-shadow: var(--shadow-xs);
 }
-.icon-btn:hover { border-color: var(--gold); background: var(--gold-soft); color: var(--gold-dim); }
+.icon-btn:hover { border-color: #C8B56A; background: var(--gold-soft); color: var(--gold-dim); }
+
 .export-btn {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 14px; border-radius: 9px;
-  border: 1px solid #E9EEF4; background: #fff;
+  padding: 7px 13px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: #fff;
   color: #334155; font-size: 12px; font-weight: 600;
-  cursor: pointer; transition: all .15s;
+  cursor: pointer; transition: all .13s; box-shadow: var(--shadow-xs);
 }
-.export-btn:hover { border-color: var(--gold); background: var(--gold-soft); color: var(--gold-dim); }
+.export-btn:hover { border-color: #C8B56A; background: var(--gold-soft); color: var(--gold-dim); }
 
-/* ── KPI CARDS ── */
+/* ════════════════════════════════════
+   KPI CARDS
+════════════════════════════════════ */
+.kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 24px; }
 .kpi-card {
   background: #fff;
-  border: 1px solid rgba(15,31,45,.07);
-  border-radius: 16px; padding: 18px 18px 16px;
-  box-shadow: var(--shadow-card);
-  transition: box-shadow .2s ease, transform .2s ease;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 18px 18px 15px;
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow .18s ease, transform .18s ease;
   position: relative; overflow: hidden;
 }
-.kpi-card::after {
-  content: ''; position: absolute;
-  top: 0; left: 0; right: 0; height: 3px;
-  background: var(--gold-gradient);
-  opacity: 0; transition: opacity .2s;
+.kpi-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.kpi-accent {
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  opacity: 0; transition: opacity .18s;
 }
-.kpi-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
-.kpi-card:hover::after { opacity: 1; }
-.kpi-icon-wrap {
-  width: 38px; height: 38px; border-radius: 11px;
+.kpi-card:hover .kpi-accent { opacity: 1; }
+.kpi-accent-gold { background: var(--gold-gradient); }
+.kpi-accent-emerald { background: linear-gradient(90deg, #10B981, #34D399); }
+.kpi-accent-amber { background: linear-gradient(90deg, #F59E0B, #FCD34D); }
+.kpi-accent-red { background: linear-gradient(90deg, #EF4444, #FCA5A5); }
+
+.kpi-icon {
+  width: 32px; height: 32px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
-  margin-bottom: 14px;
+  margin-bottom: 14px; flex-shrink: 0;
 }
-.kpi-val { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 26px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
-.kpi-label { font-size: 10.5px; font-weight: 600; color: #94A3B8; text-transform: uppercase; letter-spacing: .07em; margin-top: 5px; }
-.kpi-sub { font-size: 10.5px; font-weight: 600; margin-top: 3px; }
+.kpi-val {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 28px; font-weight: 800; line-height: 1;
+  letter-spacing: -.04em; color: #1a2533;
+}
+.kpi-label {
+  font-size: 10px; font-weight: 700; color: #9BAAB8;
+  text-transform: uppercase; letter-spacing: .08em; margin-top: 6px;
+}
+.kpi-sub { font-size: 10.5px; font-weight: 600; margin-top: 2px; }
 
-/* ── CHART CARD ── */
-.chart-card {
-  background: #fff;
-  border: 1px solid rgba(15,31,45,.07);
-  border-radius: 16px;
-  box-shadow: var(--shadow-card);
-  overflow: hidden;
-  margin-bottom: 24px;
+/* ════════════════════════════════════
+   FILTER BAR
+════════════════════════════════════ */
+.filter-bar {
+  display: flex; align-items: center; gap: 20px; margin-bottom: 16px;
+  padding-bottom: 14px; border-bottom: 1px solid var(--border-light);
 }
-.chart-card-head {
-  padding: 16px 20px 0;
-  display: flex; align-items: center; justify-content: space-between;
+.filter-segment {
+  display: flex; align-items: center; gap: 2px;
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 3px;
+  box-shadow: var(--shadow-xs);
+  overflow-x: auto; scrollbar-width: none; flex-shrink: 0;
 }
-.chart-card-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13.5px; font-weight: 700; color: #1E293B; }
-.chart-card-sub { font-size: 11px; color: #94A3B8; margin-top: 2px; }
-.chart-canvas-wrap { padding: 12px 20px 20px; height: 120px; }
-
-/* ── STATUS PILL FILTERS ── */
-.pill-filter-bar {
-  display: flex; align-items: center; gap: 6px;
-  overflow-x: auto; padding-bottom: 2px;
-  scrollbar-width: none;
-}
-.pill-filter-bar::-webkit-scrollbar { display: none; }
-.status-pill {
+.filter-segment::-webkit-scrollbar { display: none; }
+.seg-btn {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 6px 13px; border-radius: 99px;
-  font-size: 12px; font-weight: 600;
-  border: 1.5px solid #E9EEF4; background: #fff;
+  padding: 5px 11px; border-radius: 6px;
+  font-size: 11.5px; font-weight: 600;
   color: #64748B; cursor: pointer; white-space: nowrap;
-  transition: all .15s ease;
+  transition: all .13s ease; border: none; background: transparent;
+  font-family: inherit;
 }
-.status-pill:hover { border-color: var(--gold); color: var(--gold-dim); background: var(--gold-soft); }
-.status-pill.active {
+.seg-btn:hover { color: #334155; background: #F7F8FA; }
+.seg-btn.active {
   background: var(--navy); color: #fff;
-  border-color: var(--navy);
-  box-shadow: 0 2px 8px rgba(15,31,45,.25);
+  box-shadow: 0 1px 4px rgba(15,31,45,.2);
 }
-.status-pill .pill-dot {
-  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+.seg-dot {
+  width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
 }
 
-/* ── TABLE ── */
+/* Hidden select/inputs kept for JS compatibility */
+.filter-pill-select { display: none; }
+
+/* ════════════════════════════════════
+   TABLE CARD
+════════════════════════════════════ */
 .table-card {
   background: #fff;
-  border: 1px solid rgba(15,31,45,.07);
-  border-radius: 16px; overflow: hidden;
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: var(--shadow-xs);
 }
+.table-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-light);
+}
+.table-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 13px; color: #1a2533; }
+.table-count { font-size: 11px; color: #9BAAB8; font-weight: 500; }
+
 table.dtable { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 table.dtable thead th {
-  background: #F8FAFC;
-  color: #94A3B8; padding: 11px 16px;
+  background: #FAFBFC;
+  color: #9BAAB8; padding: 10px 16px;
   text-align: left; font-weight: 700;
-  font-size: 9.5px; letter-spacing: .08em;
+  font-size: 9.5px; letter-spacing: .09em;
   text-transform: uppercase;
-  border-bottom: 1px solid #F1F5F9;
+  border-bottom: 1px solid var(--border-light);
   white-space: nowrap;
+  position: sticky; top: 0; z-index: 1;
 }
 table.dtable tbody tr {
-  border-bottom: 1px solid #F8FAFC;
-  transition: background .12s;
+  border-bottom: 1px solid var(--border-light);
+  transition: background .1s;
   position: relative;
 }
 table.dtable tbody tr:last-child { border-bottom: none; }
 table.dtable tbody tr:hover { background: #FAFBFD; }
-table.dtable tbody td { padding: 11px 16px; color: #1E293B; vertical-align: middle; }
+table.dtable tbody td { padding: 12px 16px; color: #1a2533; vertical-align: middle; }
 
-/* ── ROW HOVER ACTIONS ── */
+/* Row hover actions */
 .row-actions {
   display: flex; align-items: center; gap: 4px;
-  opacity: 0; transform: translateX(4px);
+  opacity: 0; transform: translateX(6px);
   transition: opacity .15s, transform .15s;
   justify-content: flex-end;
 }
 tr:hover .row-actions { opacity: 1; transform: none; }
 .row-action-btn {
-  width: 28px; height: 28px; border-radius: 7px;
-  border: 1px solid #E9EEF4; background: #fff;
+  width: 28px; height: 28px; border-radius: 6px;
+  border: 1px solid var(--border); background: #fff;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer; color: #64748B;
-  transition: all .15s; font-size: 11px;
+  transition: all .13s; font-size: 11px;
+  box-shadow: var(--shadow-xs);
 }
-.row-action-btn:hover { border-color: var(--gold); background: var(--gold-soft); color: var(--gold-dim); }
+.row-action-btn:hover { border-color: #C8B56A; background: var(--gold-soft); color: var(--gold-dim); }
+
 .kebab-btn {
-  width: 28px; height: 28px; border-radius: 7px;
+  width: 28px; height: 28px; border-radius: 6px;
   border: 1px solid transparent; background: transparent;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; color: #CBD5E1; transition: all .15s;
-  flex-shrink: 0;
+  cursor: pointer; color: #CBD5E1; transition: all .13s; flex-shrink: 0;
 }
-.kebab-btn:hover, tr:hover .kebab-btn { color: #64748B; border-color: #E9EEF4; background: #fff; }
+.kebab-btn:hover, tr:hover .kebab-btn { color: #64748B; border-color: var(--border); background: #fff; }
 
-/* ── PIPELINE ── */
+/* ════════════════════════════════════
+   PIPELINE DOTS
+════════════════════════════════════ */
 .pipeline-wrap {
   display: flex; align-items: center; gap: 0;
-  cursor: pointer; padding: 4px 2px; border-radius: 8px;
-  transition: background .15s;
+  cursor: pointer; padding: 3px 2px; border-radius: 6px;
+  transition: background .13s;
 }
-.pipeline-wrap:hover { background: #F8FAFC; }
+.pipeline-wrap:hover { background: #F7F8FA; }
 .pl-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: #E9EEF4; flex-shrink: 0;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #E4E8EE; flex-shrink: 0;
   border: 1.5px solid #fff;
-  transition: background .15s, transform .15s;
+  transition: background .13s;
 }
-.pl-dot.pl-done { background: var(--gold); }
+.pl-dot.pl-done { background: #10B981; }
 .pl-dot.pl-current {
   background: #fff; border: 2px solid var(--gold);
-  box-shadow: 0 0 0 3px rgba(212,168,51,.2);
+  box-shadow: 0 0 0 2px rgba(212,168,51,.2);
 }
-.pl-line { width: 8px; height: 2px; background: #E9EEF4; flex-shrink: 0; }
-.pl-line.pl-line-done { background: var(--gold); }
+.pl-line { width: 6px; height: 1.5px; background: #E4E8EE; flex-shrink: 0; }
+.pl-line.pl-line-done { background: #10B981; }
 .pl-count-chip {
   font-size: 10px; font-weight: 700; color: var(--gold-dim);
-  background: var(--gold-soft); border-radius: 6px;
+  background: var(--gold-soft); border-radius: 5px;
   padding: 2px 6px; margin-left: 8px; flex-shrink: 0;
 }
-.pl-label { font-size: 10.5px; color: #64748B; font-weight: 600; margin-left: 6px; white-space: nowrap; min-width: 100px; }
+.pl-label { font-size: 10.5px; color: #9BAAB8; font-weight: 500; margin-left: 7px; white-space: nowrap; min-width: 90px; }
 
-/* ── BADGES ── */
+/* ════════════════════════════════════
+   BADGES
+════════════════════════════════════ */
 .badge {
   display: inline-flex; align-items: center; gap: 4px;
-  padding: 3px 9px; border-radius: 99px;
+  padding: 3px 8px; border-radius: 6px;
   font-size: 10.5px; font-weight: 700; white-space: nowrap;
-  cursor: pointer; transition: all .15s; border: 1px solid transparent;
+  cursor: pointer; transition: all .13s; border: 1px solid transparent;
   font-family: inherit;
 }
-.badge:hover { filter: brightness(.96); transform: translateY(-1px); }
-.badge-green { background: #DCFCE7; color: #15803D; }
-.badge-amber { background: #FEF3C7; color: #B45309; }
-.badge-blue { background: #DBEAFE; color: #1D4ED8; }
-.badge-red { background: #FEE2E2; color: #B91C1C; }
-.badge-gray { background: #F1F5F9; color: #64748B; }
-.badge-teal { background: #CCFBF1; color: #0F766E; }
+.badge:hover { filter: brightness(.95); transform: translateY(-1px); }
+.badge-green  { background: #DCFCE7; color: #15803D; border-color: #BBF7D0; }
+.badge-amber  { background: #FEF3C7; color: #92400E; border-color: #FDE68A; }
+.badge-blue   { background: #DBEAFE; color: #1D4ED8; border-color: #BFDBFE; }
+.badge-red    { background: #FEE2E2; color: #B91C1C; border-color: #FECACA; }
+.badge-gray   { background: #F1F5F9; color: #64748B; border-color: #E2E8F0; }
+.badge-teal   { background: #CCFBF1; color: #0F766E; border-color: #99F6E4; }
 
-/* ── DRAWERS ── */
+/* ════════════════════════════════════
+   DRAWERS
+════════════════════════════════════ */
 .drawer {
   position: fixed; top: 0; right: 0; height: 100%;
   width: 100%; max-width: 440px;
   background: #fff; z-index: 60;
   transform: translateX(105%);
-  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
   box-shadow: var(--shadow-drawer);
   display: flex; flex-direction: column;
 }
@@ -420,331 +465,362 @@ tr:hover .row-actions { opacity: 1; transform: none; }
 .drawer.drawer-open { transform: translateX(0); }
 #drawer-overlay {
   position: fixed; inset: 0;
-  background: rgba(15,31,45,.4);
+  background: rgba(15,31,45,.35);
   z-index: 55; opacity: 0; pointer-events: none;
-  transition: opacity .25s;
-  backdrop-filter: blur(4px);
+  transition: opacity .22s;
+  backdrop-filter: blur(3px);
 }
 #drawer-overlay.show { opacity: 1; pointer-events: all; }
 .drawer-head {
-  padding: 20px 22px;
-  border-bottom: 1px solid #F1F5F9;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border-light);
   display: flex; align-items: flex-start;
   justify-content: space-between; flex-shrink: 0;
 }
-.drawer-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 15px; color: #0F1F2D; }
-.drawer-sub { font-size: 11.5px; color: #94A3B8; margin-top: 2px; font-weight: 500; }
+.drawer-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 14.5px; color: #1a2533; }
+.drawer-sub { font-size: 11px; color: #9BAAB8; margin-top: 2px; font-weight: 500; }
 .drawer-close {
-  width: 28px; height: 28px; border-radius: 8px;
-  background: #F1F5F9; border: none; cursor: pointer;
+  width: 26px; height: 26px; border-radius: 6px;
+  background: #F7F8FA; border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  color: #64748B; flex-shrink: 0; transition: background .15s;
+  color: #64748B; flex-shrink: 0; transition: background .13s;
 }
-.drawer-close:hover { background: #E2E8F0; }
-.drawer-body { flex: 1; overflow-y: auto; padding: 20px 22px; }
+.drawer-close:hover { background: #E9EEF4; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 18px 20px; }
 .drawer-foot {
-  padding: 14px 22px;
-  border-top: 1px solid #F1F5F9;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border-light);
   display: flex; justify-content: flex-end; gap: 8px;
   flex-shrink: 0; background: #FAFBFC;
 }
 
-/* ── FORMS ── */
-.form-group { margin-bottom: 14px; }
+/* ════════════════════════════════════
+   FORMS
+════════════════════════════════════ */
+.form-group { margin-bottom: 13px; }
 .form-label {
   display: block; font-size: 10.5px; font-weight: 700;
   color: #64748B; margin-bottom: 5px;
   text-transform: uppercase; letter-spacing: .07em;
 }
 .form-control {
-  width: 100%; border: 1.5px solid #E9EEF4;
-  border-radius: 9px; padding: 9px 12px;
+  width: 100%; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 8px 11px;
   font-size: 13px; font-family: inherit;
-  color: #1E293B; background: #fff; outline: none;
-  transition: border-color .15s, box-shadow .15s;
+  color: #1a2533; background: #fff; outline: none;
+  transition: border-color .13s, box-shadow .13s;
 }
-.form-control:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,168,51,.12); }
+.form-control:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,168,51,.1); }
 textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.55; }
 .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-/* ── QA GRID ── */
-.qa-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 7px; }
+/* ════════════════════════════════════
+   QA GRID
+════════════════════════════════════ */
+.qa-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 6px; }
 .qa-btn {
-  padding: 11px 10px; border-radius: 11px;
-  border: 1.5px solid #E9EEF4; background: #F8FAFC;
-  cursor: pointer; text-align: center; transition: all .15s;
+  padding: 10px 9px; border-radius: 9px;
+  border: 1px solid var(--border); background: #FAFBFC;
+  cursor: pointer; text-align: center; transition: all .13s;
 }
 .qa-btn:hover { border-color: var(--gold); background: var(--gold-soft); }
 .qa-btn.sel {
   border-color: var(--gold); background: var(--gold-soft);
-  box-shadow: 0 2px 10px rgba(212,168,51,.2);
+  box-shadow: 0 2px 8px rgba(212,168,51,.18);
 }
-.qa-btn-icon { font-size: 16px; margin-bottom: 3px; }
-.qa-btn-lbl { font-size: 11px; font-weight: 700; color: #1E293B; }
+.qa-btn-icon { font-size: 15px; margin-bottom: 3px; }
+.qa-btn-lbl { font-size: 10.5px; font-weight: 700; color: #1a2533; }
 
-/* ── PERF GRID ── */
-.perf-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 7px; }
+/* ════════════════════════════════════
+   PERF GRID
+════════════════════════════════════ */
+.perf-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
 .perf-opt {
-  border: 1.5px solid #E9EEF4; border-radius: 11px;
-  padding: 12px 6px; text-align: center; cursor: pointer;
-  transition: all .15s; background: #F8FAFC;
+  border: 1px solid var(--border); border-radius: 9px;
+  padding: 11px 5px; text-align: center; cursor: pointer;
+  transition: all .13s; background: #FAFBFC;
 }
 .perf-opt:hover { border-color: var(--gold); background: var(--gold-soft); }
 .perf-opt.sel {
   border-color: var(--gold); background: var(--gold-soft);
-  box-shadow: 0 2px 10px rgba(212,168,51,.2);
+  box-shadow: 0 2px 8px rgba(212,168,51,.18);
 }
-.perf-emoji { font-size: 18px; margin-bottom: 4px; }
-.perf-lbl { font-size: 10.5px; font-weight: 700; color: #475569; }
+.perf-emoji { font-size: 16px; margin-bottom: 4px; }
+.perf-lbl { font-size: 10px; font-weight: 700; color: #475569; }
 
-/* ── NOTICE ── */
+/* ════════════════════════════════════
+   NOTICE
+════════════════════════════════════ */
 .notice {
-  background: #FEF3E2; border: 1px solid #F5D9A8;
-  border-radius: 10px; padding: 10px 13px;
-  font-size: 12px; color: #7A5500;
+  background: #FFFBEB; border: 1px solid #FDE68A;
+  border-radius: 8px; padding: 9px 12px;
+  font-size: 12px; color: #78350F;
   margin-bottom: 12px; display: flex; gap: 8px;
-  align-items: flex-start; line-height: 1.55;
+  align-items: flex-start; line-height: 1.5;
 }
 
-/* ── POPOVERS ── */
+/* ════════════════════════════════════
+   POPOVERS
+════════════════════════════════════ */
 .pop-card {
   position: fixed; z-index: 70; background: #fff;
-  border: 1px solid #E9EEF4; border-radius: 14px;
-  box-shadow: 0 16px 40px rgba(15,31,45,.18);
-  padding: 5px; min-width: 200px; display: none;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 4px; min-width: 200px; display: none;
 }
 .pop-card.show { display: block; }
 .pop-item {
   display: flex; align-items: center; gap: 9px;
-  padding: 8px 10px; border-radius: 8px;
-  font-size: 12.5px; font-weight: 600; color: #1E293B; cursor: pointer;
-  transition: background .12s;
+  padding: 7px 10px; border-radius: 6px;
+  font-size: 12.5px; font-weight: 600; color: #1a2533; cursor: pointer;
+  transition: background .1s;
 }
-.pop-item:hover { background: #F8FAFC; }
-.pop-item svg { flex-shrink: 0; color: #94A3B8; }
+.pop-item:hover { background: #F7F8FA; }
+.pop-item svg { flex-shrink: 0; color: #9BAAB8; }
 .pop-item:hover svg { color: var(--gold-dim); }
 
-/* ── LOOKUP ── */
+/* ════════════════════════════════════
+   LOOKUP
+════════════════════════════════════ */
 .lookup-wrap { position: relative; }
 .lookup-results {
-  position: absolute; top: calc(100% + 5px);
+  position: absolute; top: calc(100% + 4px);
   left: 0; right: 0; background: #fff;
-  border: 1px solid #E9EEF4; border-radius: 12px;
-  box-shadow: 0 16px 40px rgba(15,31,45,.14);
-  z-index: 40; max-height: 230px; overflow-y: auto; display: none;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  z-index: 40; max-height: 220px; overflow-y: auto; display: none;
 }
 .lookup-results.open { display: block; }
-.lookup-item { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #F8FAFC; }
+.lookup-item { padding: 9px 13px; cursor: pointer; border-bottom: 1px solid var(--border-light); }
 .lookup-item:last-child { border-bottom: none; }
 .lookup-item:hover { background: var(--gold-soft); }
-.lookup-item-name { font-weight: 700; font-size: 12.5px; color: #1E293B; }
-.lookup-item-id { font-size: 10.5px; color: #94A3B8; margin-top: 1px; }
+.lookup-item-name { font-weight: 700; font-size: 12.5px; color: #1a2533; }
+.lookup-item-id { font-size: 10.5px; color: #9BAAB8; margin-top: 1px; }
 
-/* ── SELECTED STUDENT CARD ── */
+/* ════════════════════════════════════
+   SELECTED STUDENT CARD
+════════════════════════════════════ */
 .sel-student {
   background: var(--gold-soft); border: 1px solid #EBDBA7;
-  border-radius: 11px; padding: 11px 13px;
+  border-radius: 9px; padding: 10px 12px;
   display: none; align-items: center; justify-content: space-between;
 }
 .sel-student.show { display: flex; }
-.ss-name { font-weight: 700; font-size: 13px; color: #1E293B; }
-.ss-meta { font-size: 11px; color: #8A6D2A; margin-top: 1px; font-weight: 500; }
-.ss-clear { background: none; border: none; cursor: pointer; color: var(--gold-dim); font-size: 14px; padding: 4px; border-radius: 5px; }
+.ss-name { font-weight: 700; font-size: 13px; color: #1a2533; }
+.ss-meta { font-size: 11px; color: #92400E; margin-top: 1px; font-weight: 500; }
+.ss-clear { background: none; border: none; cursor: pointer; color: var(--gold-dim); font-size: 14px; padding: 3px; border-radius: 4px; }
 
-/* ── SUCCESS BANNER ── */
+/* ════════════════════════════════════
+   SUCCESS BANNER
+════════════════════════════════════ */
 .success-banner {
-  background: #ECFDF5; border: 1px solid #A7F3D0;
-  border-radius: 16px; padding: 16px 20px;
-  display: none; align-items: center; gap: 14px; margin-bottom: 18px;
+  background: #F0FDF4; border: 1px solid #BBF7D0;
+  border-radius: var(--radius-lg); padding: 14px 18px;
+  display: none; align-items: center; gap: 13px; margin-bottom: 18px;
 }
 .success-banner.show { display: flex; }
 
-/* ── PROFILE DRAWER ── */
+/* ════════════════════════════════════
+   PROFILE DRAWER
+════════════════════════════════════ */
 .profile-drawer {
   position: fixed; top: 0; right: 0; height: 100%;
   width: 100%; max-width: 480px; background: #fff;
   z-index: 65; display: flex; flex-direction: column;
   transform: translateX(105%);
-  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
   box-shadow: var(--shadow-drawer);
 }
 .profile-drawer.pd-open { transform: translateX(0); }
 .profile-drawer-overlay {
   position: fixed; inset: 0;
-  background: rgba(15,31,45,.42);
-  backdrop-filter: blur(4px);
-  z-index: 64; opacity: 0; pointer-events: none; transition: opacity .25s;
+  background: rgba(15,31,45,.38);
+  backdrop-filter: blur(3px);
+  z-index: 64; opacity: 0; pointer-events: none; transition: opacity .22s;
 }
 .profile-drawer-overlay.pd-overlay-show { opacity: 1; pointer-events: all; }
 
-/* ── PROFILE DRAWER INTERNALS ── */
-.pd-section { margin-bottom: 18px; padding-bottom: 16px; border-bottom: 1px solid #F1F5F9; }
+.pd-section { margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border-light); }
 .pd-section:last-of-type { border-bottom: none; margin-bottom: 0; }
 .pd-section-title {
-  font-size: 9.5px; font-weight: 800; color: #94A3B8;
+  font-size: 9.5px; font-weight: 800; color: #9BAAB8;
   text-transform: uppercase; letter-spacing: .12em;
   margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
 }
-.pd-section-title::after { content: ''; flex: 1; height: 1px; background: #F1F5F9; }
-.pd-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 9px; }
-.pd-field { margin-bottom: 9px; }
-.pd-label { display: block; font-size: 10px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 4px; }
+.pd-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border-light); }
+.pd-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.pd-field { margin-bottom: 8px; }
+.pd-label { display: block; font-size: 10px; font-weight: 700; color: #9BAAB8; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 4px; }
 .pd-input {
-  width: 100%; border: 1.5px solid #E9EEF4; border-radius: 9px;
-  padding: 8px 11px; font-size: 12.5px; font-family: inherit;
-  color: #1E293B; background: #fff; outline: none;
-  transition: border-color .15s, box-shadow .15s; box-sizing: border-box;
+  width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 7px 10px; font-size: 12.5px; font-family: inherit;
+  color: #1a2533; background: #fff; outline: none;
+  transition: border-color .13s, box-shadow .13s; box-sizing: border-box;
 }
-.pd-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,168,51,.12); }
-.pd-input[readonly] { background: #F8FAFC; color: #64748B; cursor: default; border-color: #F1F5F9; }
+.pd-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,168,51,.1); }
+.pd-input[readonly] { background: #F7F8FA; color: #64748B; cursor: default; border-color: var(--border-light); }
 .readonly-badge {
   display: inline-flex; align-items: center; gap: 4px;
-  padding: 2px 7px; border-radius: 5px; background: #F1F5F9;
-  border: 1px solid #E9EEF4; font-size: 9.5px; font-weight: 700;
-  color: #94A3B8; margin-left: 4px;
+  padding: 2px 6px; border-radius: 4px; background: #F1F5F9;
+  border: 1px solid var(--border); font-size: 9.5px; font-weight: 700;
+  color: #9BAAB8; margin-left: 4px;
 }
 .pd-btn-save {
-  padding: 9px 22px; border-radius: 9px; border: none;
+  padding: 8px 20px; border-radius: var(--radius-sm); border: none;
   background: var(--gold-gradient); color: var(--navy);
   font-size: 12.5px; font-weight: 700; font-family: inherit;
   cursor: pointer; display: flex; align-items: center; gap: 7px;
-  transition: opacity .15s; box-shadow: 0 2px 10px rgba(212,168,51,.3);
+  transition: opacity .13s; box-shadow: 0 2px 8px rgba(212,168,51,.28);
 }
 .pd-btn-save:hover:not(:disabled) { opacity: .9; }
 .pd-btn-save:disabled { opacity: .6; cursor: not-allowed; }
-.pd-save-spinner { width: 13px; height: 13px; border: 2px solid rgba(15,31,45,.25); border-top-color: var(--navy); border-radius: 50%; animation: spin .75s linear infinite; }
+.pd-save-spinner { width: 12px; height: 12px; border: 2px solid rgba(15,31,45,.2); border-top-color: var(--navy); border-radius: 50%; animation: spin .75s linear infinite; }
 
-/* ── STAGE LIST ── */
-.stage-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid #F8FAFC; }
+/* ════════════════════════════════════
+   STAGE LIST
+════════════════════════════════════ */
+.stage-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border-light); }
 .stage-row:last-child { border-bottom: none; }
-.stage-row-left { display: flex; align-items: center; gap: 9px; }
-.stage-dot-lg { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px; font-weight: 800; background: #F1F5F9; color: #94A3B8; }
+.stage-row-left { display: flex; align-items: center; gap: 8px; }
+.stage-dot-lg { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 9px; font-weight: 800; background: #F1F5F9; color: #9BAAB8; }
 .stage-dot-lg.stage-done { background: #DCFCE7; color: #15803D; }
-.stage-name { font-size: 12.5px; font-weight: 600; color: #1E293B; }
-.stage-num { font-size: 9.5px; color: #CBD5E1; font-weight: 700; width: 14px; }
+.stage-name { font-size: 12px; font-weight: 600; color: #1a2533; }
+.stage-num { font-size: 9px; color: #CBD5E1; font-weight: 700; width: 14px; }
 
-/* ── REPORTS ── */
-.report-bar-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+/* ════════════════════════════════════
+   REPORTS
+════════════════════════════════════ */
+.report-bar-item { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
 .report-bar-label { width: 115px; font-size: 11.5px; color: #64748B; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; font-weight: 500; }
-.report-bar-track { flex: 1; background: #F1F5F9; border-radius: 5px; height: 7px; overflow: hidden; }
-.report-bar-fill { height: 100%; border-radius: 5px; background: var(--gold-gradient); transition: width .6s ease; }
-.report-bar-count { font-size: 11.5px; font-weight: 700; color: #1E293B; min-width: 22px; text-align: right; flex-shrink: 0; }
+.report-bar-track { flex: 1; background: #F1F5F9; border-radius: 4px; height: 6px; overflow: hidden; }
+.report-bar-fill { height: 100%; border-radius: 4px; background: var(--gold-gradient); transition: width .6s ease; }
+.report-bar-count { font-size: 11.5px; font-weight: 700; color: #1a2533; min-width: 22px; text-align: right; flex-shrink: 0; }
 
-/* ── FEEDBACK DOC ── */
-.doc-header { border-bottom: 3px solid var(--gold); padding-bottom: 16px; margin-bottom: 18px; }
-.doc-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; font-weight: 800; color: #0F1F2D; margin-bottom: 12px; }
-.doc-meta { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; }
-.doc-meta-item { background: #F8FAFC; border-radius: 9px; padding: 9px 12px; }
-.doc-meta-label { font-size: 9px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 3px; }
-.doc-meta-value { font-size: 12px; font-weight: 700; color: #1E293B; }
-.doc-section { margin-bottom: 16px; }
-.doc-section-title { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-.doc-section-title::after { content: ''; flex: 1; height: 1px; background: #E2E8F0; }
-.doc-text { font-size: 13px; line-height: 1.8; color: #334155; }
-.perf-badge { display: inline-block; padding: 3px 13px; border-radius: 99px; font-size: 11px; font-weight: 800; }
+/* ════════════════════════════════════
+   FEEDBACK DOC
+════════════════════════════════════ */
+.doc-header { border-bottom: 2px solid var(--gold); padding-bottom: 14px; margin-bottom: 16px; }
+.doc-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 17px; font-weight: 800; color: var(--navy); margin-bottom: 10px; }
+.doc-meta { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.doc-meta-item { background: #F7F8FA; border-radius: 8px; padding: 8px 11px; }
+.doc-meta-label { font-size: 9px; font-weight: 700; color: #9BAAB8; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 3px; }
+.doc-meta-value { font-size: 12px; font-weight: 700; color: #1a2533; }
+.doc-section { margin-bottom: 14px; }
+.doc-section-title { font-size: 9.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+.doc-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.doc-text { font-size: 13px; line-height: 1.75; color: #334155; }
+.perf-badge { display: inline-block; padding: 3px 11px; border-radius: 6px; font-size: 11px; font-weight: 800; }
 .perf-excellent { background: #DCFCE7; color: #15803D; }
 .perf-good { background: #DBEAFE; color: #1D4ED8; }
-.perf-satisfactory { background: #FEF3C7; color: #B45309; }
+.perf-satisfactory { background: #FEF3C7; color: #92400E; }
 .perf-needs { background: #FEE2E2; color: #B91C1C; }
-.doc-footer { border-top: 1px solid #E2E8F0; padding-top: 12px; margin-top: 18px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #94A3B8; }
+.doc-footer { border-top: 1px solid var(--border); padding-top: 11px; margin-top: 16px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #9BAAB8; }
 .preview-card { display: none; }
 .preview-card.show { display: block; }
 
-/* ── MISC ── */
-.empty-state { text-align: center; padding: 52px 20px; color: #94A3B8; font-size: 13px; font-weight: 500; }
-.access-denied { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; color: #94A3B8; }
+/* ════════════════════════════════════
+   MISC
+════════════════════════════════════ */
+.empty-state { text-align: center; padding: 48px 20px; color: #9BAAB8; font-size: 13px; font-weight: 500; }
+.access-denied { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; color: #9BAAB8; }
 #drop-zone.drag-over { border-color: var(--gold); background: var(--gold-soft); }
 
-/* ── TOAST ── */
+/* ════════════════════════════════════
+   TOAST
+════════════════════════════════════ */
 .toast {
-  background: #0F1F2D; color: #fff;
-  padding: 11px 16px; border-radius: 11px;
+  background: var(--navy); color: #fff;
+  padding: 10px 15px; border-radius: 10px;
   font-size: 12.5px; font-weight: 600;
-  box-shadow: 0 14px 40px rgba(0,0,0,.3);
-  animation: slideIn .22s ease;
+  box-shadow: var(--shadow-lg);
+  animation: slideIn .2s ease;
   display: flex; align-items: center; gap: 9px; max-width: 320px;
 }
 .toast.success { border-left: 3px solid var(--gold); }
 .toast.error { border-left: 3px solid #EF4444; }
-@keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
 
-/* ── SPINNER ── */
-.spinner { width: 28px; height: 28px; border: 3px solid #E2E8F0; border-top-color: var(--gold); border-radius: 50%; animation: spin .8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* ════════════════════════════════════
+   SPINNER
+════════════════════════════════════ */
+.spinner { width: 26px; height: 26px; border: 3px solid #E2E8F0; border-top-color: var(--gold); border-radius: 50%; animation: spin .8s linear infinite; }
 
-/* ── LOGIN ── */
+/* ════════════════════════════════════
+   LOGIN
+════════════════════════════════════ */
 .login-overlay {
   position: fixed; inset: 0; background: var(--navy);
   z-index: 9999; display: flex; align-items: center;
   justify-content: center; padding: 20px;
-  transition: opacity .25s ease;
+  transition: opacity .22s ease;
 }
 .login-overlay.login-hidden { opacity: 0; pointer-events: none; }
 .login-card {
-  background: #fff; border-radius: 22px;
-  padding: 36px 34px 30px;
-  width: 100%; max-width: 390px;
-  box-shadow: 0 40px 100px rgba(0,0,0,.5);
-  animation: loginSlideUp .35s cubic-bezier(.22,1,.36,1);
+  background: #fff; border-radius: 20px;
+  padding: 34px 32px 28px;
+  width: 100%; max-width: 380px;
+  box-shadow: 0 40px 80px rgba(0,0,0,.45);
+  animation: loginSlideUp .32s cubic-bezier(.22,1,.36,1);
 }
-@keyframes loginSlideUp { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 .login-logo {
-  width: 40px; height: 40px; border-radius: 11px;
+  width: 38px; height: 38px; border-radius: 9px;
   background: var(--gold-gradient);
   display: flex; align-items: center; justify-content: center;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  font-weight: 800; font-size: 13px; color: var(--navy);
-  box-shadow: 0 4px 14px rgba(212,168,51,.4);
+  font-weight: 800; font-size: 12px; color: var(--navy);
+  box-shadow: 0 3px 12px rgba(212,168,51,.35);
 }
-.login-error { background: #FEE2E2; border: 1px solid #FECACA; border-radius: 10px; padding: 10px 13px; font-size: 12.5px; color: #B91C1C; font-weight: 600; margin-bottom: 14px; line-height: 1.45; }
-.login-input { width: 100%; border: 1.5px solid #E9EEF4; border-radius: 10px; padding: 10px 13px; font-size: 13.5px; font-family: inherit; color: #1E293B; background: #fff; outline: none; transition: border-color .15s, box-shadow .15s; box-sizing: border-box; }
-.login-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,168,51,.15); }
-.login-input.input-error { border-color: #F87171; }
-.login-eye { position: absolute; right: 11px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #94A3B8; padding: 4px; display: flex; align-items: center; border-radius: 6px; }
-.login-btn { width: 100%; margin-top: 20px; background: var(--navy); color: #fff; border: none; border-radius: 11px; padding: 12px; font-size: 13.5px; font-weight: 700; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 9px; transition: background .15s; }
+.login-error { background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 9px 12px; font-size: 12.5px; color: #B91C1C; font-weight: 600; margin-bottom: 13px; line-height: 1.45; }
+.login-input { width: 100%; border: 1px solid var(--border); border-radius: 9px; padding: 9px 12px; font-size: 13.5px; font-family: inherit; color: #1a2533; background: #fff; outline: none; transition: border-color .13s, box-shadow .13s; box-sizing: border-box; }
+.login-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,168,51,.12); }
+.login-input.input-error { border-color: #FCA5A5; }
+.login-eye { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #9BAAB8; padding: 4px; display: flex; align-items: center; border-radius: 5px; }
+.login-btn { width: 100%; margin-top: 18px; background: var(--navy); color: #fff; border: none; border-radius: 10px; padding: 11px; font-size: 13.5px; font-weight: 700; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 9px; transition: background .13s; }
 .login-btn:hover:not(:disabled) { background: var(--navy2); }
 .login-btn:disabled { opacity: .65; cursor: not-allowed; }
-.login-spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .75s linear infinite; }
+.login-spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .75s linear infinite; }
 
-/* ── PILL FILTER SELECTS (legacy hidden) ── */
-.filter-pill-select { display: none; }
-
-/* ── LOAD MORE ── */
+/* ════════════════════════════════════
+   LOAD MORE
+════════════════════════════════════ */
 #load-more-btn {
-  margin-top: 12px; width: 100%; padding: 11px;
-  border-radius: 14px; border: 1.5px dashed #E9EEF4;
+  margin-top: 10px; width: 100%; padding: 10px;
+  border-radius: var(--radius); border: 1px dashed var(--border);
   background: #fff; color: #64748B;
   font-size: 12.5px; font-weight: 600; font-family: inherit;
-  cursor: pointer; transition: all .2s;
+  cursor: pointer; transition: all .18s;
 }
 #load-more-btn:hover:not(:disabled) { border-color: var(--gold); background: var(--gold-soft); color: var(--gold-dim); }
 #load-more-btn:disabled { opacity: .6; cursor: not-allowed; }
 
-/* ── BTN PRIMARIES ── */
+/* ════════════════════════════════════
+   BUTTONS
+════════════════════════════════════ */
 .btn-primary {
-  padding: 8px 18px; border-radius: 9px; border: none;
+  padding: 7px 16px; border-radius: var(--radius-sm); border: none;
   background: var(--navy); color: #fff;
   font-size: 12.5px; font-weight: 700; font-family: inherit;
-  cursor: pointer; transition: opacity .15s;
+  cursor: pointer; transition: opacity .13s;
 }
 .btn-primary:hover { opacity: .88; }
 .btn-gold {
-  padding: 8px 18px; border-radius: 9px; border: none;
+  padding: 7px 16px; border-radius: var(--radius-sm); border: none;
   background: var(--gold-gradient); color: var(--navy);
   font-size: 12.5px; font-weight: 700; font-family: inherit;
-  cursor: pointer; transition: opacity .15s;
-  box-shadow: 0 2px 10px rgba(212,168,51,.3);
+  cursor: pointer; transition: opacity .13s;
+  box-shadow: 0 2px 8px rgba(212,168,51,.28);
 }
 .btn-gold:hover { opacity: .92; }
 .btn-ghost {
-  padding: 8px 16px; border-radius: 9px;
-  border: 1.5px solid #E9EEF4; background: #fff;
+  padding: 7px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: #fff;
   color: #64748B; font-size: 12.5px; font-weight: 600;
-  font-family: inherit; cursor: pointer; transition: all .15s;
+  font-family: inherit; cursor: pointer; transition: all .13s;
 }
-.btn-ghost:hover { border-color: var(--gold); background: var(--gold-soft); color: var(--gold-dim); }
+.btn-ghost:hover { border-color: #C8B56A; background: var(--gold-soft); color: var(--gold-dim); }
 
-/* ── NOTIFICATION MODAL ── */
+/* ════════════════════════════════════
+   NOTIFICATION MODAL
+════════════════════════════════════ */
 #modal-notify .notice { margin-top: 10px; }
 
 @media (max-width: 900px) {
@@ -754,23 +830,38 @@ textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.55; }
 }
 </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased">
+<body>
 
-<!-- ═══════════════════════════════════════════
-  CMD+K GLOBAL SEARCH OVERLAY
-═══════════════════════════════════════════ -->
+<!-- ══════════════════════════════════
+  CMD+K SEARCH OVERLAY
+══════════════════════════════════ -->
 <div id="cmd-overlay" role="dialog" aria-modal="true">
   <div id="cmd-box">
     <div id="cmd-input-wrap">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9BAAB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input id="cmd-input" type="text" placeholder="Search students, courses, agents…" autocomplete="off" oninput="cmdSearch(this.value)">
       <span class="kbd">Esc</span>
     </div>
     <div id="cmd-results">
       <div class="cmd-section-label">Quick Actions</div>
-      <div class="cmd-item" onclick="cmdAction('dashboard')"><div class="cmd-item-icon">📊</div><div><div class="cmd-item-name">Dashboard</div><div class="cmd-item-meta">View all students & pipeline</div></div></div>
-      <div class="cmd-item" onclick="cmdAction('casshield')"><div class="cmd-item-icon">🛡️</div><div><div class="cmd-item-name">CAS Shield</div><div class="cmd-item-meta">Pre-CAS readiness checks</div></div></div>
-      <div class="cmd-item" onclick="cmdAction('feedback')"><div class="cmd-item-icon">📝</div><div><div class="cmd-item-name">Mock Pre-CAS</div><div class="cmd-item-meta">Build interview feedback</div></div></div>
+      <div class="cmd-item" onclick="cmdAction('dashboard')">
+        <div class="cmd-item-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A07C20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        </div>
+        <div><div class="cmd-item-name">Dashboard</div><div class="cmd-item-meta">View all students & pipeline</div></div>
+      </div>
+      <div class="cmd-item" onclick="cmdAction('casshield')">
+        <div class="cmd-item-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A07C20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5.5-3.8 9-8 11-4.2-2-8-5.5-8-11V7l8-4z"/></svg>
+        </div>
+        <div><div class="cmd-item-name">CAS Shield</div><div class="cmd-item-meta">Pre-CAS readiness checks</div></div>
+      </div>
+      <div class="cmd-item" onclick="cmdAction('feedback')">
+        <div class="cmd-item-icon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A07C20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3.5" width="12" height="18" rx="2"/><path d="M9 3.5h6v3H9z"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        </div>
+        <div><div class="cmd-item-name">Mock Pre-CAS</div><div class="cmd-item-meta">Build interview feedback</div></div>
+      </div>
     </div>
     <div class="cmd-footer">
       <span><span class="cmd-key">↑↓</span> navigate</span>
@@ -780,31 +871,31 @@ textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.55; }
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
+<!-- ══════════════════════════════════
   LOGIN OVERLAY
-═══════════════════════════════════════════ -->
+══════════════════════════════════ -->
 <div id="login-overlay" class="login-overlay" aria-modal="true" role="dialog">
   <div class="login-card">
-    <div class="flex items-center gap-3 mb-7">
+    <div style="display:flex;align-items:center;gap:11px;margin-bottom:24px">
       <div class="login-logo">R2</div>
       <div>
-        <div class="font-display font-extrabold text-[15px] text-slate-900">Route 2 Uni</div>
-        <div class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Student Portal</div>
+        <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;color:#1a2533">Route 2 Uni</div>
+        <div style="font-size:10px;font-weight:600;color:#9BAAB8;letter-spacing:.1em;text-transform:uppercase">Student Portal</div>
       </div>
     </div>
-    <h2 class="font-display font-extrabold text-[22px] text-slate-900 mb-1.5">Welcome back</h2>
-    <p class="text-[13px] text-slate-400 mb-6">Sign in with your staff credentials to continue.</p>
+    <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:20px;color:#1a2533;margin-bottom:5px">Welcome back</h2>
+    <p style="font-size:13px;color:#9BAAB8;margin-bottom:22px">Sign in with your staff credentials to continue.</p>
     <div class="login-error" id="login-error" style="display:none"></div>
-    <div class="mb-4">
-      <label class="block text-[10.5px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">Username</label>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:10.5px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Username</label>
       <input class="login-input" id="login-username" type="text" autocomplete="username" placeholder="your.username" spellcheck="false">
     </div>
-    <div class="mb-2">
-      <label class="block text-[10.5px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">Password</label>
+    <div style="margin-bottom:6px">
+      <label style="display:block;font-size:10.5px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Password</label>
       <div style="position:relative">
-        <input class="login-input" id="login-password" type="password" autocomplete="current-password" placeholder="••••••••" style="padding-right:44px">
+        <input class="login-input" id="login-password" type="password" autocomplete="current-password" placeholder="••••••••" style="padding-right:42px">
         <button type="button" class="login-eye" onclick="togglePasswordVisibility()" title="Show/hide password">
-          <svg id="eye-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg id="eye-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </div>
     </div>
@@ -812,48 +903,48 @@ textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.55; }
       <span id="login-btn-text">Sign in</span>
       <span class="login-spinner" id="login-spinner" style="display:none"></span>
     </button>
-    <p class="text-center text-[11.5px] text-slate-400 mt-5">Forgot your password? Contact your administrator.</p>
+    <p style="text-align:center;font-size:11.5px;color:#9BAAB8;margin-top:18px">Forgot your password? Contact your administrator.</p>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════
+<!-- ══════════════════════════════════
   SIDEBAR
-═══════════════════════════════════════════ -->
+══════════════════════════════════ -->
 <aside id="sidebar">
   <div class="sidebar-logo-wrap">
     <div class="sidebar-logo">R2</div>
-    <div class="sidebar-brand">
+    <div>
       <div class="sidebar-brand-name">Route 2 Uni</div>
       <div class="sidebar-brand-tag">Student Portal</div>
     </div>
   </div>
 
-  <nav class="flex-1 py-4 overflow-y-auto">
+  <nav style="flex:1;padding:12px 0;overflow-y:auto">
     <div class="nav-group-label">Main</div>
     <div class="nav-link active" data-view="dashboard" onclick="switchView('dashboard',this)">
-      <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
       <span>Dashboard</span>
     </div>
     <div class="nav-link" data-view="casshield" onclick="switchView('casshield',this)">
-      <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5.5-3.8 9-8 11-4.2-2-8-5.5-8-11V7l8-4z"/></svg>
+      <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5.5-3.8 9-8 11-4.2-2-8-5.5-8-11V7l8-4z"/></svg>
       <span>CAS Shield</span>
     </div>
     <div class="nav-link" data-view="feedback" onclick="switchView('feedback',this)">
-      <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3.5" width="12" height="18" rx="2"/><path d="M9 3.5h6v3H9z"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3.5" width="12" height="18" rx="2"/><path d="M9 3.5h6v3H9z"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
       <span>Mock Pre-CAS</span>
     </div>
     <div class="nav-group-label admin-only" style="display:none">Admin</div>
     <div class="nav-link admin-only" data-view="upload" onclick="switchView('upload',this)" style="display:none">
-      <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16a4.5 4.5 0 010-9 5.5 5.5 0 0110.4-1.7A5 5 0 0117 16"/><path d="M12 11v8"/><path d="M9 14l3-3 3 3"/></svg>
+      <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16a4.5 4.5 0 010-9 5.5 5.5 0 0110.4-1.7A5 5 0 0117 16"/><path d="M12 11v8"/><path d="M9 14l3-3 3 3"/></svg>
       <span>Import CSV</span>
     </div>
     <div class="nav-link admin-only" data-view="reports" onclick="switchView('reports',this)" style="display:none">
-      <svg class="nav-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="4" y2="11"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="20" y1="20" x2="20" y2="15"/></svg>
+      <svg class="nav-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="4" y2="11"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="20" y1="20" x2="20" y2="15"/></svg>
       <span>Reports</span>
     </div>
   </nav>
 
-  <div class="pb-3 flex-shrink-0">
+  <div style="padding-bottom:10px;flex-shrink:0">
     <div class="user-pill">
       <div class="user-avatar" id="cur-avatar">SA</div>
       <div class="user-info">
@@ -861,193 +952,223 @@ textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.55; }
         <div class="user-role" id="cur-role-label">Staff</div>
       </div>
       <button class="signout-btn" onclick="signOut()" title="Sign out">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       </button>
     </div>
   </div>
 </aside>
 
-<!-- ═══════════════════════════════════════════
+<!-- ══════════════════════════════════
   MAIN
-═══════════════════════════════════════════ -->
-<div id="app-main" class="ml-[230px] min-h-screen flex flex-col">
+══════════════════════════════════ -->
+<div id="app-main" style="margin-left:220px;min-height:100vh;display:flex;flex-direction:column">
 
   <!-- HEADER -->
   <header id="app-header">
-    <div class="flex items-center gap-4">
-      <div>
-        <h1 class="font-display font-bold text-[15.5px] text-slate-900 leading-tight" id="page-title">Dashboard</h1>
-        <p class="text-[11px] text-slate-400 font-medium" id="page-subtitle">Every applicant, one screen.</p>
-      </div>
+    <div>
+      <div class="header-page-name" id="page-title">Dashboard</div>
+      <div class="header-page-sub" id="page-subtitle">Every applicant, one screen.</div>
     </div>
-    <div class="flex items-center gap-3">
-      <!-- Global search trigger -->
+    <div style="display:flex;align-items:center;gap:10px">
       <button class="header-search-trigger" onclick="openCmd()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <span>Search…</span>
-        <div class="cmd-hint">
-          <span class="kbd">⌘</span><span class="kbd">K</span>
-        </div>
+        <span style="font-weight:500">Search…</span>
+        <div class="cmd-hint"><span class="kbd">⌘</span><span class="kbd">K</span></div>
       </button>
-      <div class="header-actions">
-        <button class="export-btn" id="dash-export-btn" onclick="exportStudentsCSV()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Export CSV
-        </button>
-        <button class="icon-btn" onclick="refreshCurrentView()" title="Refresh">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 10-2.6 6.4"/><polyline points="21 4 21 12 13 12"/></svg>
-        </button>
-      </div>
+      <button class="export-btn" id="dash-export-btn" onclick="exportStudentsCSV()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </button>
+      <button class="icon-btn" onclick="refreshCurrentView()" title="Refresh">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 10-2.6 6.4"/><polyline points="21 4 21 12 13 12"/></svg>
+      </button>
     </div>
   </header>
 
-  <main class="flex-1 px-7 py-6">
+  <main style="flex:1;padding:22px 24px">
 
-    <!-- ── DASHBOARD ── -->
+    <!-- ══════════════════════════════════
+      DASHBOARD VIEW
+    ══════════════════════════════════ -->
     <div class="view active" id="view-dashboard">
 
-      <!-- KPI CARDS -->
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
+      <!-- KPI CARDS — 6-column grid -->
+      <div class="kpi-grid">
+        <!-- Total Students -->
         <div class="kpi-card">
-          <div class="kpi-icon-wrap bg-slate-100"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c0-3.2 2.7-5.5 6-5.5s6 2.3 6 5.5"/><path d="M16.5 7.2a3 3 0 010 5.8"/><path d="M19.5 19c0-2.4-1.6-4.4-3.8-5.2"/></svg></div>
-          <div class="kpi-val text-slate-900" id="stat-total">—</div>
+          <div class="kpi-accent kpi-accent-gold"></div>
+          <div class="kpi-icon" style="background:#F7F8FA">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c0-3.2 2.7-5.5 6-5.5s6 2.3 6 5.5"/><path d="M16.5 7.2a3 3 0 010 5.8"/><path d="M19.5 19c0-2.4-1.6-4.4-3.8-5.2"/></svg>
+          </div>
+          <div class="kpi-val" id="stat-total">—</div>
           <div class="kpi-label">Total Students</div>
         </div>
+        <!-- Offers Received -->
         <div class="kpi-card">
-          <div class="kpi-icon-wrap bg-emerald-50"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3.5" width="12" height="18" rx="2"/><path d="M9 3.5h6v3H9z"/><polyline points="9 13 11 15 15 10.5"/></svg></div>
-          <div class="kpi-val text-emerald-600" id="stat-offers">—</div>
+          <div class="kpi-accent kpi-accent-emerald"></div>
+          <div class="kpi-icon" style="background:#F0FDF4">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3.5" width="12" height="18" rx="2"/><path d="M9 3.5h6v3H9z"/><polyline points="9 13 11 15 15 10.5"/></svg>
+          </div>
+          <div class="kpi-val" style="color:#10B981" id="stat-offers">—</div>
           <div class="kpi-label">Offers Received</div>
-          <div class="kpi-sub text-emerald-500" id="stat-offers-sub">&nbsp;</div>
+          <div class="kpi-sub" style="color:#10B981" id="stat-offers-sub">&nbsp;</div>
         </div>
+        <!-- CAS Pending -->
         <div class="kpi-card">
-          <div class="kpi-icon-wrap bg-amber-50"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg></div>
-          <div class="kpi-val text-amber-600" id="stat-cas">—</div>
+          <div class="kpi-accent kpi-accent-amber"></div>
+          <div class="kpi-icon" style="background:#FFFBEB">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg>
+          </div>
+          <div class="kpi-val" style="color:#D97706" id="stat-cas">—</div>
           <div class="kpi-label">CAS Pending</div>
-          <div class="kpi-sub text-amber-500" id="stat-cas-sub">&nbsp;</div>
+          <div class="kpi-sub" style="color:#D97706" id="stat-cas-sub">&nbsp;</div>
         </div>
+        <!-- Visa Approved -->
         <div class="kpi-card">
-          <div class="kpi-icon-wrap bg-emerald-50"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
-          <div class="kpi-val text-emerald-600" id="stat-visa">—</div>
+          <div class="kpi-accent kpi-accent-emerald"></div>
+          <div class="kpi-icon" style="background:#F0FDF4">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </div>
+          <div class="kpi-val" style="color:#10B981" id="stat-visa">—</div>
           <div class="kpi-label">Visa Approved</div>
-          <div class="kpi-sub text-emerald-500" id="stat-visa-sub">&nbsp;</div>
+          <div class="kpi-sub" style="color:#10B981" id="stat-visa-sub">&nbsp;</div>
         </div>
+        <!-- Visa Refused -->
         <div class="kpi-card">
-          <div class="kpi-icon-wrap bg-red-50"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div>
-          <div class="kpi-val text-red-600" id="stat-refused">—</div>
+          <div class="kpi-accent kpi-accent-red"></div>
+          <div class="kpi-icon" style="background:#FEF2F2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+          </div>
+          <div class="kpi-val" style="color:#EF4444" id="stat-refused">—</div>
           <div class="kpi-label">Visa Refused</div>
         </div>
+        <!-- Payment Pending -->
         <div class="kpi-card">
-          <div class="kpi-icon-wrap bg-amber-50"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
-          <div class="kpi-val text-amber-600" id="stat-payment">—</div>
+          <div class="kpi-accent kpi-accent-amber"></div>
+          <div class="kpi-icon" style="background:#FFFBEB">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+          <div class="kpi-val" style="color:#D97706" id="stat-payment">—</div>
           <div class="kpi-label">Payment Pending</div>
         </div>
       </div>
 
-      <!-- PIPELINE FUNNEL CHART -->
-      <div class="chart-card">
-        <div class="chart-card-head">
-          <div>
-            <div class="chart-card-title">Pipeline Funnel</div>
-            <div class="chart-card-sub">Students at each stage of the 10-stage journey</div>
-          </div>
-          <span class="text-[10.5px] font-semibold text-slate-400 bg-slate-100 px-3 py-1.5 rounded-lg" id="chart-student-count">— students</span>
+      <!-- FILTER BAR -->
+      <div class="filter-bar">
+        <div class="filter-segment">
+          <button class="seg-btn active" data-filter="all" onclick="setVisaFilter('',this)">
+            All Students
+          </button>
+          <button class="seg-btn" data-filter="visa-approved" onclick="setVisaFilter('Approved',this)">
+            <span class="seg-dot" style="background:#10B981"></span>
+            Visa Approved
+          </button>
+          <button class="seg-btn" data-filter="visa-pending" onclick="setVisaFilter('Pending',this)">
+            <span class="seg-dot" style="background:#F59E0B"></span>
+            Visa Pending
+          </button>
+          <button class="seg-btn" data-filter="visa-refused" onclick="setVisaFilter('Refused',this)">
+            <span class="seg-dot" style="background:#EF4444"></span>
+            Visa Refused
+          </button>
+          <button class="seg-btn" data-filter="offer-received" onclick="setOfferFilter('Received',this)">
+            <span class="seg-dot" style="background:#10B981"></span>
+            Offer Received
+          </button>
+          <button class="seg-btn" data-filter="cas-pending" onclick="setCASFilter('Pending',this)">
+            <span class="seg-dot" style="background:#F59E0B"></span>
+            CAS Pending
+          </button>
         </div>
-        <div class="chart-canvas-wrap">
-          <canvas id="pipeline-chart"></canvas>
-        </div>
-      </div>
 
-      <!-- STATUS PILL FILTERS -->
-      <div class="flex items-center gap-3 mb-4 flex-wrap">
-        <div class="pill-filter-bar flex-1">
-          <button class="status-pill active" data-filter="all" onclick="setVisaFilter('',this)">
-            <span class="pill-dot bg-slate-400"></span> All Students
-          </button>
-          <button class="status-pill" data-filter="visa-approved" onclick="setVisaFilter('Approved',this)">
-            <span class="pill-dot bg-emerald-500"></span> Visa Approved
-          </button>
-          <button class="status-pill" data-filter="visa-pending" onclick="setVisaFilter('Pending',this)">
-            <span class="pill-dot bg-amber-400"></span> Visa Pending
-          </button>
-          <button class="status-pill" data-filter="visa-refused" onclick="setVisaFilter('Refused',this)">
-            <span class="pill-dot bg-red-500"></span> Visa Refused
-          </button>
-          <button class="status-pill" data-filter="offer-received" onclick="setOfferFilter('Received',this)">
-            <span class="pill-dot bg-emerald-500"></span> Offer Received
-          </button>
-          <button class="status-pill" data-filter="cas-pending" onclick="setCASFilter('Pending',this)">
-            <span class="pill-dot bg-amber-400"></span> CAS Pending
-          </button>
-        </div>
-        <!-- Hidden selects for legacy JS compatibility -->
+        <!-- Hidden selects for JS compatibility -->
         <select class="filter-pill-select" id="filter-agent" onchange="filterTable()"><option value="">All Agents</option></select>
         <select class="filter-pill-select" id="filter-level" onchange="filterTable()"><option value="">All Levels</option><option>UG</option><option>PG</option><option>PHD</option></select>
         <select class="filter-pill-select" id="filter-offer" onchange="filterTable()"><option value="">All Offers</option><option>Pending</option><option>Conditional</option><option>Unconditional</option><option>Received</option><option>Rejected</option></select>
         <select class="filter-pill-select" id="filter-visa" onchange="filterTable()"><option value="">All Visa</option><option>Not Applied</option><option>Pending</option><option>Approved</option><option>Refused</option></select>
-        <!-- hidden search input still used by JS logic -->
         <input class="filter-pill-select" id="search-input" type="text" oninput="filterTable()">
       </div>
 
       <!-- TABLE -->
       <div class="table-card" id="table-wrap">
-        <div class="overflow-auto" style="max-height:60vh">
+        <div class="table-header">
+          <span class="table-title">Students</span>
+          <span class="table-count" id="table-shown-count"></span>
+        </div>
+        <div style="overflow:auto;max-height:58vh">
           <table class="dtable" id="student-table">
             <thead>
               <tr>
-                <th style="min-width:90px">Student ID</th>
-                <th style="min-width:150px">Student Name</th>
-                <th style="min-width:150px">Course</th>
-                <th style="min-width:100px">Agent</th>
-                <th style="min-width:260px">Pipeline (10 stages)</th>
-                <th style="min-width:110px" class="text-right">Actions</th>
+                <th style="min-width:86px">ID</th>
+                <th style="min-width:160px">Student</th>
+                <th style="min-width:160px">Course</th>
+                <th style="min-width:110px">Agent</th>
+                <th style="min-width:270px">Pipeline</th>
+                <th style="min-width:100px;text-align:right">Actions</th>
               </tr>
             </thead>
-            <tbody id="table-body"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
+            <tbody id="table-body">
+              <tr><td colspan="6" class="empty-state">Loading…</td></tr>
+            </tbody>
           </table>
         </div>
       </div>
     </div><!-- /view-dashboard -->
 
-    <!-- ── CAS SHIELD ── -->
+    <!-- ══════════════════════════════════
+      CAS SHIELD VIEW
+    ══════════════════════════════════ -->
     <div class="view" id="view-casshield">
-      <div class="flex items-center gap-2 mb-4 flex-wrap">
-        <div class="relative">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="form-control pl-9 w-56" id="cas-search" type="text" placeholder="Search name, ID, agent…" oninput="filterCASTable()" style="padding-left:36px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <div style="position:relative">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9BAAB8"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="form-control" id="cas-search" type="text" placeholder="Search name, ID, agent…" oninput="filterCASTable()" style="padding-left:34px;width:220px">
         </div>
-        <select class="form-control w-auto" id="cas-filter-pci" onchange="filterCASTable()" style="width:auto;padding:8px 12px"><option value="">Ready for PCI</option><option>Yes</option><option>No</option></select>
-        <select class="form-control w-auto" id="cas-filter-visa" onchange="filterCASTable()" style="width:auto;padding:8px 12px"><option value="">Visa Refusal</option><option>Yes</option><option>No</option></select>
+        <select class="form-control" id="cas-filter-pci" onchange="filterCASTable()" style="width:auto;padding:8px 12px"><option value="">Ready for PCI</option><option>Yes</option><option>No</option></select>
+        <select class="form-control" id="cas-filter-visa" onchange="filterCASTable()" style="width:auto;padding:8px 12px"><option value="">Visa Refusal</option><option>Yes</option><option>No</option></select>
       </div>
       <div class="table-card">
-        <div class="overflow-auto" style="max-height:64vh">
+        <div style="overflow:auto;max-height:64vh">
           <table class="dtable" id="cas-table">
-            <thead><tr><th>ID</th><th>Name</th><th>Agent</th><th>Nationality</th><th>Course</th><th>Team</th><th>Study Gap</th><th>Same Level</th><th>Visa Refusal</th><th>Ready PCI</th><th>Info Check</th><th>Pre-CAS Q</th><th>PCI Invite</th><th class="text-right">Actions</th></tr></thead>
-            <tbody id="cas-table-body"><tr><td colspan="14" class="empty-state">Click Refresh to load CAS Shield data…</td></tr></tbody>
+            <thead>
+              <tr>
+                <th>ID</th><th>Name</th><th>Agent</th><th>Nationality</th>
+                <th>Course</th><th>Team</th><th>Study Gap</th><th>Same Level</th>
+                <th>Visa Refusal</th><th>Ready PCI</th><th>Info Check</th>
+                <th>Pre-CAS Q</th><th>PCI Invite</th><th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="cas-table-body">
+              <tr><td colspan="14" class="empty-state">Click Refresh to load CAS Shield data…</td></tr>
+            </tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- ── FEEDBACK ── -->
+    <!-- ══════════════════════════════════
+      FEEDBACK VIEW
+    ══════════════════════════════════ -->
     <div class="view" id="view-feedback">
       <div class="success-banner" id="fb-success">
-        <div class="w-11 h-11 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 text-emerald-600">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <div style="width:40px;height:40px;border-radius:50%;background:#DCFCE7;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#15803D">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <div class="flex-1">
-          <div class="font-bold text-[13.5px] text-emerald-900" id="fb-success-title">Feedback doc created!</div>
-          <div class="text-[11.5px] text-emerald-600 font-medium mt-0.5">Saved to Google Drive and linked in the student record.</div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:13.5px;color:#14532D" id="fb-success-title">Feedback doc created!</div>
+          <div style="font-size:11.5px;color:#16A34A;font-weight:500;margin-top:2px">Saved to Google Drive and linked in the student record.</div>
         </div>
-        <div class="flex gap-2">
-          <a class="px-3.5 py-2 rounded-lg border border-emerald-300 text-emerald-700 text-[12px] font-semibold hover:bg-emerald-100 transition" id="fb-doc-link" href="#" target="_blank">Open Doc ↗</a>
-          <button class="btn-primary text-[12px]" onclick="resetFeedback()">New Feedback</button>
+        <div style="display:flex;gap:8px">
+          <a style="padding:7px 13px;border-radius:7px;border:1px solid #86EFAC;color:#15803D;font-size:12px;font-weight:600;background:#F0FDF4;text-decoration:none" id="fb-doc-link" href="#" target="_blank">Open Doc ↗</a>
+          <button class="btn-primary" style="font-size:12px" onclick="resetFeedback()">New Feedback</button>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
-        <div class="lg:col-span-2 space-y-4">
-          <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">Student Details</div>
+      <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:20px">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <!-- Student Details -->
+          <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow-xs)">
+            <div style="font-size:9.5px;font-weight:700;color:#9BAAB8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px">Student Details</div>
             <div class="form-group">
               <label class="form-label">Search Student</label>
               <div class="lookup-wrap">
@@ -1055,8 +1176,11 @@ textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.55; }
                 <div class="lookup-results" id="fb-lookup"></div>
               </div>
             </div>
-            <div class="sel-student mb-3" id="fb-sel-card">
-              <div><div class="ss-name" id="fb-ss-name">—</div><div class="text-[11px] text-amber-700 font-medium mt-0.5" id="fb-ss-meta">—</div></div>
+            <div class="sel-student" style="margin-bottom:10px" id="fb-sel-card">
+              <div>
+                <div class="ss-name" id="fb-ss-name">—</div>
+                <div class="ss-meta" id="fb-ss-meta">—</div>
+              </div>
               <button class="ss-clear" onclick="fbClearStudent()">✕</button>
             </div>
             <div id="fb-manual" style="display:none">
@@ -1065,72 +1189,85 @@ textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.55; }
                 <div class="form-group"><label class="form-label">Student ID</label><input class="form-control" id="fb-mid" type="text"></div>
               </div>
             </div>
-            <button class="text-[12px] font-semibold text-slate-400 hover:text-slate-700 transition" onclick="toggleFbManual()" id="fb-manual-toggle">+ Enter manually</button>
+            <button style="font-size:12px;font-weight:600;color:#9BAAB8;background:none;border:none;cursor:pointer;padding:0;font-family:inherit" onmouseover="this.style.color='#334155'" onmouseout="this.style.color='#9BAAB8'" onclick="toggleFbManual()" id="fb-manual-toggle">+ Enter manually</button>
           </div>
 
-          <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">Session Info</div>
+          <!-- Session Info -->
+          <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow-xs)">
+            <div style="font-size:9.5px;font-weight:700;color:#9BAAB8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px">Session Info</div>
             <div class="form-grid-2">
               <div class="form-group"><label class="form-label">Session Date</label><input class="form-control" id="fb-date" type="date"></div>
-              <div class="form-group"><label class="form-label">Session Type</label><select class="form-control" id="fb-stype"><option>Mock Pre-CAS Interview</option><option>CAS Shield Review</option><option>Pre-CAS Prep Session</option><option>PCI Practice</option></select></div>
+              <div class="form-group"><label class="form-label">Session Type</label>
+                <select class="form-control" id="fb-stype">
+                  <option>Mock Pre-CAS Interview</option>
+                  <option>CAS Shield Review</option>
+                  <option>Pre-CAS Prep Session</option>
+                  <option>PCI Practice</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">Overall Performance</div>
+          <!-- Performance -->
+          <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow-xs)">
+            <div style="font-size:9.5px;font-weight:700;color:#9BAAB8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px">Overall Performance</div>
             <div class="perf-grid">
               <div class="perf-opt sel" data-value="Excellent" onclick="selectPerf(this)"><div class="perf-emoji">🟢</div><div class="perf-lbl">Excellent</div></div>
               <div class="perf-opt" data-value="Good" onclick="selectPerf(this)"><div class="perf-emoji">🔵</div><div class="perf-lbl">Good</div></div>
               <div class="perf-opt" data-value="Satisfactory" onclick="selectPerf(this)"><div class="perf-emoji">🟡</div><div class="perf-lbl">Satisfactory</div></div>
-              <div class="perf-opt" data-value="Needs Improvement" onclick="selectPerf(this)"><div class="perf-emoji">🔴</div><div class="perf-lbl">Needs Improvement</div></div>
+              <div class="perf-opt" data-value="Needs Improvement" onclick="selectPerf(this)"><div class="perf-emoji">🔴</div><div class="perf-lbl">Needs Impr.</div></div>
             </div>
           </div>
 
-          <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">Feedback &amp; Recommendations</div>
+          <!-- Feedback -->
+          <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow-xs)">
+            <div style="font-size:9.5px;font-weight:700;color:#9BAAB8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px">Feedback &amp; Recommendations</div>
             <div class="form-group"><label class="form-label">Detailed Feedback</label><textarea class="form-control" id="fb-text" placeholder="Describe the student's performance in detail…"></textarea></div>
             <div class="form-group" style="margin-bottom:0"><label class="form-label">Recommendations</label><textarea class="form-control" style="min-height:65px" id="fb-recs" placeholder="Key areas to improve…"></textarea></div>
           </div>
 
-          <div class="flex gap-2 justify-end">
+          <div style="display:flex;gap:8px;justify-content:flex-end">
             <button class="btn-ghost" onclick="fbPreview()">Preview</button>
             <button class="btn-primary" onclick="fbDownloadPDF()">Download PDF</button>
             <button class="btn-gold" onclick="fbSaveToDrive()">Save to Drive &amp; Sheet</button>
           </div>
         </div>
 
-        <div class="lg:col-span-3">
-          <div class="preview-card bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm sticky top-20" id="fb-preview">
-            <div class="bg-navy px-5 py-3 flex items-center justify-between">
-              <span class="text-white/50 text-[10.5px] font-bold tracking-wider uppercase">Document Preview</span>
-              <button class="text-white/40 hover:text-white text-[12px] font-semibold transition" onclick="document.getElementById('fb-preview').classList.remove('show')">Close ✕</button>
+        <!-- Preview panel -->
+        <div>
+          <div class="preview-card" style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-xs);position:sticky;top:76px" id="fb-preview">
+            <div style="background:var(--navy);padding:11px 18px;display:flex;align-items:center;justify-content:space-between">
+              <span style="color:rgba(255,255,255,.45);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase">Document Preview</span>
+              <button style="color:rgba(255,255,255,.35);background:none;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit" onclick="document.getElementById('fb-preview').classList.remove('show')">Close ✕</button>
             </div>
-            <div class="p-7" id="fb-preview-body"></div>
+            <div style="padding:22px 24px;max-height:76vh;overflow-y:auto" id="fb-preview-body"></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ── UPLOAD ── -->
+    <!-- ══════════════════════════════════
+      UPLOAD VIEW
+    ══════════════════════════════════ -->
     <div class="view" id="view-upload">
       <div id="upload-access-check">
-        <div class="border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center max-w-xl mx-auto bg-white" id="drop-zone" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event)">
-          <div class="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center mx-auto mb-4 text-amber-500">
+        <div style="border:1.5px dashed var(--border);border-radius:var(--radius-lg);padding:48px 24px;text-align:center;max-width:560px;margin:0 auto;background:#fff;box-shadow:var(--shadow-xs)" id="drop-zone" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event)">
+          <div style="width:52px;height:52px;border-radius:14px;background:var(--gold-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--gold-dim)">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16a4.5 4.5 0 010-9 5.5 5.5 0 0110.4-1.7A5 5 0 0117 16"/><path d="M12 11v8"/><path d="M9 14l3-3 3 3"/></svg>
           </div>
-          <div class="font-display font-bold text-[17px] text-slate-900 mb-1">Drop your CSV file here</div>
-          <div class="text-slate-400 text-[12.5px] mb-3">Must contain: LEVEL, DOB, STUDENT ID, STUDENT NAME, COURSE, SUBMITTED BY</div>
-          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5 text-left text-[12px] text-amber-800">
+          <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:16px;color:#1a2533;margin-bottom:5px">Drop your CSV file here</div>
+          <div style="color:#9BAAB8;font-size:12.5px;margin-bottom:14px">Must contain: LEVEL, DOB, STUDENT ID, STUDENT NAME, COURSE, SUBMITTED BY</div>
+          <div style="background:var(--gold-soft);border:1px solid #EBDBA7;border-radius:9px;padding:11px 14px;margin-bottom:18px;text-align:left;font-size:12px;color:#92400E">
             <strong>Sheet-only fields:</strong> LEVEL · DOB · STUDENT ID · STUDENT NAME · COURSE · SUBMITTED BY<br>
-            <strong class="mt-1 block">Portal-managed fields:</strong> All statuses are updated from the portal only.
+            <strong style="display:block;margin-top:4px">Portal-managed fields:</strong> All statuses are updated from the portal only.
           </div>
           <input type="file" id="csv-file" accept=".csv" onchange="handleFileSelect(event)" style="display:none">
           <button class="btn-gold" onclick="document.getElementById('csv-file').click()">Choose file</button>
         </div>
-        <div class="bg-white border border-slate-100 rounded-2xl p-5 mt-5 max-w-3xl mx-auto shadow-sm" id="upload-preview" style="display:none">
-          <div class="text-[12px] text-slate-400 mb-3"><strong class="text-slate-700" id="preview-filename"></strong> — <span id="preview-rows"></span> rows</div>
-          <div class="overflow-auto rounded-xl border border-slate-200" style="max-height:240px;margin-bottom:14px"><table class="dtable" id="preview-table"><thead id="preview-thead"></thead><tbody id="preview-tbody"></tbody></table></div>
-          <div class="flex gap-2 justify-end">
+        <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;margin-top:16px;max-width:720px;margin-left:auto;margin-right:auto;box-shadow:var(--shadow-xs)" id="upload-preview" style="display:none">
+          <div style="font-size:12px;color:#9BAAB8;margin-bottom:12px"><strong style="color:#1a2533" id="preview-filename"></strong> — <span id="preview-rows"></span> rows</div>
+          <div style="overflow:auto;border-radius:9px;border:1px solid var(--border);max-height:230px;margin-bottom:12px"><table class="dtable" id="preview-table"><thead id="preview-thead"></thead><tbody id="preview-tbody"></tbody></table></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
             <button class="btn-ghost" onclick="clearUpload()">Cancel</button>
             <button class="btn-gold" onclick="confirmUpload()">Upload to Google Sheet</button>
           </div>
@@ -1138,16 +1275,18 @@ textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.55; }
       </div>
     </div>
 
-    <!-- ── REPORTS ── -->
+    <!-- ══════════════════════════════════
+      REPORTS VIEW
+    ══════════════════════════════════ -->
     <div class="view" id="view-reports">
       <div id="reports-access-check">
-        <div class="flex justify-end mb-4">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
           <button class="export-btn" onclick="exportStudentsCSV()">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export CSV
           </button>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="report-grid">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" id="report-grid">
           <div class="empty-state">Loading reports…</div>
         </div>
       </div>
@@ -1156,29 +1295,29 @@ textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.55; }
   </main>
 </div><!-- /app-main -->
 
-<!-- ═══════════════════════════════════════════
+<!-- ══════════════════════════════════
   DRAWER OVERLAY
-═══════════════════════════════════════════ -->
+══════════════════════════════════ -->
 <div id="drawer-overlay"></div>
 
 <!-- PRE-SCREENING MODAL -->
 <aside class="drawer" id="modal-prescreening">
   <div class="drawer-head"><div><div class="drawer-title">Pre-Screening Call</div><div class="drawer-sub" id="ps-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-prescreening')">✕</button></div>
-  <div class="drawer-body"><div class="qa-grid" id="ps-options"></div><div class="form-group" style="margin-top:14px"><label class="form-label">Notes</label><textarea class="form-control" id="ps-notes" style="min-height:60px" placeholder="Optional call notes…"></textarea></div></div>
+  <div class="drawer-body"><div class="qa-grid" id="ps-options"></div><div class="form-group" style="margin-top:13px"><label class="form-label">Notes</label><textarea class="form-control" id="ps-notes" style="min-height:60px" placeholder="Optional call notes…"></textarea></div></div>
   <div class="drawer-foot"><button class="btn-ghost" onclick="closeModal('modal-prescreening')">Cancel</button><button class="btn-gold" onclick="submitQuickStatus('modal-prescreening','PRE-SCREENING CALL STATUS','ps-notes')">Save</button></div>
 </aside>
 
 <!-- OFFER MODAL -->
 <aside class="drawer" id="modal-offer">
   <div class="drawer-head"><div><div class="drawer-title">Offer Status</div><div class="drawer-sub" id="offer-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-offer')">✕</button></div>
-  <div class="drawer-body"><div class="qa-grid" id="offer-options"></div><div id="offer-conditional-notice" class="notice" style="display:none;margin-top:14px"><strong>Conditional offer</strong> — remember to log condition docs once received.</div><div class="form-group" style="margin-top:14px"><label class="form-label">Notes / Condition details</label><textarea class="form-control" id="offer-notes" style="min-height:60px" placeholder="e.g. condition: English cert pending"></textarea></div></div>
+  <div class="drawer-body"><div class="qa-grid" id="offer-options"></div><div id="offer-conditional-notice" class="notice" style="display:none;margin-top:13px"><strong>Conditional offer</strong> — remember to log condition docs once received.</div><div class="form-group" style="margin-top:13px"><label class="form-label">Notes / Condition details</label><textarea class="form-control" id="offer-notes" style="min-height:60px" placeholder="e.g. condition: English cert pending"></textarea></div></div>
   <div class="drawer-foot"><button class="btn-ghost" onclick="closeModal('modal-offer')">Cancel</button><button class="btn-gold" onclick="submitQuickStatus('modal-offer','OFFER STATUS','offer-notes')">Save</button></div>
 </aside>
 
 <!-- SCHOLARSHIP MODAL -->
 <aside class="drawer" id="modal-scholarship">
   <div class="drawer-head"><div><div class="drawer-title">Scholarship</div><div class="drawer-sub" id="sch-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-scholarship')">✕</button></div>
-  <div class="drawer-body"><div class="qa-grid" id="sch-options"></div><div class="form-group" style="margin-top:14px"><label class="form-label">Amount / Reference</label><input class="form-control" id="sch-amount" type="text" placeholder="e.g. £3,000 merit scholarship"></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="sch-notes" style="min-height:60px"></textarea></div></div>
+  <div class="drawer-body"><div class="qa-grid" id="sch-options"></div><div class="form-group" style="margin-top:13px"><label class="form-label">Amount / Reference</label><input class="form-control" id="sch-amount" type="text" placeholder="e.g. £3,000 merit scholarship"></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="sch-notes" style="min-height:60px"></textarea></div></div>
   <div class="drawer-foot"><button class="btn-ghost" onclick="closeModal('modal-scholarship')">Cancel</button><button class="btn-gold" onclick="submitQuickStatus('modal-scholarship','SCHOLARSHIP','sch-notes')">Save</button></div>
 </aside>
 
@@ -1187,7 +1326,7 @@ textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.55; }
   <div class="drawer-head"><div><div class="drawer-title">Payment</div><div class="drawer-sub" id="pay-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-payment')">✕</button></div>
   <div class="drawer-body">
     <div class="qa-grid" id="pay-options"></div>
-    <div class="form-grid-2" style="margin-top:14px"><div class="form-group"><label class="form-label">Payment Date</label><input class="form-control" id="pay-date" type="date"></div><div class="form-group"><label class="form-label">Amount (£)</label><input class="form-control" id="pay-amount" type="text" placeholder="e.g. 5000"></div></div>
+    <div class="form-grid-2" style="margin-top:13px"><div class="form-group"><label class="form-label">Payment Date</label><input class="form-control" id="pay-date" type="date"></div><div class="form-group"><label class="form-label">Amount (£)</label><input class="form-control" id="pay-amount" type="text" placeholder="e.g. 5000"></div></div>
     <div class="form-group"><label class="form-label">Reference / Receipt No.</label><input class="form-control" id="pay-ref" type="text" placeholder="e.g. TXN-2026-REF"></div>
     <div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="pay-notes" style="min-height:55px"></textarea></div>
   </div>
@@ -1197,14 +1336,14 @@ textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.55; }
 <!-- CAS LINK MODAL -->
 <aside class="drawer" id="modal-caslink">
   <div class="drawer-head"><div><div class="drawer-title">CAS Shield Progress</div><div class="drawer-sub" id="caslink-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-caslink')">✕</button></div>
-  <div class="drawer-body"><div class="qa-grid" id="caslink-options"></div><div class="form-group" style="margin-top:14px"><label class="form-label">Notes</label><textarea class="form-control" id="caslink-notes" style="min-height:60px"></textarea></div></div>
+  <div class="drawer-body"><div class="qa-grid" id="caslink-options"></div><div class="form-group" style="margin-top:13px"><label class="form-label">Notes</label><textarea class="form-control" id="caslink-notes" style="min-height:60px"></textarea></div></div>
   <div class="drawer-foot"><button class="btn-ghost" onclick="closeModal('modal-caslink')">Cancel</button><button class="btn-gold" onclick="submitQuickStatus('modal-caslink','CAS SHIELD','caslink-notes')">Save</button></div>
 </aside>
 
 <!-- CAS STATUS MODAL -->
 <aside class="drawer" id="modal-casstatus">
   <div class="drawer-head"><div><div class="drawer-title">CAS Status</div><div class="drawer-sub" id="casstatus-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-casstatus')">✕</button></div>
-  <div class="drawer-body"><div class="qa-grid" id="casstatus-options"></div><div class="form-group" style="margin-top:14px"><label class="form-label">CAS Number (if issued)</label><input class="form-control" id="cas-number" type="text" placeholder="e.g. ABC123456789"></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="casstatus-notes" style="min-height:55px"></textarea></div></div>
+  <div class="drawer-body"><div class="qa-grid" id="casstatus-options"></div><div class="form-group" style="margin-top:13px"><label class="form-label">CAS Number (if issued)</label><input class="form-control" id="cas-number" type="text" placeholder="e.g. ABC123456789"></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="casstatus-notes" style="min-height:55px"></textarea></div></div>
   <div class="drawer-foot"><button class="btn-ghost" onclick="closeModal('modal-casstatus')">Cancel</button><button class="btn-gold" onclick="submitCASStatus()">Save</button></div>
 </aside>
 
@@ -1213,7 +1352,7 @@ textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.55; }
   <div class="drawer-head"><div><div class="drawer-title">Visa Status</div><div class="drawer-sub" id="visa-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-visa')">✕</button></div>
   <div class="drawer-body">
     <div class="qa-grid" id="visa-options"></div>
-    <div class="form-grid-2" style="margin-top:14px"><div class="form-group"><label class="form-label">Application Date</label><input class="form-control" id="visa-appdate" type="date"></div><div class="form-group"><label class="form-label">Decision Date</label><input class="form-control" id="visa-decdate" type="date"></div></div>
+    <div class="form-grid-2" style="margin-top:13px"><div class="form-group"><label class="form-label">Application Date</label><input class="form-control" id="visa-appdate" type="date"></div><div class="form-group"><label class="form-label">Decision Date</label><input class="form-control" id="visa-decdate" type="date"></div></div>
     <div class="form-group"><label class="form-label">GWF / Ref Number</label><input class="form-control" id="visa-ref" type="text" placeholder="e.g. GWF059123456"></div>
     <div id="visa-refusal-section" style="display:none"><div class="notice"><strong>Visa Refused</strong> — capture the refusal reason for CAS Shield records.</div><div class="form-group"><label class="form-label">Refusal Reason</label><textarea class="form-control" id="visa-refusal-reason" style="min-height:65px" placeholder="Summarise the ECO refusal notice…"></textarea></div></div>
     <div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="visa-notes" style="min-height:55px"></textarea></div>
@@ -1281,21 +1420,21 @@ textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.55; }
   </div>
 </aside>
 
-<!-- ═══════════════════════════════════════════
+<!-- ══════════════════════════════════
   PROFILE DRAWER
-═══════════════════════════════════════════ -->
+══════════════════════════════════ -->
 <aside class="profile-drawer" id="profile-drawer" role="dialog" aria-modal="true">
-  <div class="border-b border-slate-100 px-6 py-5 flex items-start justify-between flex-shrink-0">
+  <div style="border-bottom:1px solid var(--border-light);padding:18px 22px;display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0">
     <div>
-      <div class="font-display font-bold text-[15px] text-slate-900" id="profile-drawer-title">Student Profile</div>
-      <div class="text-[11px] text-slate-400 font-medium mt-0.5" id="profile-drawer-sub"></div>
+      <div style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14.5px;color:#1a2533" id="profile-drawer-title">Student Profile</div>
+      <div style="font-size:11px;color:#9BAAB8;font-weight:400;margin-top:2px" id="profile-drawer-sub"></div>
     </div>
-    <button class="w-8 h-8 rounded-lg bg-slate-100 border-none cursor-pointer flex items-center justify-center text-slate-400 hover:bg-slate-200 transition ml-3" onclick="closeProfileDrawer()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    <button style="width:28px;height:28px;border-radius:7px;background:#F7F8FA;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748B;flex-shrink:0;margin-left:12px" onclick="closeProfileDrawer()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
   </div>
 
-  <div class="flex-1 overflow-y-auto px-6 py-5" id="profile-drawer-body">
+  <div style="flex:1;overflow-y:auto;padding:18px 22px" id="profile-drawer-body">
     <div class="pd-section">
       <div class="pd-section-title">Sheet Fields <span class="readonly-badge">Read-only · Set in Google Sheet</span></div>
       <div class="pd-row-2">
@@ -1426,10 +1565,10 @@ textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.55; }
       </div>
     </div>
 
-    <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-[12px] font-medium" id="pd-save-error" style="display:none"></div>
+    <div style="background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;border-radius:8px;padding:11px 13px;font-size:12px;font-weight:500" id="pd-save-error" style="display:none"></div>
   </div>
 
-  <div class="border-t border-slate-100 px-6 py-4 flex justify-end gap-3 flex-shrink-0 bg-slate-50">
+  <div style="border-top:1px solid var(--border-light);padding:13px 22px;display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;background:#FAFBFC">
     <button class="btn-ghost" onclick="closeProfileDrawer()">Cancel</button>
     <button class="pd-btn-save" id="pd-save-btn" onclick="saveStudentProfile()">
       <span id="pd-save-text">Save changes</span>
@@ -1444,26 +1583,26 @@ textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.55; }
 <div class="pop-card" id="kebab-menu"></div>
 
 <!-- TOASTS -->
-<div class="fixed bottom-5 right-5 z-[999] space-y-2" id="toast-wrap"></div>
+<div style="position:fixed;bottom:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:8px" id="toast-wrap"></div>
 
 <!-- LOADING -->
-<div class="hidden fixed inset-0 bg-white/70 z-[90] flex items-center justify-center flex-col gap-3" id="loading">
+<div class="hidden" style="position:fixed;inset:0;background:rgba(255,255,255,.72);z-index:90;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px" id="loading">
   <div class="spinner"></div>
-  <span class="font-semibold text-[13px] text-slate-600" id="loading-msg">Processing…</span>
+  <span style="font-weight:600;font-size:12.5px;color:#64748B" id="loading-msg">Processing…</span>
 </div>
 
-<!-- ═══════════════════════════════════════════
-  JAVASCRIPT — ALL ORIGINAL LOGIC PRESERVED
-═══════════════════════════════════════════ -->
+<!-- ══════════════════════════════════
+  JAVASCRIPT — ALL ORIGINAL LOGIC
+══════════════════════════════════ -->
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────────────────
+// ── CONFIG ───────────────────────────────────────────────────────────────────
 const APPS_SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbzVg_S_d8Z8XyTjuF7ri5v9K9swAczaiF_CvruvJC-14fSC1IzEikF4O2YqWR4fR3XR/exec';
 const SESSION_KEY_ROLE = 'r2u_role';
 const SESSION_KEY_USER = 'r2u_userName';
 const SESSION_KEY_TIME = 'r2u_loginTime';
 const SESSION_TTL_MS   = 12 * 60 * 60 * 1000;
 
-// ── STATE ───────────────────────────────────────────────────────────────────
+// ── STATE ────────────────────────────────────────────────────────────────────
 let currentStaff      = { name: '', initials: '', role: 'Staff', email: '' };
 let allStudents       = [];
 let allCASData        = [];
@@ -1481,7 +1620,6 @@ const PAGE_LIMIT      = 100;
 let _totalRecords     = 0;
 let _isLoadingMore    = false;
 let _activePillFilter = { type: '', value: '' };
-let pipelineChart     = null;
 
 const PAGE_META = {
   dashboard: ['Dashboard','Every applicant, one screen.'],
@@ -1506,7 +1644,7 @@ const STAGE_DEFS = [
 function stageStatusList(s) { return STAGE_DEFS.map(st => ({ label: st.label, done: !!st.check(s) })); }
 function stageCurrentIndex(s) { const list = stageStatusList(s); const idx = list.findIndex(x => !x.done); return idx === -1 ? list.length : idx; }
 
-// ── BOOT ────────────────────────────────────────────────────────────────────
+// ── BOOT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('fb-date').value = today();
   const role      = localStorage.getItem(SESSION_KEY_ROLE);
@@ -1530,7 +1668,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (profileActiveId) closeProfileDrawer();
     }
   });
-  // Cmd input
   document.getElementById('cmd-input').addEventListener('keydown', e => {
     if (e.key === 'Enter') { const active = document.querySelector('.cmd-item.cmd-active'); if (active) active.click(); }
   });
@@ -1549,7 +1686,7 @@ function bootSession(name, role) {
   loadStudents();
 }
 
-// ── CRYPTO ──────────────────────────────────────────────────────────────────
+// ── CRYPTO ───────────────────────────────────────────────────────────────────
 async function hashPassword(plainText) {
   const encoder = new TextEncoder();
   const data    = encoder.encode(plainText);
@@ -1557,7 +1694,7 @@ async function hashPassword(plainText) {
   return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-// ── LOGIN ───────────────────────────────────────────────────────────────────
+// ── LOGIN ────────────────────────────────────────────────────────────────────
 async function handleLoginSubmit() {
   const usernameEl = document.getElementById('login-username');
   const passwordEl = document.getElementById('login-password');
@@ -1610,19 +1747,19 @@ function togglePasswordVisibility() {
 }
 function signOut() { localStorage.removeItem(SESSION_KEY_ROLE); localStorage.removeItem(SESSION_KEY_USER); localStorage.removeItem(SESSION_KEY_TIME); location.reload(); }
 
-// ── ROLE UI ─────────────────────────────────────────────────────────────────
+// ── ROLE UI ──────────────────────────────────────────────────────────────────
 function applyRoleUI(role) {
   const isAdmin = role === 'Admin';
   document.querySelectorAll('.admin-only').forEach(el => { el.style.display = isAdmin ? '' : 'none'; });
   if (!isAdmin) {
     const reportsCheck = document.getElementById('reports-access-check');
-    if (reportsCheck) reportsCheck.innerHTML = `<div class="access-denied"><div style="font-size:32px;margin-bottom:12px">🔒</div><div class="font-bold text-slate-600 text-[15px] mb-2">Access Restricted</div><div class="text-[13px]">Reports are available to Admin users only.</div></div>`;
+    if (reportsCheck) reportsCheck.innerHTML = `<div class="access-denied"><div style="font-size:30px;margin-bottom:10px">🔒</div><div style="font-weight:700;color:#64748B;font-size:14px;margin-bottom:6px">Access Restricted</div><div style="font-size:13px">Reports are available to Admin users only.</div></div>`;
     const uploadCheck = document.getElementById('upload-access-check');
-    if (uploadCheck) uploadCheck.innerHTML = `<div class="access-denied"><div style="font-size:32px;margin-bottom:12px">🔒</div><div class="font-bold text-slate-600 text-[15px] mb-2">Access Restricted</div><div class="text-[13px]">CSV Import is available to Admin users only.</div></div>`;
+    if (uploadCheck) uploadCheck.innerHTML = `<div class="access-denied"><div style="font-size:30px;margin-bottom:10px">🔒</div><div style="font-weight:700;color:#64748B;font-size:14px;margin-bottom:6px">Access Restricted</div><div style="font-size:13px">CSV Import is available to Admin users only.</div></div>`;
   }
 }
 
-// ── ICONS ────────────────────────────────────────────────────────────────────
+// ── ICONS ─────────────────────────────────────────────────────────────────────
 const ICN = {
   phone:    '<path d="M5 4h4l2 5-2.3 1.5a11.5 11.5 0 005.3 5.3L15.5 13l5 2v4a2 2 0 01-2.2 2A16.5 16.5 0 013 6.2 2 2 0 015 4z"/>',
   cap:      '<path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11.5v4.5c0 1.3 2.8 2.5 6 2.5s6-1.2 6-2.5v-4.5"/><path d="M22 9v5"/>',
@@ -1635,7 +1772,7 @@ const ICN = {
 };
 function icon(name, cls) { return `<svg class="${cls||''}" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICN[name]||''}</svg>`; }
 
-// ── CMD PALETTE ──────────────────────────────────────────────────────────────
+// ── CMD PALETTE ───────────────────────────────────────────────────────────────
 function openCmd() {
   const overlay = document.getElementById('cmd-overlay');
   overlay.classList.add('cmd-open');
@@ -1649,9 +1786,9 @@ function closeCmd() {
 function resetCmdResults() {
   document.getElementById('cmd-results').innerHTML = `
     <div class="cmd-section-label">Quick Actions</div>
-    <div class="cmd-item" onclick="cmdAction('dashboard')"><div class="cmd-item-icon">📊</div><div><div class="cmd-item-name">Dashboard</div><div class="cmd-item-meta">View all students & pipeline</div></div></div>
-    <div class="cmd-item" onclick="cmdAction('casshield')"><div class="cmd-item-icon">🛡️</div><div><div class="cmd-item-name">CAS Shield</div><div class="cmd-item-meta">Pre-CAS readiness checks</div></div></div>
-    <div class="cmd-item" onclick="cmdAction('feedback')"><div class="cmd-item-icon">📝</div><div><div class="cmd-item-name">Mock Pre-CAS</div><div class="cmd-item-meta">Build interview feedback</div></div></div>
+    <div class="cmd-item" onclick="cmdAction('dashboard')"><div class="cmd-item-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A07C20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg></div><div><div class="cmd-item-name">Dashboard</div><div class="cmd-item-meta">View all students & pipeline</div></div></div>
+    <div class="cmd-item" onclick="cmdAction('casshield')"><div class="cmd-item-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A07C20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5.5-3.8 9-8 11-4.2-2-8-5.5-8-11V7l8-4z"/></svg></div><div><div class="cmd-item-name">CAS Shield</div><div class="cmd-item-meta">Pre-CAS readiness checks</div></div></div>
+    <div class="cmd-item" onclick="cmdAction('feedback')"><div class="cmd-item-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A07C20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3.5" width="12" height="18" rx="2"/><path d="M9 3.5h6v3H9z"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div><div><div class="cmd-item-name">Mock Pre-CAS</div><div class="cmd-item-meta">Build interview feedback</div></div></div>
   `;
 }
 function cmdAction(view) {
@@ -1668,14 +1805,14 @@ function cmdSearch(q) {
     (s['COURSE']||'').toLowerCase().includes(q.toLowerCase())
   ).slice(0, 8);
   if (!matches.length) {
-    document.getElementById('cmd-results').innerHTML = '<div style="padding:28px;text-align:center;color:#94A3B8;font-size:13px">No students found</div>';
+    document.getElementById('cmd-results').innerHTML = '<div style="padding:26px;text-align:center;color:#9BAAB8;font-size:13px">No students found</div>';
     return;
   }
   document.getElementById('cmd-results').innerHTML =
     '<div class="cmd-section-label">Students</div>' +
     matches.map(s => `
       <div class="cmd-item" onclick="closeCmd();openStudentProfile('${(s['STUDENT ID']||'').replace(/'/g,"\\'")}')">
-        <div class="cmd-item-icon">👤</div>
+        <div class="cmd-item-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A07C20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
         <div>
           <div class="cmd-item-name">${s['STUDENT NAME']||'—'}</div>
           <div class="cmd-item-meta">${s['STUDENT ID']||''} · ${s['COURSE']||''} · ${s['AGENT']||'No agent'}</div>
@@ -1683,12 +1820,11 @@ function cmdSearch(q) {
       </div>
     `).join('');
 }
-// Close cmd overlay when clicking backdrop
 document.getElementById('cmd-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('cmd-overlay')) closeCmd();
 });
 
-// ── VIEW SWITCHING ───────────────────────────────────────────────────────────
+// ── VIEW SWITCHING ────────────────────────────────────────────────────────────
 function switchView(id, tab) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(t => t.classList.remove('active'));
@@ -1709,12 +1845,12 @@ function refreshCurrentView() {
   else showToast('Nothing to refresh here.','success');
 }
 
-// ── STATUS PILL FILTER HANDLERS ──────────────────────────────────────────────
+// ── PILL / SEGMENT FILTERS ────────────────────────────────────────────────────
 function setVisaFilter(val, btn) {
   _activePillFilter = val ? { type: 'visa', value: val } : { type: '', value: '' };
   document.getElementById('filter-visa').value  = val;
   document.getElementById('filter-offer').value = '';
-  document.querySelectorAll('.status-pill').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.seg-btn').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   filterTable();
 }
@@ -1722,21 +1858,20 @@ function setOfferFilter(val, btn) {
   _activePillFilter = { type: 'offer', value: val };
   document.getElementById('filter-offer').value = val;
   document.getElementById('filter-visa').value  = '';
-  document.querySelectorAll('.status-pill').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.seg-btn').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   filterTable();
 }
 function setCASFilter(val, btn) {
   _activePillFilter = { type: 'cas', value: val };
-  // Route through existing hidden selects as a pass-through: filter inline
   document.getElementById('filter-offer').value = '';
   document.getElementById('filter-visa').value  = '';
-  document.querySelectorAll('.status-pill').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.seg-btn').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   filterTable();
 }
 
-// ── API HELPERS ──────────────────────────────────────────────────────────────
+// ── API HELPERS ───────────────────────────────────────────────────────────────
 async function appsScriptGet(action, params = {}) {
   const url = new URL(APPS_SCRIPT_URL);
   url.searchParams.set('action', action);
@@ -1756,7 +1891,7 @@ async function appsScriptPost(action, body = {}) {
   return res.json();
 }
 
-// ── STUDENTS ─────────────────────────────────────────────────────────────────
+// ── STUDENTS ──────────────────────────────────────────────────────────────────
 async function loadStudents() {
   _currentPage = 1; _totalRecords = 0; allStudents = []; _isLoadingMore = false;
   const existingBtn = document.getElementById('load-more-btn');
@@ -1775,7 +1910,6 @@ async function loadStudents() {
   } finally {
     filterTable();
     updateStats(allStudents);
-    updatePipelineChart(allStudents);
     populateAgentFilter(allStudents);
     _renderLoadMoreButton();
     hideLoading();
@@ -1798,7 +1932,6 @@ async function loadMoreStudents() {
     _totalRecords  = data.totalRecords ?? _totalRecords;
     _appendTableRows(incoming);
     updateStats(allStudents);
-    updatePipelineChart(allStudents);
     _renderLoadMoreButton();
     showToast(`Loaded ${incoming.length} more ✓`, 'success');
   } catch(e) {
@@ -1809,68 +1942,36 @@ async function loadMoreStudents() {
   }
 }
 
-// ── PIPELINE CHART ───────────────────────────────────────────────────────────
-function updatePipelineChart(students) {
-  const counts = STAGE_DEFS.map(st => students.filter(s => st.check(s)).length);
-  const labels = STAGE_DEFS.map(st => st.label);
-  const total  = students.length || 1;
-  const el     = document.getElementById('chart-student-count');
-  if (el) el.textContent = `${students.length} students`;
-
-  const ctx = document.getElementById('pipeline-chart');
-  if (!ctx) return;
-
-  if (pipelineChart) { pipelineChart.destroy(); }
-
-  pipelineChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        data: counts,
-        backgroundColor: counts.map((_, i) => `rgba(212,168,51,${0.35 + (i/counts.length)*0.55})`),
-        borderColor:     'rgba(212,168,51,0.9)',
-        borderWidth: 1,
-        borderRadius: 5,
-        borderSkipped: false,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => ` ${ctx.parsed.y} students (${Math.round(ctx.parsed.y/total*100)}%)`
-          }
-        }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 9, family: 'Inter' }, color: '#94A3B8', maxRotation: 30 } },
-        y: { grid: { color: '#F8FAFC' }, ticks: { font: { size: 10, family: 'Inter' }, color: '#94A3B8' }, beginAtZero: true }
-      }
-    }
-  });
-}
-
 function _buildStudentRow(s) {
   const sid = s['STUDENT ID'] || '';
   const safeId = sid.replace(/'/g, "\\'");
+  const levelColor = s['LEVEL'] === 'PG' ? '#1D4ED8' : s['LEVEL'] === 'PHD' ? '#7C3AED' : '#64748B';
   return `<tr>
-    <td><span class="font-semibold text-[12px] text-slate-600">${sid}</span></td>
     <td>
-      <div class="font-semibold text-[13px] text-slate-800">${s['STUDENT NAME']||'—'}</div>
-      <div class="text-[10px] text-slate-400 mt-0.5 font-medium">${s['LEVEL']||''}</div>
+      <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:700;color:#64748B;letter-spacing:.02em">${sid}</span>
     </td>
-    <td><div class="text-[12px] text-slate-500 max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap" title="${s['COURSE']||''}">${s['COURSE']||'—'}</div></td>
-    <td><div class="text-[12px] text-slate-400">${s['AGENT']||'—'}</div></td>
+    <td>
+      <div style="font-weight:600;font-size:13px;color:#1a2533;line-height:1.3">${s['STUDENT NAME']||'—'}</div>
+      ${s['LEVEL'] ? `<span style="font-size:9.5px;font-weight:700;color:${levelColor};background:${levelColor}18;border-radius:4px;padding:1px 6px;margin-top:3px;display:inline-block">${s['LEVEL']}</span>` : ''}
+    </td>
+    <td>
+      <div style="font-size:12px;color:#64748B;max-width:155px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${s['COURSE']||''}">${s['COURSE']||'—'}</div>
+    </td>
+    <td>
+      <div style="font-size:11.5px;color:#9BAAB8;font-weight:500">${s['AGENT']||'—'}</div>
+    </td>
     <td>${renderPipelineCell(s)}</td>
-    <td class="text-right">
+    <td style="text-align:right">
       <div class="row-actions">
-        <button class="row-action-btn" onclick="openNotifyModal('${safeId}')" title="Send notification">🔔</button>
-        <button class="row-action-btn" onclick="openStudentProfile('${safeId}')" title="Edit profile">${icon('edit')}</button>
-        <button class="kebab-trigger kebab-btn" onclick="openKebabMenu(event,'${safeId}')" title="More actions">${icon('kebab')}</button>
+        <button class="row-action-btn" onclick="openNotifyModal('${safeId}')" title="Send notification">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        </button>
+        <button class="row-action-btn" onclick="openStudentProfile('${safeId}')" title="Edit profile">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="kebab-trigger kebab-btn" onclick="openKebabMenu(event,'${safeId}')" title="More actions">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="12" cy="19" r="1.3"/></svg>
+        </button>
       </div>
     </td>
   </tr>`;
@@ -1928,7 +2029,7 @@ function filterTable() {
   const visa  = document.getElementById('filter-visa').value;
   const pf    = _activePillFilter;
 
-  renderTable(allStudents.filter(s => {
+  const filtered = allStudents.filter(s => {
     if (q && ![s['STUDENT NAME'],s['STUDENT ID'],s['COURSE'],s['AGENT']].some(f => (f||'').toLowerCase().includes(q))) return false;
     if (agent && s['AGENT'] !== agent) return false;
     if (level && s['LEVEL'] !== level) return false;
@@ -1936,12 +2037,16 @@ function filterTable() {
     if (visa  && s['VISA STATUS']  !== visa)  return false;
     if (pf.type === 'cas' && s['CAS STATUS'] !== pf.value) return false;
     return true;
-  }));
+  });
+  renderTable(filtered);
+
+  const countEl = document.getElementById('table-shown-count');
+  if (countEl) countEl.textContent = filtered.length + ' of ' + allStudents.length + ' students';
 }
 
 function renderTable(students) {
   const tbody = document.getElementById('table-body');
-  if (!students.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No students found. Try adjusting the filters or click Refresh.</td></tr>'; return; }
+  if (!students.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No students match the current filter.</td></tr>'; return; }
   tbody.innerHTML = students.map(_buildStudentRow).join('');
 }
 
@@ -1950,7 +2055,7 @@ function renderPipelineCell(s) {
   const list      = stageStatusList(s);
   const curIdx    = stageCurrentIndex(s);
   const doneCount = list.filter(x => x.done).length;
-  const curLabel  = curIdx >= list.length ? 'Pipeline complete ✓' : list[curIdx].label;
+  const curLabel  = curIdx >= list.length ? 'Pipeline complete' : list[curIdx].label;
   const dots = list.map((st,i) => {
     const cls     = st.done ? 'pl-done' : (i===curIdx ? 'pl-current' : '');
     const lineCls = (i>0 && list[i-1].done) ? 'pl-line-done' : '';
@@ -1964,16 +2069,16 @@ function renderPipelineCell(s) {
   </div>`;
 }
 
-// ── QUICK POPOVER ─────────────────────────────────────────────────────────────
+// ── QUICK POPOVER ──────────────────────────────────────────────────────────────
 function positionPopover(pop, anchor) {
   const r = anchor.getBoundingClientRect();
   let left = r.left;
   if (left+210 > window.innerWidth) left = window.innerWidth-216;
-  pop.style.top  = (r.bottom+6)+'px';
+  pop.style.top  = (r.bottom+5)+'px';
   pop.style.left = Math.max(8,left)+'px';
 }
 
-// ── KEBAB MENU ────────────────────────────────────────────────────────────────
+// ── KEBAB MENU ─────────────────────────────────────────────────────────────────
 function openKebabMenu(e, sid) {
   e.stopPropagation();
   document.getElementById('badge-popover').classList.remove('show');
@@ -1991,7 +2096,7 @@ function openKebabMenu(e, sid) {
     <div class="pop-item" onclick="hideKebab();openVisaModal('${sid}')">${icon('send')} Visa status</div>
     <div class="pop-item" onclick="hideKebab();openSubmissionModal('${sid}')">${icon('send')} Application submission</div>
     <div class="pop-item" onclick="hideKebab();openFeedbackModal('${sid}')">${icon('clipboard')} ${hasDoc?'New mock feedback':'Add mock feedback'}</div>
-    <div class="pop-item" onclick="hideKebab();openNotifyModal('${sid}')">🔔&nbsp; Send Notification</div>
+    <div class="pop-item" onclick="hideKebab();openNotifyModal('${sid}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg> Send Notification</div>
     <div class="pop-item" onclick="hideKebab();openStudentProfile('${sid}')">${icon('edit')} Full profile / pipeline</div>
   `;
   positionPopover(menu, e.currentTarget);
@@ -1999,7 +2104,7 @@ function openKebabMenu(e, sid) {
 }
 function hideKebab() { document.getElementById('kebab-menu').classList.remove('show'); }
 
-// ── QA GRID ──────────────────────────────────────────────────────────────────
+// ── QA GRID ───────────────────────────────────────────────────────────────────
 function buildQAGrid(containerId, options, currentVal) {
   const container = document.getElementById(containerId);
   activeQuickVal  = currentVal || null;
@@ -2045,7 +2150,7 @@ async function saveField(studentId, field, value, notes='') {
     if (!result.success) throw new Error(result.error);
     const s = allStudents.find(s => s['STUDENT ID']===studentId);
     if (s) s[field] = value;
-    filterTable(); updateStats(allStudents); updatePipelineChart(allStudents);
+    filterTable(); updateStats(allStudents);
     showToast('Updated ✓','success');
   } catch(e) {
     showToast('Failed: '+e.message,'error');
@@ -2054,7 +2159,7 @@ async function saveField(studentId, field, value, notes='') {
   }
 }
 
-// ── DRAWER OPENERS ────────────────────────────────────────────────────────────
+// ── DRAWER OPENERS ─────────────────────────────────────────────────────────────
 function studentSub(sid) { const s=allStudents.find(s=>s['STUDENT ID']===sid); return `${s?s['STUDENT NAME']||sid:sid} · ${sid}`; }
 
 function openPreScreeningModal(sid) {
@@ -2220,7 +2325,7 @@ async function submitFeedback() {
   }
 }
 
-// ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
+// ── NOTIFICATIONS ──────────────────────────────────────────────────────────────
 let notifyActiveStudentId = null;
 
 function openNotifyModal(sid) {
@@ -2298,7 +2403,7 @@ async function sendNotification() {
   }
 }
 
-// ── CAS SHIELD ────────────────────────────────────────────────────────────────
+// ── CAS SHIELD ─────────────────────────────────────────────────────────────────
 async function loadCASShield() {
   try {
     showLoading('Fetching CAS Shield…');
@@ -2318,20 +2423,20 @@ function renderCASTable(records) {
   tbody.innerHTML = records.map(r => {
     const aid = (r['Applicant ID']||'').replace(/'/g,"\\'");
     return `<tr>
-      <td><strong class="text-[12px]">${r['Applicant ID']||''}</strong></td>
-      <td>${r['Applicant Name']||''}</td>
-      <td class="text-slate-500">${r['Agent (Name)']||''}</td>
-      <td class="text-slate-500">${r['Nationality']||''}</td>
-      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis">${r['Course Name']||''}</td>
-      <td class="text-slate-500">${r['Team Member']||''}</td>
+      <td><strong style="font-size:12px;color:#1a2533">${r['Applicant ID']||''}</strong></td>
+      <td style="font-weight:600">${r['Applicant Name']||''}</td>
+      <td style="color:#9BAAB8;font-size:12px">${r['Agent (Name)']||''}</td>
+      <td style="color:#9BAAB8;font-size:12px">${r['Nationality']||''}</td>
+      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:#64748B">${r['Course Name']||''}</td>
+      <td style="color:#9BAAB8;font-size:12px">${r['Team Member']||''}</td>
       <td>${ynBadge(r['Study Gap Y/N'])}</td>
       <td>${ynBadge(r['Same Level Studies Y/N'])}</td>
       <td>${ynBadge(r['Visa Refusal Y/N'],'warn')}</td>
       <td>${ynBadge(r['Ready for PCI'])}</td>
       <td>${ynBadge(r['Information check on CAS Shield completed? Y/N'])}</td>
       <td>${ynBadge(r['Pre-CAS questionnaire on CAS shield Completed? Y/N'])}</td>
-      <td class="text-[11px] text-slate-500">${r['PCI Invite']||'—'}</td>
-      <td class="text-right"><button class="btn-primary text-[11px] py-1.5 px-3" onclick="openCASModal('${aid}')">Update</button></td>
+      <td style="font-size:11px;color:#9BAAB8">${r['PCI Invite']||'—'}</td>
+      <td style="text-align:right"><button class="btn-primary" style="font-size:11px;padding:5px 12px" onclick="openCASModal('${aid}')">Update</button></td>
     </tr>`;
   }).join('');
 }
@@ -2393,7 +2498,7 @@ async function submitCASUpdate() {
   } finally { hideLoading(); }
 }
 
-// ── FEEDBACK TOOL ─────────────────────────────────────────────────────────────
+// ── FEEDBACK TOOL ──────────────────────────────────────────────────────────────
 function fbSearchStudents(q) {
   const results = document.getElementById('fb-lookup');
   if (!q.trim()||q.length<2) { results.classList.remove('open'); return; }
@@ -2401,7 +2506,7 @@ function fbSearchStudents(q) {
     (s['STUDENT NAME']||'').toLowerCase().includes(q.toLowerCase()) ||
     (s['STUDENT ID']||'').toLowerCase().includes(q.toLowerCase())
   ).slice(0,8);
-  if (!matches.length) { results.innerHTML='<div style="padding:14px;color:#94A3B8;font-size:12px;text-align:center">No students found</div>'; results.classList.add('open'); return; }
+  if (!matches.length) { results.innerHTML='<div style="padding:14px;color:#9BAAB8;font-size:12px;text-align:center">No students found</div>'; results.classList.add('open'); return; }
   results.innerHTML = matches.map(s =>
     `<div class="lookup-item" onclick="fbSelectStudent('${(s['STUDENT ID']||'').replace(/'/g,"\\'")}')"><div class="lookup-item-name">${s['STUDENT NAME']||'—'}</div><div class="lookup-item-id">${s['STUDENT ID']||''} · ${s['COURSE']||''}</div></div>`
   ).join('');
@@ -2429,7 +2534,7 @@ function getFbData() {
 function buildDocHTML(data) {
   const perfClass={'Excellent':'perf-excellent','Good':'perf-good','Satisfactory':'perf-satisfactory','Needs Improvement':'perf-needs'}[data.performance]||'perf-good';
   const dateFormatted=data.sessionDate?new Date(data.sessionDate).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'—';
-  return `<div class="doc-header"><div style="font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px">Route 2 University (R2U) — Internal Document</div><div class="doc-title">${data.sessionType} Feedback Report</div><div class="doc-meta"><div class="doc-meta-item"><div class="doc-meta-label">Student</div><div class="doc-meta-value">${data.studentName}</div></div><div class="doc-meta-item"><div class="doc-meta-label">Student ID</div><div class="doc-meta-value">${data.studentId||'—'}</div></div><div class="doc-meta-item"><div class="doc-meta-label">Date</div><div class="doc-meta-value">${dateFormatted}</div></div>${data.studentCourse?`<div class="doc-meta-item"><div class="doc-meta-label">Course</div><div class="doc-meta-value">${data.studentCourse}</div></div>`:''}<div class="doc-meta-item"><div class="doc-meta-label">Performance</div><div class="doc-meta-value"><span class="perf-badge ${perfClass}">${data.performance}</span></div></div></div></div><div class="doc-section"><div class="doc-section-title">Detailed Feedback</div><div class="doc-text">${(data.feedback||'—').replace(/\n/g,'<br>')}</div></div>${data.recommendations?`<div class="doc-section"><div class="doc-section-title">Recommendations</div><div class="doc-text">${data.recommendations.replace(/\n/g,'<br>')}</div></div>`:''}<div class="doc-footer"><span>Generated by R2U Student Portal</span><span>Conducted by: ${data.staffName}</span></div>`;
+  return `<div class="doc-header"><div style="font-size:9.5px;font-weight:700;color:#9BAAB8;text-transform:uppercase;letter-spacing:.12em;margin-bottom:5px">Route 2 University (R2U) — Internal Document</div><div class="doc-title">${data.sessionType} Feedback Report</div><div class="doc-meta"><div class="doc-meta-item"><div class="doc-meta-label">Student</div><div class="doc-meta-value">${data.studentName}</div></div><div class="doc-meta-item"><div class="doc-meta-label">Student ID</div><div class="doc-meta-value">${data.studentId||'—'}</div></div><div class="doc-meta-item"><div class="doc-meta-label">Date</div><div class="doc-meta-value">${dateFormatted}</div></div>${data.studentCourse?`<div class="doc-meta-item"><div class="doc-meta-label">Course</div><div class="doc-meta-value">${data.studentCourse}</div></div>`:''}<div class="doc-meta-item"><div class="doc-meta-label">Performance</div><div class="doc-meta-value"><span class="perf-badge ${perfClass}">${data.performance}</span></div></div></div></div><div class="doc-section"><div class="doc-section-title">Detailed Feedback</div><div class="doc-text">${(data.feedback||'—').replace(/\n/g,'<br>')}</div></div>${data.recommendations?`<div class="doc-section"><div class="doc-section-title">Recommendations</div><div class="doc-text">${data.recommendations.replace(/\n/g,'<br>')}</div></div>`:''}<div class="doc-footer"><span>Generated by R2U Student Portal</span><span>Conducted by: ${data.staffName}</span></div>`;
 }
 function fbPreview() {
   const data=getFbData();
@@ -2484,7 +2589,7 @@ function resetFeedback() {
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// ── UPLOAD ────────────────────────────────────────────────────────────────────
+// ── UPLOAD ─────────────────────────────────────────────────────────────────────
 function handleFileSelect(e) { parseFile(e.target.files[0]); }
 function handleDrop(e) { e.preventDefault();document.getElementById('drop-zone').classList.remove('drag-over');parseFile(e.dataTransfer.files[0]); }
 function parseFile(file) { if(!file)return;Papa.parse(file,{header:true,skipEmptyLines:true,complete:r=>{parsedCSVData=r.data;showPreview(file.name,r.data);},error:err=>showToast('Parse error: '+err.message,'error')}); }
@@ -2495,14 +2600,14 @@ async function confirmUpload() {
   try{showLoading('Uploading…');const r=await appsScriptPost('uploadCSV',{rows:parsedCSVData});if(!r.success)throw new Error(r.error);showToast(`Imported ${r.added||0} new, updated ${r.updated||0} records ✓`,'success');clearUpload();loadStudents();}catch(e){showToast('Upload failed: '+e.message,'error');}finally{hideLoading();}
 }
 
-// ── EXPORT ────────────────────────────────────────────────────────────────────
+// ── EXPORT ──────────────────────────────────────────────────────────────────────
 function exportStudentsCSV() {
   if(!allStudents.length){showToast('No student data loaded to export.','error');return;}
   const rows=allStudents.map(s=>{const list=stageStatusList(s);const base={'STUDENT ID':s['STUDENT ID']||'','STUDENT NAME':s['STUDENT NAME']||'','COURSE':s['COURSE']||'','AGENT':s['AGENT']||'','LEVEL':s['LEVEL']||''};list.forEach(st=>{base[st.label]=st.done?'Done':'Pending';});base['PIPELINE PROGRESS']=list.filter(x=>x.done).length+'/'+list.length;return base;});
   try{const csv=Papa.unparse(rows);const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='R2U_Students_Export_'+today()+'.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);showToast('CSV exported ✓','success');}catch(e){showToast('Export failed: '+e.message,'error');}
 }
 
-// ── REPORTS ───────────────────────────────────────────────────────────────────
+// ── REPORTS ────────────────────────────────────────────────────────────────────
 async function loadReports() {
   if (currentStaff.role !== 'Admin') return;
   const grid = document.getElementById('report-grid');
@@ -2528,20 +2633,20 @@ function renderReports(report) {
   const grid=document.getElementById('report-grid');if(!report){grid.innerHTML='<div class="empty-state">No data.</div>';return;}
   const funnel=buildPipelineFunnel(allStudents.length?allStudents:[]);const funnelTotal=allStudents.length||1;
   const funnelBars=Object.entries(funnel).map(([label,cnt])=>{const pct=Math.round(cnt/funnelTotal*100);return`<div class="report-bar-item"><div class="report-bar-label">${label}</div><div class="report-bar-track"><div class="report-bar-fill" style="width:${pct}%"></div></div><div class="report-bar-count">${cnt}</div></div>`;}).join('');
-  const funnelCard=`<div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm md:col-span-2"><div class="text-[12.5px] font-bold text-slate-800 mb-4 pb-3 border-b border-slate-100 flex items-center justify-between"><span>Pipeline Funnel (10 stages)</span><span class="text-slate-400 font-medium text-[11px]">${allStudents.length} students</span></div>${funnelBars||'<div class="empty-state">No data</div>'}</div>`;
+  const funnelCard=`<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow-xs);grid-column:span 2"><div style="font-size:12.5px;font-weight:700;color:#1a2533;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between"><span>Pipeline Funnel (10 stages)</span><span style="color:#9BAAB8;font-weight:500;font-size:11px">${allStudents.length} students</span></div>${funnelBars||'<div class="empty-state">No data</div>'}</div>`;
   const sections=[{title:'Offer Status',data:report.offer},{title:'CAS Status',data:report.cas},{title:'Visa Status',data:report.visa},{title:'Payment',data:report.payment}];
-  const otherCards=sections.map(sec=>{const total=Object.values(sec.data||{}).reduce((a,b)=>a+b,0);const bars=Object.entries(sec.data||{}).map(([label,cnt])=>{const pct=total?Math.round(cnt/total*100):0;return`<div class="report-bar-item"><div class="report-bar-label">${label}</div><div class="report-bar-track"><div class="report-bar-fill" style="width:${pct}%"></div></div><div class="report-bar-count">${cnt}</div></div>`;}).join('');return`<div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm"><div class="text-[12.5px] font-bold text-slate-800 mb-4 pb-3 border-b border-slate-100 flex items-center justify-between"><span>${sec.title}</span><span class="text-slate-400 font-medium text-[11px]">${total} total</span></div>${bars||'<div class="empty-state">No data</div>'}</div>`;}).join('');
+  const otherCards=sections.map(sec=>{const total=Object.values(sec.data||{}).reduce((a,b)=>a+b,0);const bars=Object.entries(sec.data||{}).map(([label,cnt])=>{const pct=total?Math.round(cnt/total*100):0;return`<div class="report-bar-item"><div class="report-bar-label">${label}</div><div class="report-bar-track"><div class="report-bar-fill" style="width:${pct}%"></div></div><div class="report-bar-count">${cnt}</div></div>`;}).join('');return`<div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow-xs)"><div style="font-size:12.5px;font-weight:700;color:#1a2533;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;justify-content:space-between"><span>${sec.title}</span><span style="color:#9BAAB8;font-weight:500;font-size:11px">${total} total</span></div>${bars||'<div class="empty-state">No data</div>'}</div>`;}).join('');
   grid.innerHTML=funnelCard+otherCards;
 }
 
-// ── DRAWERS ────────────────────────────────────────────────────────────────────
+// ── DRAWERS ─────────────────────────────────────────────────────────────────────
 function openModal(id)  { document.getElementById(id).classList.add('drawer-open');    document.getElementById('drawer-overlay').classList.add('show'); }
 function closeModal(id) { document.getElementById(id).classList.remove('drawer-open'); document.getElementById('drawer-overlay').classList.remove('show'); }
 document.getElementById('drawer-overlay').addEventListener('click', () => {
   document.querySelectorAll('.drawer.drawer-open').forEach(d => closeModal(d.id));
 });
 
-// ── PROFILE DRAWER ─────────────────────────────────────────────────────────────
+// ── PROFILE DRAWER ──────────────────────────────────────────────────────────────
 function renderPipelineList(s) {
   return stageStatusList(s).map((st,i)=>
     `<div class="stage-row"><div class="stage-row-left"><span class="stage-num">${i+1}</span><div class="stage-dot-lg ${st.done?'stage-done':''}">${st.done?'✓':''}</div><span class="stage-name">${st.label}</span></div><span class="badge ${st.done?'badge-green':'badge-gray'}">${st.done?'Done':'Pending'}</span></div>`
@@ -2612,7 +2717,7 @@ async function saveStudentProfile() {
   btn.disabled=true; btnText.textContent='Saving…'; spinner.style.display='inline-block';
   const s = allStudents.find(s=>s['STUDENT ID']===studentId);
   const snapshot = s ? {...s} : null;
-  if(s){ Object.assign(s, patch); filterTable(); updateStats(allStudents); updatePipelineChart(allStudents); document.getElementById('pd-pipeline-list').innerHTML=renderPipelineList(s); }
+  if(s){ Object.assign(s, patch); filterTable(); updateStats(allStudents); document.getElementById('pd-pipeline-list').innerHTML=renderPipelineList(s); }
   closeProfileDrawer();
   showToast('Saving profile…','success');
   try {
@@ -2626,7 +2731,7 @@ async function saveStudentProfile() {
     if(!data.success) throw new Error(data.error||'Unknown error');
     showToast('Profile saved ✓','success');
   } catch(err) {
-    if(s&&snapshot){ const idx=allStudents.findIndex(x=>x['STUDENT ID']===studentId); if(idx!==-1) allStudents[idx]=snapshot; filterTable(); updateStats(allStudents); updatePipelineChart(allStudents); }
+    if(s&&snapshot){ const idx=allStudents.findIndex(x=>x['STUDENT ID']===studentId); if(idx!==-1) allStudents[idx]=snapshot; filterTable(); updateStats(allStudents); }
     showToast('Save failed — changes reverted. '+err.message,'error');
   } finally {
     btn.disabled=false; btnText.textContent='Save changes'; spinner.style.display='none';
@@ -2634,12 +2739,18 @@ async function saveStudentProfile() {
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────────────────
-function showLoading(msg) { document.getElementById('loading-msg').textContent=msg||'Processing…'; document.getElementById('loading').classList.remove('hidden'); }
-function hideLoading()    { document.getElementById('loading').classList.add('hidden'); }
+function showLoading(msg) {
+  const el = document.getElementById('loading');
+  document.getElementById('loading-msg').textContent=msg||'Processing…';
+  el.style.display='flex';
+}
+function hideLoading() {
+  document.getElementById('loading').style.display='none';
+}
 function showToast(msg, type='success') {
   const wrap=document.getElementById('toast-wrap');const t=document.createElement('div');
   t.className='toast '+type;
-  t.innerHTML=(type==='success'?'<span style="color:#D4A833">✓</span>&nbsp;':'<span style="color:#EF4444">✕</span>&nbsp;')+msg;
+  t.innerHTML=(type==='success'?'<span style="color:var(--gold)">✓</span>&nbsp;':'<span style="color:#EF4444">✕</span>&nbsp;')+msg;
   wrap.appendChild(t); setTimeout(()=>t.remove(),4000);
 }
 
