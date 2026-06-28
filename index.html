@@ -172,6 +172,26 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
 .filter-pill{background:#fff;border:1px solid #E2E8F0;border-radius:9px;padding:8px 12px;font-size:12px;font-family:inherit;color:#334155;outline:none;cursor:pointer;}
 .filter-pill:focus{border-color:var(--gold);}
 
+/* ── PIPELINE TRACKER ── */
+.pipeline-wrap{display:flex;align-items:center;gap:0;cursor:pointer;padding:4px 2px;border-radius:8px;transition:background .15s;}
+.pipeline-wrap:hover{background:#F8FAFC;}
+.pl-dot{width:9px;height:9px;border-radius:50%;background:#E2E8F0;flex-shrink:0;position:relative;transition:background .15s,transform .15s;border:1.5px solid #fff;}
+.pl-dot.pl-done{background:var(--gold);}
+.pl-dot.pl-current{background:#fff;border:2px solid var(--gold);box-shadow:0 0 0 3px rgba(212,168,51,.18);}
+.pl-line{width:9px;height:2px;background:#E2E8F0;flex-shrink:0;}
+.pl-line.pl-line-done{background:var(--gold);}
+.pipeline-wrap:hover .pl-dot{transform:scale(1.15);}
+.pl-label{font-size:10.5px;color:#64748B;font-weight:700;margin-left:8px;white-space:nowrap;min-width:108px;}
+.pl-count-chip{font-size:10px;font-weight:700;color:var(--gold-dim);background:var(--gold-soft);border-radius:6px;padding:2px 6px;margin-left:6px;flex-shrink:0;}
+
+.stage-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #F1F5F9;}
+.stage-row:last-child{border-bottom:none;}
+.stage-row-left{display:flex;align-items:center;gap:10px;}
+.stage-dot-lg{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:800;background:#F1F5F9;color:#94A3B8;}
+.stage-dot-lg.stage-done{background:#DCFCE7;color:#15803D;}
+.stage-name{font-size:12.5px;font-weight:600;color:#1E293B;}
+.stage-num{font-size:9.5px;color:#CBD5E1;font-weight:700;width:14px;}
+
 /* ── LOGIN OVERLAY ── */
 .login-overlay{position:fixed;inset:0;background:#0F1F2D;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .25s ease;}
 .login-overlay.login-hidden{opacity:0;pointer-events:none;}
@@ -232,6 +252,9 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
 .pd-btn-save:active:not(:disabled){transform:scale(.97);}
 .pd-btn-save:disabled{opacity:.6;cursor:not-allowed;}
 .pd-save-spinner{width:14px;height:14px;border:2px solid rgba(15,31,45,.3);border-top-color:#0F1F2D;border-radius:50%;animation:spin .75s linear infinite;}
+
+.export-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:9px;border:1px solid #E2E8F0;background:#fff;color:#334155;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
+.export-btn:hover{border-color:var(--gold);background:var(--gold-soft);color:var(--gold-dim);}
 
 @media(max-width:900px){
   #sidebar{transform:translateX(-100%);}
@@ -347,6 +370,10 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
       <p class="text-[11.5px] text-slate-400 font-medium" id="page-subtitle">Every applicant, one screen.</p>
     </div>
     <div class="flex items-center gap-2">
+      <button class="export-btn" id="dash-export-btn" onclick="exportStudentsCSV()" title="Export visible students to CSV">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </button>
       <button class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition" onclick="refreshCurrentView()" title="Refresh">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 10-2.6 6.4"/><polyline points="21 4 21 12 13 12"/></svg>
       </button>
@@ -377,8 +404,8 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
       <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
         <div class="overflow-auto" style="max-height:62vh">
           <table class="dtable" id="student-table">
-            <thead><tr><th style="min-width:160px">Student</th><th style="min-width:150px">Course / Agent</th><th>Call</th><th>Offer</th><th>CAS</th><th>Visa</th><th>Payment</th><th class="text-right" style="min-width:90px"></th></tr></thead>
-            <tbody id="table-body"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
+            <thead><tr><th style="min-width:90px">Student ID</th><th style="min-width:150px">Student Name</th><th style="min-width:150px">Course</th><th style="min-width:110px">Agent</th><th style="min-width:260px">Pipeline (10 stages)</th><th class="text-right" style="min-width:90px"></th></tr></thead>
+            <tbody id="table-body"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -466,6 +493,12 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
 
     <!-- ══ REPORTS ══ -->
     <div class="view" id="view-reports">
+      <div class="flex items-center justify-end mb-4">
+        <button class="export-btn" onclick="exportStudentsCSV()" title="Export all student data to CSV">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="report-grid"><div class="empty-state">Loading reports…</div></div>
     </div>
 
@@ -503,25 +536,34 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
   </div>
   <div class="profile-drawer-body" id="profile-drawer-body">
     <div class="pd-section">
+      <div class="pd-section-title">Pipeline Progress</div>
+      <div id="pd-pipeline-list"></div>
+    </div>
+    <div class="pd-section">
       <div class="pd-section-title">Contact &amp; Personal</div>
       <div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-mobile">Mobile</label><input class="pd-input" id="pd-mobile" type="tel" placeholder="+44 7XXX XXXXXX"></div><div class="pd-field"><label class="pd-label" for="pd-email">Email</label><input class="pd-input" id="pd-email" type="email" placeholder="student@email.com"></div></div>
       <div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-dob">Date of Birth</label><input class="pd-input" id="pd-dob" type="date"></div><div class="pd-field"><label class="pd-label" for="pd-edu">Education Type</label><select class="pd-input" id="pd-edu"><option value="">— Select —</option><option>High School</option><option>Foundation</option><option>Diploma</option><option>Bachelor's</option><option>Master's</option><option>PhD</option><option>Professional</option></select></div></div>
     </div>
     <div class="pd-section">
-      <div class="pd-section-title">Application Status</div>
+      <div class="pd-section-title">Stage 1 · Application &amp; Offer</div>
+      <div class="pd-field"><label class="pd-label" for="pd-app-date">Application Submitted Date</label><input class="pd-input" id="pd-app-date" type="date"></div>
       <div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-call">Pre-Screening Call</label><select class="pd-input" id="pd-call"><option value="">— Select —</option><option>Not Called</option><option>Scheduled</option><option>Called – Interested</option><option>Called – Not Interested</option><option>No Answer</option><option>Voicemail Left</option></select></div><div class="pd-field"><label class="pd-label" for="pd-offer">Offer Status</label><select class="pd-input" id="pd-offer"><option value="">— Select —</option><option>Pending</option><option>Conditional</option><option>Unconditional</option><option>Received</option><option>Rejected</option><option>Withdrawn</option></select></div></div>
-      <div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-scholarship">Scholarship</label><select class="pd-input" id="pd-scholarship"><option value="">— Select —</option><option>None</option><option>Partial</option><option>Full</option><option>Bursary</option><option>Sponsorship</option></select></div><div class="pd-field"><label class="pd-label" for="pd-payment">Payment</label><select class="pd-input" id="pd-payment"><option value="">— Select —</option><option>Unpaid</option><option>Deposit Paid</option><option>Partially Paid</option><option>Paid</option><option>Refunded</option><option>Deferred</option></select></div></div>
+      <div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-scholarship">Scholarship</label><select class="pd-input" id="pd-scholarship"><option value="">— Select —</option><option>None</option><option>Partial</option><option>Full</option><option>Bursary</option><option>Sponsorship</option></select></div><div class="pd-field"><label class="pd-label" for="pd-payment">Payment (Tuition)</label><select class="pd-input" id="pd-payment"><option value="">— Select —</option><option>Unpaid</option><option>Deposit Paid</option><option>Partially Paid</option><option>Paid</option><option>Refunded</option><option>Deferred</option></select></div></div>
     </div>
     <div class="pd-section">
-      <div class="pd-section-title">CAS &amp; Visa</div>
-      <div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-cas-shield">CAS Shield</label><select class="pd-input" id="pd-cas-shield"><option value="">— Select —</option><option>Not Started</option><option>In Progress</option><option>Completed</option><option>On Hold</option></select></div><div class="pd-field"><label class="pd-label" for="pd-cas-status">CAS Status</label><select class="pd-input" id="pd-cas-status"><option value="">— Select —</option><option>Not Applied</option><option>Applied</option><option>Pending</option><option>Issued</option><option>Rejected</option><option>Withdrawn</option></select></div></div>
-      <div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-mock">Mock Pre-CAS</label><select class="pd-input" id="pd-mock"><option value="">— Select —</option><option>Not Scheduled</option><option>Scheduled</option><option>Completed</option><option>Passed</option><option>Needs Improvement</option></select></div><div class="pd-field"><label class="pd-label" for="pd-precas">Pre-CAS Interview</label><select class="pd-input" id="pd-precas"><option value="">— Select —</option><option>Not Scheduled</option><option>Scheduled</option><option>Completed</option><option>Passed</option><option>Failed</option></select></div></div>
+      <div class="pd-section-title">Stage 2 · Mock &amp; Pre-CAS</div>
+      <div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-mock">Mock Interview Prep</label><select class="pd-input" id="pd-mock"><option value="">— Select —</option><option>Not Scheduled</option><option>Scheduled</option><option>Completed</option></select></div><div class="pd-field"><label class="pd-label" for="pd-precas">Pre-CAS Interview</label><select class="pd-input" id="pd-precas"><option value="">— Select —</option><option>Not Scheduled</option><option>Scheduled</option><option>Completed</option><option>Passed</option><option>Failed</option></select></div></div>
+      <div class="pd-field"><label class="pd-label" for="pd-cas-shield">CAS Shield</label><select class="pd-input" id="pd-cas-shield"><option value="">— Select —</option><option>Not Started</option><option>In Progress</option><option>Completed</option><option>On Hold</option></select></div>
+    </div>
+    <div class="pd-section">
+      <div class="pd-section-title">Stage 3 · CAS &amp; Visa</div>
+      <div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-cas-payment">CAS Payment</label><select class="pd-input" id="pd-cas-payment"><option value="">— Select —</option><option>Unpaid</option><option>Paid</option></select></div><div class="pd-field"><label class="pd-label" for="pd-cas-requested">CAS Requested</label><select class="pd-input" id="pd-cas-requested"><option value="">— Select —</option><option>Not Requested</option><option>Requested</option></select></div></div>
+      <div class="pd-field"><label class="pd-label" for="pd-cas-status">CAS Status (Received when Issued)</label><select class="pd-input" id="pd-cas-status"><option value="">— Select —</option><option>Not Applied</option><option>Applied</option><option>Pending</option><option>Issued</option><option>Rejected</option><option>Withdrawn</option></select></div>
       <div class="pd-field"><label class="pd-label" for="pd-visa">Visa Status</label><select class="pd-input" id="pd-visa"><option value="">— Select —</option><option>Not Applied</option><option>Biometrics Booked</option><option>Submitted</option><option>Pending</option><option>Approved</option><option>Refused</option><option>Withdrawn</option></select></div>
     </div>
     <div class="pd-section">
       <div class="pd-section-title">Key Dates</div>
       <div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-cond-date">Condition Docs Received</label><input class="pd-input" id="pd-cond-date" type="date"></div><div class="pd-field"><label class="pd-label" for="pd-pay-date">Payment Date</label><input class="pd-input" id="pd-pay-date" type="date"></div></div>
-      <div class="pd-field"><label class="pd-label" for="pd-app-date">Application Submitted Date</label><input class="pd-input" id="pd-app-date" type="date"></div>
     </div>
     <div class="pd-save-error" id="pd-save-error" style="display:none"></div>
   </div>
@@ -568,6 +610,25 @@ const PAGE_META = {
   upload:    ['Import CSV','Bring new applicants into the sheet.'],
   reports:   ['Reports','Live pipeline breakdowns.']
 };
+
+// ── PIPELINE STAGE DEFINITIONS (10 stages) ───────────────────────────
+// NOTE: 'MOCK INTERVIEW STATUS', 'CAS PAYMENT STATUS', 'CAS REQUESTED STATUS'
+// are NEW fields. Add matching columns to the Google Sheet + Apps Script
+// (updateStatus / updateStudentProfile actions) so these persist server-side.
+const STAGE_DEFS = [
+  {label:'Application Submitted', check:s => !!(s['APPLICATION SUBMITTED DATE'])},
+  {label:'Pre-Screening Call',    check:s => /interested|scheduled|no answer|voicemail/i.test(s['PRE-SCREENING CALL STATUS']||'')},
+  {label:'Conditional Offer',     check:s => /conditional|unconditional|received/i.test(s['OFFER STATUS']||'')},
+  {label:'Unconditional Offer',   check:s => /unconditional|received/i.test(s['OFFER STATUS']||'')},
+  {label:'Mock Interview Prep',   check:s => s['MOCK INTERVIEW STATUS']==='Completed' || /^https?:/i.test(s['MOCK PRE-CAS']||'')},
+  {label:'Pre-CAS Interview Cleared', check:s => /passed/i.test(s['PRE-CAS INTERVIEW']||'')},
+  {label:'CAS Payment',           check:s => s['CAS PAYMENT STATUS']==='Paid'},
+  {label:'CAS Requested',         check:s => s['CAS REQUESTED STATUS']==='Requested' || /applied|pending|issued/i.test(s['CAS STATUS']||'')},
+  {label:'CAS Received',          check:s => /issued/i.test(s['CAS STATUS']||'')},
+  {label:'Visa Received',         check:s => /approved/i.test(s['VISA STATUS']||'')},
+];
+function stageStatusList(s){ return STAGE_DEFS.map(st => ({label:st.label, done:!!st.check(s)})); }
+function stageCurrentIndex(s){ const list=stageStatusList(s); let idx=list.findIndex(x=>!x.done); return idx===-1?list.length:idx; }
 
 // ── BOOT ────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -708,6 +769,7 @@ function switchView(id,tab){
   const meta=PAGE_META[id]||['',''];
   document.getElementById('page-title').textContent=meta[0];
   document.getElementById('page-subtitle').textContent=meta[1];
+  document.getElementById('dash-export-btn').style.display = id==='dashboard' ? '' : 'none';
   if(id==='reports') loadReports();
   if(id==='casshield') loadCASShield();
 }
@@ -787,20 +849,16 @@ function populateAgentFilter(students){
 // ── RENDER TABLE ─────────────────────────────────────────────────────
 function renderTable(students){
   const tbody=document.getElementById('table-body');
-  if(!students.length){ tbody.innerHTML='<tr><td colspan="8" class="empty-state">No students found.</td></tr>'; return; }
+  if(!students.length){ tbody.innerHTML='<tr><td colspan="6" class="empty-state">No students found.</td></tr>'; return; }
   tbody.innerHTML=students.map(s=>{
     const sid=s['STUDENT ID']||'';
-    const hasDoc=s['MOCK PRE-CAS']&&s['MOCK PRE-CAS'].startsWith('http');
     return `<tr>
-      <td><div class="font-semibold text-[13px] text-slate-800">${s['STUDENT NAME']||''}</div><div class="text-[10.5px] text-slate-400 mt-0.5">${sid}${s['LEVEL']?' · '+s['LEVEL']:''}</div></td>
-      <td><div class="text-[12px] text-slate-600 max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap" title="${s['COURSE']||''}">${s['COURSE']||'—'}</div><div class="text-[10.5px] text-slate-400 mt-0.5">${s['AGENT']||'—'}</div></td>
-      <td>${badgeBtn(s['PRE-SCREENING CALL STATUS'],`openQuickPopover(event,'${sid}','call')`)}</td>
-      <td>${badgeBtn(s['OFFER STATUS'],`openQuickPopover(event,'${sid}','offer')`)}</td>
-      <td>${badgeBtn(s['CAS STATUS'],`openCASStatusModal('${sid}')`)}</td>
-      <td>${badgeBtn(s['VISA STATUS'],`openVisaModal('${sid}')`)}</td>
-      <td>${badgeBtn(s['PAYMENT'],`openPaymentModal('${sid}')`)}</td>
+      <td><span class="font-semibold text-[12.5px] text-slate-700">${sid}</span></td>
+      <td><div class="font-semibold text-[13px] text-slate-800">${s['STUDENT NAME']||''}</div><div class="text-[10.5px] text-slate-400 mt-0.5">${s['LEVEL']||''}</div></td>
+      <td><div class="text-[12px] text-slate-600 max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap" title="${s['COURSE']||''}">${s['COURSE']||'—'}</div></td>
+      <td><div class="text-[12px] text-slate-500">${s['AGENT']||'—'}</div></td>
+      <td>${renderPipelineCell(s)}</td>
       <td class="text-right whitespace-nowrap">
-        ${hasDoc?`<a class="doc-chip mr-1" href="${s['MOCK PRE-CAS']}" target="_blank">${icon('external')} Doc</a>`:''}
         <button class="w-7 h-7 inline-flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition mr-0.5" onclick="openStudentProfile('${sid}')" title="Edit profile">${icon('edit')}</button>
         <button class="kebab-trigger w-7 h-7 inline-flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 transition" onclick="openKebabMenu(event,'${sid}')">${icon('kebab')}</button>
       </td>
@@ -808,16 +866,22 @@ function renderTable(students){
   }).join('');
 }
 
-function badgeBtn(val,onclickStr){ const v=val||''; return `<button class="badge ${badgeClass(v)}" onclick="${onclickStr}">${v||'Set'}</button>`; }
-function badgeClass(val){
-  const v=(val||'').toLowerCase();
-  if(!v) return 'badge-gray';
-  if(v.match(/approved|received|unconditional|issued|paid(?!.*partial)|complete|yes|granted/)) return 'badge-green';
-  if(v.match(/refused|rejected|failed/)) return 'badge-red';
-  if(v.match(/pending|awaiting|submitted|conditional/)) return 'badge-amber';
-  if(v.match(/partial|progress|in prog/)) return 'badge-blue';
-  if(v.match(/scheduled|called/)) return 'badge-teal';
-  return 'badge-gray';
+function renderPipelineCell(s){
+  const sid=s['STUDENT ID']||'';
+  const list=stageStatusList(s);
+  const curIdx=stageCurrentIndex(s);
+  const doneCount=list.filter(x=>x.done).length;
+  const curLabel = curIdx>=list.length ? 'Pipeline complete' : list[curIdx].label;
+  const dots=list.map((st,i)=>{
+    const cls = st.done ? 'pl-done' : (i===curIdx ? 'pl-current' : '');
+    const lineCls = (i>0 && list[i-1].done) ? 'pl-line-done' : '';
+    return (i>0?`<span class="pl-line ${lineCls}"></span>`:'') + `<span class="pl-dot ${cls}" title="${st.label}: ${st.done?'Done':'Pending'}"></span>`;
+  }).join('');
+  return `<div class="pipeline-wrap" onclick="openStudentProfile('${sid}')" title="${curLabel} — click to update">
+    ${dots}
+    <span class="pl-count-chip">${doneCount}/10</span>
+    <span class="pl-label">${curLabel}</span>
+  </div>`;
 }
 
 function filterTable(){
@@ -874,11 +938,12 @@ function openKebabMenu(e,sid){
   const menu=document.getElementById('kebab-menu');
   menu.innerHTML=`
     <div class="pop-item" onclick="hideKebab();openPreScreeningModal('${sid}')">${icon('phone')}Pre-screening call</div>
+    <div class="pop-item" onclick="hideKebab();openOfferModal('${sid}')">${icon('send')}Offer status</div>
     <div class="pop-item" onclick="hideKebab();openScholarshipModal('${sid}')">${icon('cap')}Scholarship</div>
     <div class="pop-item" onclick="hideKebab();openSubmissionModal('${sid}')">${icon('send')}Application submission</div>
     <div class="pop-item" onclick="hideKebab();openCASLinkModal('${sid}')">${icon('shield')}CAS Shield progress</div>
     <div class="pop-item" onclick="hideKebab();openFeedbackModal('${sid}')">${icon('clipboard')}${hasDoc?'New mock feedback':'Add mock feedback'}</div>
-    <div class="pop-item" onclick="hideKebab();openStudentProfile('${sid}')">${icon('edit')}Edit full profile</div>
+    <div class="pop-item" onclick="hideKebab();openStudentProfile('${sid}')">${icon('edit')}Full pipeline / profile</div>
   `;
   positionPopover(menu,e.currentTarget); menu.classList.add('show');
 }
@@ -979,10 +1044,56 @@ function showPreview(filename,data){ if(!data.length){showToast('No data rows fo
 function clearUpload(){ parsedCSVData=[]; document.getElementById('csv-file').value=''; document.getElementById('upload-preview').style.display='none'; }
 async function confirmUpload(){ if(!parsedCSVData.length) return; try{ showLoading('Uploading…'); const r=await appsScriptPost('uploadCSV',{rows:parsedCSVData}); if(!r.success) throw new Error(r.error); showToast(`Imported ${r.added||0} new, updated ${r.updated||0} records ✓`,'success'); clearUpload(); loadStudents(); }catch(e){showToast('Upload failed: '+e.message,'error');} finally{hideLoading();} }
 
+// ── EXPORT CSV ────────────────────────────────────────────────────────
+function exportStudentsCSV(){
+  if(!allStudents.length){ showToast('No student data loaded to export.','error'); return; }
+  // Build a friendly export: ID, Name, Course, Agent, then all 10 pipeline stages, then raw fields.
+  const rows = allStudents.map(s=>{
+    const list = stageStatusList(s);
+    const base = {
+      'STUDENT ID': s['STUDENT ID']||'',
+      'STUDENT NAME': s['STUDENT NAME']||'',
+      'COURSE': s['COURSE']||'',
+      'AGENT': s['AGENT']||'',
+      'LEVEL': s['LEVEL']||''
+    };
+    list.forEach(st=>{ base[st.label] = st.done ? 'Done' : 'Pending'; });
+    base['PIPELINE PROGRESS'] = list.filter(x=>x.done).length + ' / ' + list.length;
+    return base;
+  });
+  try{
+    const csv = Papa.unparse(rows);
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'R2U_Students_Export_'+today()+'.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('CSV exported ✓','success');
+  }catch(e){ showToast('Export failed: '+e.message,'error'); }
+}
+
 // ── REPORTS ──────────────────────────────────────────────────────────
 async function loadReports(){ const grid=document.getElementById('report-grid'); grid.innerHTML='<div class="empty-state">Loading…</div>'; try{ const data=await appsScriptGet('getReport'); if(!data.success) throw new Error(data.error); renderReports(data.report); }catch{ renderReports(buildLocalReport(allStudents)); } }
 function buildLocalReport(students){ const cnt=(f,v)=>students.filter(s=>s[f]===v).length; return{offer:{Pending:cnt('OFFER STATUS','Pending'),Conditional:cnt('OFFER STATUS','Conditional'),Unconditional:cnt('OFFER STATUS','Unconditional'),Received:cnt('OFFER STATUS','Received'),Rejected:cnt('OFFER STATUS','Rejected')},cas:{'Not Applied':cnt('CAS STATUS','Not Applied'),Applied:cnt('CAS STATUS','Applied'),Pending:cnt('CAS STATUS','Pending'),Issued:cnt('CAS STATUS','Issued'),Rejected:cnt('CAS STATUS','Rejected')},visa:{'Not Applied':cnt('VISA STATUS','Not Applied'),Pending:cnt('VISA STATUS','Pending'),Approved:cnt('VISA STATUS','Approved'),Refused:cnt('VISA STATUS','Refused')},payment:{Unpaid:cnt('PAYMENT','Unpaid'),'Deposit Paid':cnt('PAYMENT','Deposit Paid'),'Partially Paid':cnt('PAYMENT','Partially Paid'),Paid:cnt('PAYMENT','Paid'),Refunded:cnt('PAYMENT','Refunded')}}; }
-function renderReports(report){ const grid=document.getElementById('report-grid'); if(!report){grid.innerHTML='<div class="empty-state">No data.</div>';return;} const sections=[{title:'Offer Status',data:report.offer},{title:'CAS Status',data:report.cas},{title:'Visa Status',data:report.visa},{title:'Payment',data:report.payment}]; grid.innerHTML=sections.map(sec=>{ const total=Object.values(sec.data||{}).reduce((a,b)=>a+b,0); const bars=Object.entries(sec.data||{}).map(([label,cnt])=>{ const pct=total?Math.round(cnt/total*100):0; return `<div class="report-bar-item"><div class="report-bar-label">${label}</div><div class="report-bar-track"><div class="report-bar-fill" style="width:${pct}%"></div></div><div class="report-bar-count">${cnt}</div></div>`; }).join(''); return `<div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"><div class="text-[12.5px] font-bold text-slate-800 mb-4 pb-3 border-b border-slate-100 flex items-center justify-between"><span>${sec.title}</span><span class="text-slate-400 font-medium">${total} total</span></div>${bars||'<div class="empty-state">No data</div>'}</div>`; }).join(''); }
+function buildPipelineFunnel(students){ const out={}; STAGE_DEFS.forEach(st=>{ out[st.label]=students.filter(s=>st.check(s)).length; }); return out; }
+function renderReports(report){
+  const grid=document.getElementById('report-grid');
+  if(!report){grid.innerHTML='<div class="empty-state">No data.</div>';return;}
+  const funnel = buildPipelineFunnel(allStudents.length?allStudents:[]);
+  const funnelTotal = allStudents.length || 1;
+  const funnelBars = Object.entries(funnel).map(([label,cnt])=>{
+    const pct = Math.round(cnt/funnelTotal*100);
+    return `<div class="report-bar-item"><div class="report-bar-label">${label}</div><div class="report-bar-track"><div class="report-bar-fill" style="width:${pct}%"></div></div><div class="report-bar-count">${cnt}</div></div>`;
+  }).join('');
+  const funnelCard = `<div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm md:col-span-2">
+    <div class="text-[12.5px] font-bold text-slate-800 mb-4 pb-3 border-b border-slate-100 flex items-center justify-between"><span>Pipeline Funnel (10 stages)</span><span class="text-slate-400 font-medium">${allStudents.length} students</span></div>
+    ${funnelBars||'<div class="empty-state">No data</div>'}
+  </div>`;
+  const sections=[{title:'Offer Status',data:report.offer},{title:'CAS Status',data:report.cas},{title:'Visa Status',data:report.visa},{title:'Payment',data:report.payment}];
+  const otherCards = sections.map(sec=>{ const total=Object.values(sec.data||{}).reduce((a,b)=>a+b,0); const bars=Object.entries(sec.data||{}).map(([label,cnt])=>{ const pct=total?Math.round(cnt/total*100):0; return `<div class="report-bar-item"><div class="report-bar-label">${label}</div><div class="report-bar-track"><div class="report-bar-fill" style="width:${pct}%"></div></div><div class="report-bar-count">${cnt}</div></div>`; }).join(''); return `<div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"><div class="text-[12.5px] font-bold text-slate-800 mb-4 pb-3 border-b border-slate-100 flex items-center justify-between"><span>${sec.title}</span><span class="text-slate-400 font-medium">${total} total</span></div>${bars||'<div class="empty-state">No data</div>'}</div>`; }).join('');
+  grid.innerHTML = funnelCard + otherCards;
+}
 
 // ── DRAWERS ───────────────────────────────────────────────────────────
 function openModal(id){ document.getElementById(id).classList.add('drawer-open'); document.getElementById('drawer-overlay').classList.add('show'); }
@@ -990,18 +1101,24 @@ function closeModal(id){ document.getElementById(id).classList.remove('drawer-op
 document.getElementById('drawer-overlay').addEventListener('click',()=>{ document.querySelectorAll('.drawer.drawer-open').forEach(d=>closeModal(d.id)); });
 
 // ── PROFILE DRAWER ────────────────────────────────────────────────────
+function renderPipelineList(s){
+  const list=stageStatusList(s);
+  return list.map((st,i)=>`<div class="stage-row"><div class="stage-row-left"><span class="stage-num">${i+1}</span><div class="stage-dot-lg ${st.done?'stage-done':''}">${st.done?'✓':''}</div><span class="stage-name">${st.label}</span></div><span class="badge ${st.done?'badge-green':'badge-gray'}">${st.done?'Done':'Pending'}</span></div>`).join('');
+}
 function openStudentProfile(studentId){
   const s=allStudents.find(s=>s['STUDENT ID']===studentId);
   if(!s){ showToast('Student not found: '+studentId,'error'); return; }
   profileActiveId=studentId;
   document.getElementById('profile-drawer-title').textContent=s['STUDENT NAME']||studentId;
   document.getElementById('profile-drawer-sub').textContent=[studentId,s['LEVEL'],s['COURSE']].filter(Boolean).join(' · ');
+  document.getElementById('pd-pipeline-list').innerHTML=renderPipelineList(s);
   const set=(id,key)=>{ const el=document.getElementById(id); if(el) el.value=s[key]||''; };
   set('pd-mobile','MOBILE'); set('pd-email','EMAIL'); set('pd-dob','DOB'); set('pd-edu','EDUCATION TYPE');
   set('pd-call','PRE-SCREENING CALL STATUS'); set('pd-offer','OFFER STATUS');
   set('pd-scholarship','SCHOLARSHIP'); set('pd-payment','PAYMENT');
-  set('pd-cas-shield','CAS SHIELD'); set('pd-mock','MOCK PRE-CAS');
+  set('pd-cas-shield','CAS SHIELD'); set('pd-mock','MOCK INTERVIEW STATUS');
   set('pd-precas','PRE-CAS INTERVIEW'); set('pd-cas-status','CAS STATUS'); set('pd-visa','VISA STATUS');
+  set('pd-cas-payment','CAS PAYMENT STATUS'); set('pd-cas-requested','CAS REQUESTED STATUS');
   set('pd-cond-date','CONDITION - DOCS / UC RECEIVED DATE');
   set('pd-pay-date','PAYMENT DATE'); set('pd-app-date','APPLICATION SUBMITTED DATE');
   const errEl=document.getElementById('pd-save-error'); if(errEl) errEl.style.display='none';
@@ -1024,14 +1141,15 @@ async function saveStudentProfile(){
     'MOBILE':val('pd-mobile'),'EMAIL':val('pd-email'),'DOB':val('pd-dob'),'EDUCATION TYPE':val('pd-edu'),
     'PRE-SCREENING CALL STATUS':val('pd-call'),'OFFER STATUS':val('pd-offer'),
     'SCHOLARSHIP':val('pd-scholarship'),'PAYMENT':val('pd-payment'),
-    'CAS SHIELD':val('pd-cas-shield'),'MOCK PRE-CAS':val('pd-mock'),
+    'CAS SHIELD':val('pd-cas-shield'),'MOCK INTERVIEW STATUS':val('pd-mock'),
     'PRE-CAS INTERVIEW':val('pd-precas'),'CAS STATUS':val('pd-cas-status'),'VISA STATUS':val('pd-visa'),
+    'CAS PAYMENT STATUS':val('pd-cas-payment'),'CAS REQUESTED STATUS':val('pd-cas-requested'),
     'CONDITION - DOCS / UC RECEIVED DATE':val('pd-cond-date'),
     'PAYMENT DATE':val('pd-pay-date'),'APPLICATION SUBMITTED DATE':val('pd-app-date'),
   };
   const s=allStudents.find(s=>s['STUDENT ID']===studentId);
   const snapshot=s?{...s}:null;
-  if(s){ Object.assign(s,patch); filterTable(); updateStats(allStudents); }
+  if(s){ Object.assign(s,patch); filterTable(); updateStats(allStudents); document.getElementById('pd-pipeline-list').innerHTML=renderPipelineList(s); }
   closeProfileDrawer();
   showToast('Saving profile…','success');
   try{
@@ -1056,7 +1174,7 @@ function hideLoading(){ document.getElementById('loading').classList.add('hidden
 function showToast(msg,type='success'){ const wrap=document.getElementById('toast-wrap'); const t=document.createElement('div'); t.className='toast '+type; t.innerHTML=(type==='success'?'✓&nbsp;&nbsp;':'✕&nbsp;&nbsp;')+msg; wrap.appendChild(t); setTimeout(()=>t.remove(),4000); }
 
 // ── MOCK DATA ─────────────────────────────────────────────────────────
-function getMockStudents(){ return [{'STUDENT ID':'R2U001','STUDENT NAME':'Priya Sharma','LEVEL':'PG','COURSE':'MSc Computer Science','AGENT':'Agent A','PRE-SCREENING CALL STATUS':'Called – Interested','OFFER STATUS':'Received','SCHOLARSHIP':'Partial','PAYMENT':'Paid','CAS SHIELD':'Completed','CAS STATUS':'Issued','VISA STATUS':'Approved','SUBMITTED BY':'Sagar Adhikari','APPLICATION SUBMITTED DATE':'2026-03-12','DOB':'2000-05-14','MOBILE':'+977 9801234567','EMAIL':'priya@email.com'},{'STUDENT ID':'R2U002','STUDENT NAME':'Amit Patel','LEVEL':'UG','COURSE':'BA Business Management','AGENT':'Agent B','PRE-SCREENING CALL STATUS':'Scheduled','OFFER STATUS':'Conditional','SCHOLARSHIP':'None','PAYMENT':'Deposit Paid','CAS SHIELD':'In Progress','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','SUBMITTED BY':'Admin','APPLICATION SUBMITTED DATE':'2026-04-01','DOB':'2002-11-22'},{'STUDENT ID':'R2U003','STUDENT NAME':'Sara Khan','LEVEL':'PG','COURSE':'MBA Finance','AGENT':'Agent A','PRE-SCREENING CALL STATUS':'Called – Interested','OFFER STATUS':'Unconditional','SCHOLARSHIP':'Full','PAYMENT':'Paid','CAS SHIELD':'Completed','CAS STATUS':'Pending','VISA STATUS':'Pending','SUBMITTED BY':'Sagar Adhikari','APPLICATION SUBMITTED DATE':'2026-02-28','DOB':'1999-07-08'},{'STUDENT ID':'R2U004','STUDENT NAME':'Rahul Singh','LEVEL':'PHD','COURSE':'PhD Engineering','AGENT':'Agent C','PRE-SCREENING CALL STATUS':'Not Called','OFFER STATUS':'Received','SCHOLARSHIP':'None','PAYMENT':'Unpaid','CAS SHIELD':'Not Started','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','SUBMITTED BY':'Admin','APPLICATION SUBMITTED DATE':'','DOB':'1995-03-30'},{'STUDENT ID':'R2U005','STUDENT NAME':'Meena Joshi','LEVEL':'UG','COURSE':'BSc Nursing','AGENT':'Agent B','PRE-SCREENING CALL STATUS':'Called – Not Interested','OFFER STATUS':'Rejected','SCHOLARSHIP':'None','PAYMENT':'Refunded','CAS SHIELD':'Not Started','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','SUBMITTED BY':'Admin','APPLICATION SUBMITTED DATE':'','DOB':'2003-01-15'}]; }
+function getMockStudents(){ return [{'STUDENT ID':'R2U001','STUDENT NAME':'Priya Sharma','LEVEL':'PG','COURSE':'MSc Computer Science','AGENT':'Agent A','PRE-SCREENING CALL STATUS':'Called – Interested','OFFER STATUS':'Received','SCHOLARSHIP':'Partial','PAYMENT':'Paid','CAS SHIELD':'Completed','CAS STATUS':'Issued','VISA STATUS':'Approved','SUBMITTED BY':'Sagar Adhikari','APPLICATION SUBMITTED DATE':'2026-03-12','DOB':'2000-05-14','MOBILE':'+977 9801234567','EMAIL':'priya@email.com','MOCK INTERVIEW STATUS':'Completed','PRE-CAS INTERVIEW':'Passed','CAS PAYMENT STATUS':'Paid','CAS REQUESTED STATUS':'Requested'},{'STUDENT ID':'R2U002','STUDENT NAME':'Amit Patel','LEVEL':'UG','COURSE':'BA Business Management','AGENT':'Agent B','PRE-SCREENING CALL STATUS':'Scheduled','OFFER STATUS':'Conditional','SCHOLARSHIP':'None','PAYMENT':'Deposit Paid','CAS SHIELD':'In Progress','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','SUBMITTED BY':'Admin','APPLICATION SUBMITTED DATE':'2026-04-01','DOB':'2002-11-22'},{'STUDENT ID':'R2U003','STUDENT NAME':'Sara Khan','LEVEL':'PG','COURSE':'MBA Finance','AGENT':'Agent A','PRE-SCREENING CALL STATUS':'Called – Interested','OFFER STATUS':'Unconditional','SCHOLARSHIP':'Full','PAYMENT':'Paid','CAS SHIELD':'Completed','CAS STATUS':'Pending','VISA STATUS':'Pending','SUBMITTED BY':'Sagar Adhikari','APPLICATION SUBMITTED DATE':'2026-02-28','DOB':'1999-07-08','MOCK INTERVIEW STATUS':'Completed','PRE-CAS INTERVIEW':'Completed','CAS PAYMENT STATUS':'Paid','CAS REQUESTED STATUS':'Requested'},{'STUDENT ID':'R2U004','STUDENT NAME':'Rahul Singh','LEVEL':'PHD','COURSE':'PhD Engineering','AGENT':'Agent C','PRE-SCREENING CALL STATUS':'Not Called','OFFER STATUS':'Received','SCHOLARSHIP':'None','PAYMENT':'Unpaid','CAS SHIELD':'Not Started','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','SUBMITTED BY':'Admin','APPLICATION SUBMITTED DATE':'','DOB':'1995-03-30'},{'STUDENT ID':'R2U005','STUDENT NAME':'Meena Joshi','LEVEL':'UG','COURSE':'BSc Nursing','AGENT':'Agent B','PRE-SCREENING CALL STATUS':'Called – Not Interested','OFFER STATUS':'Rejected','SCHOLARSHIP':'None','PAYMENT':'Refunded','CAS SHIELD':'Not Started','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','SUBMITTED BY':'Admin','APPLICATION SUBMITTED DATE':'','DOB':'2003-01-15'}]; }
 function getMockCASData(){ return [{'Applicant ID':'R2U001','Applicant Name':'Priya Sharma','Agent (Name)':'Agent A','Nationality':'Nepali','Course Name':'MSc Computer Science','Team Member':'Sagar','Study Gap Y/N':'No','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'Yes','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'Yes','PCI Invite':'2026-07-01'},{'Applicant ID':'R2U002','Applicant Name':'Amit Patel','Agent (Name)':'Agent B','Nationality':'Indian','Course Name':'BA Business Management','Team Member':'Admin','Study Gap Y/N':'Yes','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'No','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'No','PCI Invite':''}]; }
 </script>
 </body>
