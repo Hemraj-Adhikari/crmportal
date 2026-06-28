@@ -23,15 +23,14 @@ tailwind.config = {
 :root{ --navy:#0F1F2D; --navy2:#16273A; --gold:#D4A833; --gold-soft:#FBF3DD; --gold-dim:#A07C20; }
 *{box-sizing:border-box;}
 html,body{font-family:'Inter',sans-serif;}
-.font-display{font-family:'Plus Jakarta Sans',sans-serif;}
 ::-webkit-scrollbar{width:8px;height:8px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:4px;}
-::-webkit-scrollbar-thumb:hover{background:#94A3B8;}
 
 .view{display:none;}
 .view.active{display:block;}
 
+/* DRAWER */
 .drawer{position:fixed;top:0;right:0;height:100%;width:100%;max-width:440px;background:#fff;z-index:60;
   transform:translateX(105%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:-20px 0 60px rgba(15,31,45,.2);
   display:flex;flex-direction:column;}
@@ -62,7 +61,6 @@ textarea.form-control{resize:vertical;min-height:80px;line-height:1.55;}
 .qa-btn-lbl{font-size:11px;font-weight:700;color:#1E293B;}
 
 .notice{background:#FEF3E2;border:1px solid #F5D9A8;border-radius:10px;padding:11px 13px;font-size:12px;color:#7A5500;margin-bottom:13px;display:flex;gap:9px;align-items:flex-start;line-height:1.5;}
-.notice svg{flex-shrink:0;margin-top:1px;}
 
 .badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:10.5px;font-weight:700;white-space:nowrap;cursor:pointer;transition:all .15s;border:1px solid transparent;font-family:inherit;}
 .badge:hover{filter:brightness(0.97);transform:translateY(-1px);}
@@ -92,7 +90,6 @@ textarea.form-control{resize:vertical;min-height:80px;line-height:1.55;}
 .ss-name{font-weight:700;font-size:13.5px;color:#1E293B;}
 .ss-meta{font-size:11px;color:#8A6D2A;margin-top:2px;font-weight:500;}
 .ss-clear{background:none;border:none;cursor:pointer;color:#A07C20;font-size:15px;line-height:1;padding:5px;border-radius:6px;}
-.ss-clear:hover{background:rgba(160,124,32,.12);}
 
 .perf-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
 .perf-opt{border:1.5px solid #E5EAF0;border-radius:11px;padding:13px 6px;text-align:center;cursor:pointer;transition:all .15s;background:#F8FAFC;}
@@ -103,16 +100,121 @@ textarea.form-control{resize:vertical;min-height:80px;line-height:1.55;}
 
 .success-banner{background:#ECFDF5;border:1px solid #A7F3D0;border-radius:16px;padding:18px 22px;display:none;align-items:center;gap:14px;margin-bottom:18px;}
 .success-banner.show{display:flex;}
-.success-title{font-weight:800;font-size:13.5px;color:#065F46;}
-.success-sub{font-size:11.5px;color:#10B981;font-weight:500;}
 
-.doc-chip{display:inline-flex;align-items:center;gap:4px;background:#DCFCE7;border:1px solid #A7F3D0;border-radius:7px;padding:4px 9px;font-size:10px;font-weight:700;color:#15803D;text-decoration:none;}
-.doc-chip:hover{background:#bbf7d0;}
+.report-bar-item{display:flex;align-items:center;gap:10px;margin-bottom:11px;}
+.report-bar-label{width:112px;font-size:11.5px;color:#64748B;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;font-weight:500;}
+.report-bar-track{flex:1;background:#F1F5F9;border-radius:5px;height:8px;overflow:hidden;}
+.report-bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--gold-dim),var(--gold));transition:width .6s ease;}
+.report-bar-count{font-size:11.5px;font-weight:700;color:#1E293B;min-width:22px;text-align:right;flex-shrink:0;}
 
+.empty-state{text-align:center;padding:56px 20px;color:#94A3B8;font-size:13px;font-weight:500;}
+
+.toast{background:#0F1F2D;color:#fff;padding:12px 17px;border-radius:11px;font-size:12.5px;font-weight:600;box-shadow:0 14px 32px rgba(0,0,0,.28);animation:slideIn .25s ease;display:flex;align-items:center;gap:9px;max-width:320px;}
+.toast.success{border-left:3px solid var(--gold);}
+.toast.error{border-left:3px solid #EF4444;}
+@keyframes slideIn{from{transform:translateX(60px);opacity:0;}to{transform:none;opacity:1;}}
+
+.spinner{width:30px;height:30px;border:3px solid #E2E8F0;border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.nav-link{display:flex;align-items:center;gap:11px;padding:9px 13px;border-radius:10px;font-size:13px;font-weight:600;color:#8B9CAC;cursor:pointer;transition:all .15s;user-select:none;}
+.nav-link:hover{background:rgba(255,255,255,.06);color:#fff;}
+.nav-link.active{background:rgba(212,168,51,.14);color:var(--gold);}
+
+.kpi-card{background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:18px 19px;transition:box-shadow .15s,transform .15s;}
+.kpi-card:hover{box-shadow:0 10px 28px rgba(15,31,45,.08);transform:translateY(-2px);}
+
+table.dtable{width:100%;border-collapse:collapse;font-size:12.5px;}
+table.dtable thead th{background:#F8FAFC;color:#64748B;padding:12px 16px;text-align:left;font-weight:700;font-size:10px;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid #E2E8F0;white-space:nowrap;}
+table.dtable tbody tr{border-bottom:1px solid #F1F5F9;transition:background .12s;}
+table.dtable tbody tr:last-child{border-bottom:none;}
+table.dtable tbody tr:hover{background:#FAFBFD;}
+table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
+
+.filter-pill{background:#fff;border:1px solid #E2E8F0;border-radius:9px;padding:8px 12px;font-size:12px;font-family:inherit;color:#334155;outline:none;cursor:pointer;}
+.filter-pill:focus{border-color:var(--gold);}
+
+/* Pipeline */
+.pipeline-wrap{display:flex;align-items:center;gap:0;cursor:pointer;padding:4px 2px;border-radius:8px;transition:background .15s;}
+.pipeline-wrap:hover{background:#F8FAFC;}
+.pl-dot{width:9px;height:9px;border-radius:50%;background:#E2E8F0;flex-shrink:0;transition:background .15s,transform .15s;border:1.5px solid #fff;}
+.pl-dot.pl-done{background:var(--gold);}
+.pl-dot.pl-current{background:#fff;border:2px solid var(--gold);box-shadow:0 0 0 3px rgba(212,168,51,.18);}
+.pl-line{width:9px;height:2px;background:#E2E8F0;flex-shrink:0;}
+.pl-line.pl-line-done{background:var(--gold);}
+.pl-label{font-size:10.5px;color:#64748B;font-weight:700;margin-left:8px;white-space:nowrap;min-width:108px;}
+.pl-count-chip{font-size:10px;font-weight:700;color:var(--gold-dim);background:var(--gold-soft);border-radius:6px;padding:2px 6px;margin-left:6px;flex-shrink:0;}
+
+/* Stage list in profile */
+.stage-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #F1F5F9;}
+.stage-row:last-child{border-bottom:none;}
+.stage-row-left{display:flex;align-items:center;gap:10px;}
+.stage-dot-lg{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:800;background:#F1F5F9;color:#94A3B8;}
+.stage-dot-lg.stage-done{background:#DCFCE7;color:#15803D;}
+.stage-name{font-size:12.5px;font-weight:600;color:#1E293B;}
+.stage-num{font-size:9.5px;color:#CBD5E1;font-weight:700;width:14px;}
+
+/* Load more */
+#load-more-btn{margin-top:14px;width:100%;padding:11px;border-radius:14px;border:1.5px dashed #E2E8F0;background:#fff;color:#64748B;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;}
+#load-more-btn:hover:not(:disabled){border-color:var(--gold);background:var(--gold-soft);color:var(--gold-dim);}
+#load-more-btn:disabled{opacity:.6;cursor:not-allowed;}
+
+/* Login */
+.login-overlay{position:fixed;inset:0;background:#0F1F2D;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .25s ease;}
+.login-overlay.login-hidden{opacity:0;pointer-events:none;}
+.login-card{background:#fff;border-radius:20px;padding:36px 34px 30px;width:100%;max-width:390px;box-shadow:0 32px 80px rgba(0,0,0,.45);animation:loginSlideUp .35s cubic-bezier(.22,1,.36,1);}
+@keyframes loginSlideUp{from{transform:translateY(24px);opacity:0;}to{transform:none;opacity:1;}}
+.login-logo{width:40px;height:40px;background:#D4A833;border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:14px;color:#0F1F2D;flex-shrink:0;}
+.login-error{background:#FEE2E2;border:1px solid #FECACA;border-radius:10px;padding:10px 13px;font-size:12.5px;color:#B91C1C;font-weight:600;margin-bottom:14px;line-height:1.45;}
+.login-input{width:100%;border:1px solid #E2E8F0;border-radius:10px;padding:10px 13px;font-size:13.5px;font-family:inherit;color:#1E293B;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;box-sizing:border-box;}
+.login-input:focus{border-color:#D4A833;box-shadow:0 0 0 3px rgba(212,168,51,.18);}
+.login-input.input-error{border-color:#F87171;}
+.login-eye{position:absolute;right:11px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94A3B8;padding:4px;display:flex;align-items:center;border-radius:6px;}
+.login-btn{width:100%;margin-top:20px;background:#0F1F2D;color:#fff;border:none;border-radius:11px;padding:12px;font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .15s;}
+.login-btn:hover:not(:disabled){background:#16273A;}
+.login-btn:disabled{opacity:.65;cursor:not-allowed;}
+.login-spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .75s linear infinite;}
+
+.user-pill{display:flex;align-items:center;border-radius:12px;border:1px solid rgba(255,255,255,.10);padding:10px 12px;}
+.user-pill-avatar{width:32px;height:32px;border-radius:50%;background:var(--gold);color:#0F1F2D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0;}
+.user-pill-info{flex:1;min-width:0;margin-left:10px;}
+.user-pill-name{font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-pill-role{font-size:10px;color:rgba(255,255,255,.4);}
+.signout-btn{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.07);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);transition:all .15s;flex-shrink:0;}
+.signout-btn:hover{background:rgba(239,68,68,.2);color:#F87171;}
+
+/* Profile Drawer */
+.profile-drawer{position:fixed;top:0;right:0;height:100%;width:100%;max-width:480px;background:#fff;z-index:65;display:flex;flex-direction:column;transform:translateX(105%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:-24px 0 64px rgba(15,31,45,.22);}
+.profile-drawer.pd-open{transform:translateX(0);}
+.profile-drawer-overlay{position:fixed;inset:0;background:rgba(15,31,45,.45);backdrop-filter:blur(2px);z-index:64;opacity:0;pointer-events:none;transition:opacity .25s;}
+.profile-drawer-overlay.pd-overlay-show{opacity:1;pointer-events:all;}
+.pd-section{margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid #F1F5F9;}
+.pd-section:last-of-type{border-bottom:none;margin-bottom:0;}
+.pd-section-title{font-size:10px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.pd-section-title::after{content:'';flex:1;height:1px;background:#F1F5F9;}
+.pd-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.pd-field{margin-bottom:10px;}
+.pd-label{display:block;font-size:10.5px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+.pd-input{width:100%;border:1px solid #E2E8F0;border-radius:9px;padding:8px 11px;font-size:13px;font-family:inherit;color:#1E293B;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;box-sizing:border-box;}
+.pd-input:focus{border-color:#D4A833;box-shadow:0 0 0 3px rgba(212,168,51,.15);}
+.pd-input[readonly]{background:#F8FAFC;color:#64748B;cursor:default;}
+.pd-btn-save{padding:9px 22px;border-radius:9px;border:none;background:#D4A833;color:#0F1F2D;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:8px;transition:opacity .15s;}
+.pd-btn-save:hover:not(:disabled){opacity:.9;}
+.pd-btn-save:disabled{opacity:.6;cursor:not-allowed;}
+.pd-save-spinner{width:14px;height:14px;border:2px solid rgba(15,31,45,.3);border-top-color:#0F1F2D;border-radius:50%;animation:spin .75s linear infinite;}
+
+/* Readonly field badge */
+.readonly-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;background:#F1F5F9;border:1px solid #E2E8F0;font-size:10px;font-weight:700;color:#94A3B8;margin-left:6px;vertical-align:middle;}
+
+.export-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:9px;border:1px solid #E2E8F0;background:#fff;color:#334155;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
+.export-btn:hover{border-color:var(--gold);background:var(--gold-soft);color:var(--gold-dim);}
+
+.access-denied{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;text-align:center;color:#94A3B8;}
+
+/* Doc preview */
 .preview-card{display:none;}
 .preview-card.show{display:block;}
 .doc-header{border-bottom:3px solid var(--gold);padding-bottom:16px;margin-bottom:20px;}
-.doc-org{font-size:10px;font-weight:700;letter-spacing:.12em;color:#94A3B8;text-transform:uppercase;margin-bottom:6px;}
 .doc-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:19px;font-weight:800;color:#0F1F2D;margin-bottom:14px;}
 .doc-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
 .doc-meta-item{background:#F8FAFC;border-radius:9px;padding:10px 13px;}
@@ -129,155 +231,12 @@ textarea.form-control{resize:vertical;min-height:80px;line-height:1.55;}
 .perf-needs{background:#FEE2E2;color:#B91C1C;}
 .doc-footer{border-top:1px solid #E2E8F0;padding-top:13px;margin-top:20px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#94A3B8;}
 
-.report-bar-item{display:flex;align-items:center;gap:10px;margin-bottom:11px;}
-.report-bar-label{width:112px;font-size:11.5px;color:#64748B;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;font-weight:500;}
-.report-bar-track{flex:1;background:#F1F5F9;border-radius:5px;height:8px;overflow:hidden;}
-.report-bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--gold-dim),var(--gold));transition:width .6s ease;}
-.report-bar-count{font-size:11.5px;font-weight:700;color:#1E293B;min-width:22px;text-align:right;flex-shrink:0;}
-
-.empty-state{text-align:center;padding:56px 20px;color:#94A3B8;font-size:13px;font-weight:500;}
-.cur-val{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:6px;background:#F8FAFC;border:1px solid #E5EAF0;color:#64748B;}
-
 #drop-zone.drag-over{border-color:var(--gold);background:var(--gold-soft);}
-
-.toast{background:#0F1F2D;color:#fff;padding:12px 17px;border-radius:11px;font-size:12.5px;font-weight:600;box-shadow:0 14px 32px rgba(0,0,0,.28);animation:slideIn .25s ease;display:flex;align-items:center;gap:9px;max-width:320px;}
-.toast.success{border-left:3px solid var(--gold);}
-.toast.error{border-left:3px solid #EF4444;}
-@keyframes slideIn{from{transform:translateX(60px);opacity:0;}to{transform:none;opacity:1;}}
-
-.spinner{width:30px;height:30px;border:3px solid #E2E8F0;border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-
-.nav-link{display:flex;align-items:center;gap:11px;padding:9px 13px;border-radius:10px;font-size:13px;font-weight:600;color:#8B9CAC;cursor:pointer;transition:all .15s;user-select:none;}
-.nav-link:hover{background:rgba(255,255,255,.06);color:#fff;}
-.nav-link.active{background:rgba(212,168,51,.14);color:var(--gold);}
-.nav-link svg{flex-shrink:0;}
-
-.kpi-card{background:#fff;border:1px solid #E2E8F0;border-radius:16px;padding:18px 19px;transition:box-shadow .15s,transform .15s;}
-.kpi-card:hover{box-shadow:0 10px 28px rgba(15,31,45,.08);transform:translateY(-2px);}
-
-table.dtable{width:100%;border-collapse:collapse;font-size:12.5px;}
-table.dtable thead th{background:#F8FAFC;color:#64748B;padding:12px 16px;text-align:left;font-weight:700;font-size:10px;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid #E2E8F0;white-space:nowrap;}
-table.dtable tbody tr{border-bottom:1px solid #F1F5F9;transition:background .12s;}
-table.dtable tbody tr:last-child{border-bottom:none;}
-table.dtable tbody tr:hover{background:#FAFBFD;}
-table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
-
-/* Removed .staff-opt switcher styles - replaced with static display */
-.filter-pill{background:#fff;border:1px solid #E2E8F0;border-radius:9px;padding:8px 12px;font-size:12px;font-family:inherit;color:#334155;outline:none;cursor:pointer;}
-.filter-pill:focus{border-color:var(--gold);}
-
-.pipeline-wrap{display:flex;align-items:center;gap:0;cursor:pointer;padding:4px 2px;border-radius:8px;transition:background .15s;}
-.pipeline-wrap:hover{background:#F8FAFC;}
-.pl-dot{width:9px;height:9px;border-radius:50%;background:#E2E8F0;flex-shrink:0;position:relative;transition:background .15s,transform .15s;border:1.5px solid #fff;}
-.pl-dot.pl-done{background:var(--gold);}
-.pl-dot.pl-current{background:#fff;border:2px solid var(--gold);box-shadow:0 0 0 3px rgba(212,168,51,.18);}
-.pl-line{width:9px;height:2px;background:#E2E8F0;flex-shrink:0;}
-.pl-line.pl-line-done{background:var(--gold);}
-.pipeline-wrap:hover .pl-dot{transform:scale(1.15);}
-.pl-label{font-size:10.5px;color:#64748B;font-weight:700;margin-left:8px;white-space:nowrap;min-width:108px;}
-.pl-count-chip{font-size:10px;font-weight:700;color:var(--gold-dim);background:var(--gold-soft);border-radius:6px;padding:2px 6px;margin-left:6px;flex-shrink:0;}
-
-.stage-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #F1F5F9;}
-.stage-row:last-child{border-bottom:none;}
-.stage-row-left{display:flex;align-items:center;gap:10px;}
-.stage-dot-lg{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:800;background:#F1F5F9;color:#94A3B8;}
-.stage-dot-lg.stage-done{background:#DCFCE7;color:#15803D;}
-.stage-name{font-size:12.5px;font-weight:600;color:#1E293B;}
-.stage-num{font-size:9.5px;color:#CBD5E1;font-weight:700;width:14px;}
-
-#load-more-btn{
-  margin-top:14px;width:100%;padding:11px;border-radius:14px;
-  border:1.5px dashed #E2E8F0;background:#fff;
-  color:#64748B;font-size:12.5px;font-weight:600;font-family:inherit;
-  cursor:pointer;transition:all .2s;
-}
-#load-more-btn:hover:not(:disabled){
-  border-color:var(--gold);background:var(--gold-soft);color:var(--gold-dim);
-}
-#load-more-btn:disabled{opacity:.6;cursor:not-allowed;}
-
-.login-overlay{position:fixed;inset:0;background:#0F1F2D;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .25s ease;}
-.login-overlay.login-hidden{opacity:0;pointer-events:none;}
-.login-card{background:#fff;border-radius:20px;padding:36px 34px 30px;width:100%;max-width:390px;box-shadow:0 32px 80px rgba(0,0,0,.45);animation:loginSlideUp .35s cubic-bezier(.22,1,.36,1);}
-@keyframes loginSlideUp{from{transform:translateY(24px);opacity:0;}to{transform:none;opacity:1;}}
-.login-brand{display:flex;align-items:center;gap:11px;margin-bottom:28px;}
-.login-logo{width:40px;height:40px;background:#D4A833;border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:14px;color:#0F1F2D;flex-shrink:0;}
-.login-brand-name{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:15px;color:#0F1F2D;}
-.login-brand-sub{font-size:10px;font-weight:700;color:#94A3B8;letter-spacing:.1em;text-transform:uppercase;}
-.login-title{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:800;color:#0F1F2D;margin:0 0 6px;}
-.login-hint{font-size:13px;color:#64748B;margin:0 0 22px;line-height:1.5;}
-.login-error{background:#FEE2E2;border:1px solid #FECACA;border-radius:10px;padding:10px 13px;font-size:12.5px;color:#B91C1C;font-weight:600;margin-bottom:14px;line-height:1.45;}
-.login-field{margin-bottom:14px;}
-.login-label{display:block;font-size:10.5px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
-.login-input{width:100%;border:1px solid #E2E8F0;border-radius:10px;padding:10px 13px;font-size:13.5px;font-family:inherit;color:#1E293B;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;box-sizing:border-box;}
-.login-input:focus{border-color:#D4A833;box-shadow:0 0 0 3px rgba(212,168,51,.18);}
-.login-input::placeholder{color:#CBD5E1;}
-.login-input.input-error{border-color:#F87171;}
-.login-eye{position:absolute;right:11px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94A3B8;padding:4px;display:flex;align-items:center;border-radius:6px;transition:color .15s;}
-.login-eye:hover{color:#475569;}
-.login-btn{width:100%;margin-top:20px;background:#0F1F2D;color:#fff;border:none;border-radius:11px;padding:12px;font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .15s,transform .1s;}
-.login-btn:hover:not(:disabled){background:#16273A;}
-.login-btn:active:not(:disabled){transform:scale(.98);}
-.login-btn:disabled{opacity:.65;cursor:not-allowed;}
-.login-spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .75s linear infinite;}
-.login-footer-note{text-align:center;font-size:11.5px;color:#94A3B8;margin:14px 0 0;line-height:1.5;}
-
-/* Static user pill (no switching) */
-.user-pill{display:flex;align-items:center;gap:2.5px;px-2.5 py-2;border-radius:12px;border:1px solid rgba(255,255,255,.10);padding:10px 12px;}
-.user-pill-avatar{width:32px;height:32px;border-radius:50%;background:var(--gold);color:#0F1F2D;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;flex-shrink:0;}
-.user-pill-info{flex:1;min-width:0;margin-left:10px;}
-.user-pill-name{font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.user-pill-role{font-size:10px;color:rgba(255,255,255,.4);}
-.signout-btn{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.07);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);transition:all .15s;flex-shrink:0;}
-.signout-btn:hover{background:rgba(239,68,68,.2);color:#F87171;}
-
-.profile-drawer{position:fixed;top:0;right:0;height:100%;width:100%;max-width:440px;background:#fff;z-index:65;display:flex;flex-direction:column;transform:translateX(105%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:-24px 0 64px rgba(15,31,45,.22);}
-.profile-drawer.pd-open{transform:translateX(0);}
-.profile-drawer-overlay{position:fixed;inset:0;background:rgba(15,31,45,.45);backdrop-filter:blur(2px);z-index:64;opacity:0;pointer-events:none;transition:opacity .25s;}
-.profile-drawer-overlay.pd-overlay-show{opacity:1;pointer-events:all;}
-.profile-drawer-head{padding:20px 22px;border-bottom:1px solid #E2E8F0;display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;background:#fff;}
-.profile-drawer-title{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:15.5px;color:#0F1F2D;}
-.profile-drawer-sub{font-size:11.5px;color:#94A3B8;font-weight:500;margin-top:3px;}
-.profile-drawer-close{width:30px;height:30px;border-radius:8px;background:#F1F5F9;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#64748B;flex-shrink:0;margin-left:12px;transition:background .15s;}
-.profile-drawer-close:hover{background:#E2E8F0;}
-.profile-drawer-body{flex:1;overflow-y:auto;padding:18px 22px;}
-.pd-section{margin-bottom:22px;padding-bottom:20px;border-bottom:1px solid #F1F5F9;}
-.pd-section:last-of-type{border-bottom:none;margin-bottom:0;}
-.pd-section-title{font-size:10px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-.pd-section-title::after{content:'';flex:1;height:1px;background:#F1F5F9;}
-.pd-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
-.pd-field{margin-bottom:10px;}
-.pd-field:last-child{margin-bottom:0;}
-.pd-label{display:block;font-size:10.5px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
-.pd-input{width:100%;border:1px solid #E2E8F0;border-radius:9px;padding:8px 11px;font-size:13px;font-family:inherit;color:#1E293B;background:#fff;outline:none;transition:border-color .15s,box-shadow .15s;box-sizing:border-box;}
-.pd-input:focus{border-color:#D4A833;box-shadow:0 0 0 3px rgba(212,168,51,.15);}
-.pd-save-error{background:#FEE2E2;border:1px solid #FECACA;border-radius:9px;padding:10px 13px;font-size:12px;color:#B91C1C;font-weight:600;margin-top:14px;line-height:1.5;}
-.profile-drawer-foot{padding:14px 22px;border-top:1px solid #E2E8F0;display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;background:#FAFBFC;}
-.pd-btn-cancel{padding:9px 18px;border-radius:9px;border:1px solid #E2E8F0;background:#fff;color:#64748B;font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s;}
-.pd-btn-cancel:hover{background:#F8FAFC;}
-.pd-btn-save{padding:9px 22px;border-radius:9px;border:none;background:#D4A833;color:#0F1F2D;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:8px;transition:opacity .15s,transform .1s;}
-.pd-btn-save:hover:not(:disabled){opacity:.9;}
-.pd-btn-save:active:not(:disabled){transform:scale(.97);}
-.pd-btn-save:disabled{opacity:.6;cursor:not-allowed;}
-.pd-save-spinner{width:14px;height:14px;border:2px solid rgba(15,31,45,.3);border-top-color:#0F1F2D;border-radius:50%;animation:spin .75s linear infinite;}
-
-.export-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:9px;border:1px solid #E2E8F0;background:#fff;color:#334155;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
-.export-btn:hover{border-color:var(--gold);background:var(--gold-soft);color:var(--gold-dim);}
-
-/* Access denied banner */
-.access-denied{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;text-align:center;color:#94A3B8;}
-.access-denied-icon{width:56px;height:56px;background:#F1F5F9;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px;}
 
 @media(max-width:900px){
   #sidebar{transform:translateX(-100%);}
   #sidebar.mobile-open{transform:translateX(0);}
   #app-main{margin-left:0 !important;}
-  .doc-meta,.form-grid-2,.perf-grid{grid-template-columns:1fr 1fr;}
-}
-@media(max-width:480px){
-  .profile-drawer{max-width:100%;}
-  .pd-row-2{grid-template-columns:1fr;}
 }
 </style>
 </head>
@@ -286,28 +245,26 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
 <!-- LOGIN OVERLAY -->
 <div id="login-overlay" class="login-overlay" aria-modal="true" role="dialog">
   <div class="login-card">
-    <div class="login-brand">
+    <div class="flex items-center gap-3 mb-7">
       <div class="login-logo">R2</div>
       <div>
-        <div class="login-brand-name">Route 2 Uni</div>
-        <div class="login-brand-sub">Student Portal</div>
+        <div class="font-display font-extrabold text-[15px] text-slate-900">Route 2 Uni</div>
+        <div class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Student Portal</div>
       </div>
     </div>
-    <h2 class="login-title">Welcome back</h2>
-    <p class="login-hint">Sign in with your staff credentials to continue.</p>
-    <div class="login-error" id="login-error" role="alert" style="display:none"></div>
-    <div class="login-field">
-      <label class="login-label" for="login-username">Username</label>
+    <h2 class="font-display font-extrabold text-[22px] text-slate-900 mb-1.5">Welcome back</h2>
+    <p class="text-[13px] text-slate-500 mb-6">Sign in with your staff credentials to continue.</p>
+    <div class="login-error" id="login-error" style="display:none"></div>
+    <div class="mb-4">
+      <label class="block text-[10.5px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Username</label>
       <input class="login-input" id="login-username" type="text" autocomplete="username" placeholder="your.username" spellcheck="false">
     </div>
-    <div class="login-field">
-      <label class="login-label" for="login-password">Password</label>
+    <div class="mb-2">
+      <label class="block text-[10.5px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Password</label>
       <div style="position:relative">
         <input class="login-input" id="login-password" type="password" autocomplete="current-password" placeholder="••••••••" style="padding-right:44px">
         <button type="button" class="login-eye" onclick="togglePasswordVisibility()" title="Show/hide password">
-          <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-          </svg>
+          <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </div>
     </div>
@@ -315,7 +272,7 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
       <span id="login-btn-text">Sign in</span>
       <span class="login-spinner" id="login-spinner" style="display:none"></span>
     </button>
-    <p class="login-footer-note">Forgot your password? Contact your system administrator.</p>
+    <p class="text-center text-[11.5px] text-slate-400 mt-4">Forgot your password? Contact your administrator.</p>
   </div>
 </div>
 
@@ -341,7 +298,6 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3.5" width="12" height="18" rx="2"/><path d="M9 3.5h6v3H9z"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
       <span>Mock Pre-CAS</span>
     </div>
-    <!-- Admin-only nav items -->
     <div class="nav-link admin-only" data-view="upload" onclick="switchView('upload',this)" style="display:none">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16a4.5 4.5 0 010-9 5.5 5.5 0 0110.4-1.7A5 5 0 0117 16"/><path d="M12 11v8"/><path d="M9 14l3-3 3 3"/></svg>
       <span>Import CSV</span>
@@ -351,7 +307,6 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
       <span>Reports</span>
     </div>
   </nav>
-  <!-- Static user info (no switching) -->
   <div class="px-3 pb-4 flex-shrink-0">
     <div class="user-pill">
       <div class="user-pill-avatar" id="cur-avatar">SA</div>
@@ -374,7 +329,7 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
       <p class="text-[11.5px] text-slate-400 font-medium" id="page-subtitle">Every applicant, one screen.</p>
     </div>
     <div class="flex items-center gap-2">
-      <button class="export-btn" id="dash-export-btn" onclick="exportStudentsCSV()" title="Export visible students to CSV">
+      <button class="export-btn" id="dash-export-btn" onclick="exportStudentsCSV()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Export CSV
       </button>
@@ -388,27 +343,42 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
 
     <!-- DASHBOARD -->
     <div class="view active" id="view-dashboard">
+      <!-- KPI Cards -->
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5 mb-6">
         <div class="kpi-card"><div class="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center mb-3 text-slate-500"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c0-3.2 2.7-5.5 6-5.5s6 2.3 6 5.5"/><path d="M16.5 7.2a3 3 0 010 5.8"/><path d="M19.5 19c0-2.4-1.6-4.4-3.8-5.2"/></svg></div><div class="font-display text-[25px] font-bold text-slate-900 leading-none" id="stat-total">—</div><div class="text-[10.5px] font-semibold text-slate-400 uppercase tracking-wide mt-1.5">Total Students</div></div>
         <div class="kpi-card"><div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center mb-3 text-emerald-600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3.5" width="12" height="18" rx="2"/><path d="M9 3.5h6v3H9z"/><polyline points="9 13 11 15 15 10.5"/></svg></div><div class="font-display text-[25px] font-bold text-emerald-600 leading-none" id="stat-offers">—</div><div class="text-[10.5px] font-semibold text-slate-400 uppercase tracking-wide mt-1.5">Offers Received</div><div class="text-[10.5px] text-emerald-600 font-semibold mt-1" id="stat-offers-sub">&nbsp;</div></div>
         <div class="kpi-card"><div class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center mb-3 text-amber-600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg></div><div class="font-display text-[25px] font-bold text-amber-600 leading-none" id="stat-cas">—</div><div class="text-[10.5px] font-semibold text-slate-400 uppercase tracking-wide mt-1.5">CAS Pending</div><div class="text-[10.5px] text-amber-600 font-semibold mt-1" id="stat-cas-sub">&nbsp;</div></div>
         <div class="kpi-card"><div class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center mb-3 text-emerald-600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div><div class="font-display text-[25px] font-bold text-emerald-600 leading-none" id="stat-visa">—</div><div class="text-[10.5px] font-semibold text-slate-400 uppercase tracking-wide mt-1.5">Visa Approved</div><div class="text-[10.5px] text-emerald-600 font-semibold mt-1" id="stat-visa-sub">&nbsp;</div></div>
-        <div class="kpi-card"><div class="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center mb-3 text-red-600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="font-display text-[25px] font-bold text-red-600 leading-none" id="stat-refused">—</div><div class="text-[10.5px] font-semibold text-slate-400 uppercase tracking-wide mt-1.5">Visa Refused</div><div class="text-[10.5px] text-red-600 font-semibold mt-1" id="stat-refused-sub">&nbsp;</div></div>
-        <div class="kpi-card"><div class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center mb-3 text-amber-600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="font-display text-[25px] font-bold text-amber-600 leading-none" id="stat-payment">—</div><div class="text-[10.5px] font-semibold text-slate-400 uppercase tracking-wide mt-1.5">Payment Pending</div><div class="text-[10.5px] text-amber-600 font-semibold mt-1" id="stat-payment-sub">&nbsp;</div></div>
+        <div class="kpi-card"><div class="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center mb-3 text-red-600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg></div><div class="font-display text-[25px] font-bold text-red-600 leading-none" id="stat-refused">—</div><div class="text-[10.5px] font-semibold text-slate-400 uppercase tracking-wide mt-1.5">Visa Refused</div></div>
+        <div class="kpi-card"><div class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center mb-3 text-amber-600"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="font-display text-[25px] font-bold text-amber-600 leading-none" id="stat-payment">—</div><div class="text-[10.5px] font-semibold text-slate-400 uppercase tracking-wide mt-1.5">Payment Pending</div></div>
       </div>
-      <div class="flex items-center justify-between gap-3 mb-4 flex-wrap">
-        <div class="flex items-center gap-2 flex-wrap flex-1">
-          <div class="relative"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="filter-pill pl-8 w-56" id="search-input" type="text" placeholder="Search name, ID, course…" oninput="filterTable()"></div>
-          <select class="filter-pill" id="filter-agent" onchange="filterTable()"><option value="">All Agents</option></select>
-          <select class="filter-pill" id="filter-level" onchange="filterTable()"><option value="">All Levels</option><option>UG</option><option>PG</option><option>PHD</option></select>
-          <select class="filter-pill" id="filter-offer" onchange="filterTable()"><option value="">All Offers</option><option>Pending</option><option>Conditional</option><option>Unconditional</option><option>Received</option><option>Rejected</option></select>
-          <select class="filter-pill" id="filter-visa" onchange="filterTable()"><option value="">All Visa</option><option>Not Applied</option><option>Pending</option><option>Approved</option><option>Refused</option></select>
+
+      <!-- Filters -->
+      <div class="flex items-center gap-2 mb-4 flex-wrap">
+        <div class="relative">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="filter-pill pl-8 w-56" id="search-input" type="text" placeholder="Search name, ID, course…" oninput="filterTable()">
         </div>
+        <select class="filter-pill" id="filter-agent" onchange="filterTable()"><option value="">All Agents</option></select>
+        <select class="filter-pill" id="filter-level" onchange="filterTable()"><option value="">All Levels</option><option>UG</option><option>PG</option><option>PHD</option></select>
+        <select class="filter-pill" id="filter-offer" onchange="filterTable()"><option value="">All Offers</option><option>Pending</option><option>Conditional</option><option>Unconditional</option><option>Received</option><option>Rejected</option></select>
+        <select class="filter-pill" id="filter-visa" onchange="filterTable()"><option value="">All Visa</option><option>Not Applied</option><option>Pending</option><option>Approved</option><option>Refused</option></select>
       </div>
+
+      <!-- Table -->
       <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm" id="table-wrap">
         <div class="overflow-auto" style="max-height:62vh">
           <table class="dtable" id="student-table">
-            <thead><tr><th style="min-width:90px">Student ID</th><th style="min-width:150px">Student Name</th><th style="min-width:150px">Course</th><th style="min-width:110px">Agent</th><th style="min-width:260px">Pipeline (10 stages)</th><th class="text-right" style="min-width:90px"></th></tr></thead>
+            <thead>
+              <tr>
+                <th style="min-width:90px">Student ID</th>
+                <th style="min-width:150px">Student Name</th>
+                <th style="min-width:150px">Course</th>
+                <th style="min-width:110px">Agent</th>
+                <th style="min-width:260px">Pipeline (10 stages)</th>
+                <th class="text-right" style="min-width:90px"></th>
+              </tr>
+            </thead>
             <tbody id="table-body"><tr><td colspan="6" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
@@ -417,12 +387,10 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
 
     <!-- CAS SHIELD -->
     <div class="view" id="view-casshield">
-      <div class="flex items-center justify-between gap-3 mb-4 flex-wrap">
-        <div class="flex items-center gap-2 flex-wrap flex-1">
-          <div class="relative"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="filter-pill pl-8 w-56" id="cas-search" type="text" placeholder="Search name, ID, agent…" oninput="filterCASTable()"></div>
-          <select class="filter-pill" id="cas-filter-pci" onchange="filterCASTable()"><option value="">Ready for PCI</option><option>Yes</option><option>No</option></select>
-          <select class="filter-pill" id="cas-filter-visa" onchange="filterCASTable()"><option value="">Visa Refusal</option><option>Yes</option><option>No</option></select>
-        </div>
+      <div class="flex items-center gap-2 mb-4 flex-wrap">
+        <div class="relative"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="filter-pill pl-8 w-56" id="cas-search" type="text" placeholder="Search name, ID, agent…" oninput="filterCASTable()"></div>
+        <select class="filter-pill" id="cas-filter-pci" onchange="filterCASTable()"><option value="">Ready for PCI</option><option>Yes</option><option>No</option></select>
+        <select class="filter-pill" id="cas-filter-visa" onchange="filterCASTable()"><option value="">Visa Refusal</option><option>Yes</option><option>No</option></select>
       </div>
       <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
         <div class="overflow-auto" style="max-height:64vh">
@@ -438,7 +406,7 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
     <div class="view" id="view-feedback">
       <div class="success-banner" id="fb-success">
         <div class="w-11 h-11 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 text-emerald-600"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-        <div class="flex-1"><div class="success-title" id="fb-success-title">Feedback doc created!</div><div class="success-sub">Saved to Google Drive and linked in the student record.</div></div>
+        <div class="flex-1"><div class="font-bold text-[13.5px] text-emerald-900" id="fb-success-title">Feedback doc created!</div><div class="text-[11.5px] text-emerald-600 font-medium mt-0.5">Saved to Google Drive and linked in the student record.</div></div>
         <div class="flex gap-2"><a class="px-3.5 py-2 rounded-lg border border-emerald-300 text-emerald-700 text-[12px] font-semibold hover:bg-emerald-100 transition" id="fb-doc-link" href="#" target="_blank">Open Doc ↗</a><button class="px-3.5 py-2 rounded-lg bg-navy text-white text-[12px] font-semibold hover:opacity-90 transition" onclick="resetFeedback()">New Feedback</button></div>
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-5 gap-5">
@@ -446,8 +414,8 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
           <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
             <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-4">Student Details</div>
             <div class="form-group"><label class="form-label">Search Student</label><div class="lookup-wrap"><input class="form-control" id="fb-search" type="text" placeholder="Type name or ID…" oninput="fbSearchStudents(this.value)" autocomplete="off"><div class="lookup-results" id="fb-lookup"></div></div></div>
-            <div class="sel-student mb-3" id="fb-sel-card"><div><div class="ss-name" id="fb-ss-name">—</div><div class="ss-meta" id="fb-ss-meta">—</div></div><button class="ss-clear" onclick="fbClearStudent()">✕</button></div>
-            <div id="fb-manual" style="display:none"><div class="form-grid-2"><div class="form-group"><label class="form-label">Student Name</label><input class="form-control" id="fb-mname" type="text" placeholder="e.g. Priya Sharma"></div><div class="form-group"><label class="form-label">Student ID</label><input class="form-control" id="fb-mid" type="text" placeholder="e.g. R2U001"></div></div></div>
+            <div class="sel-student mb-3" id="fb-sel-card"><div><div class="ss-name" id="fb-ss-name">—</div><div class="text-[11px] text-amber-700 font-medium mt-0.5" id="fb-ss-meta">—</div></div><button class="ss-clear" onclick="fbClearStudent()">✕</button></div>
+            <div id="fb-manual" style="display:none"><div class="form-grid-2"><div class="form-group"><label class="form-label">Student Name</label><input class="form-control" id="fb-mname" type="text"></div><div class="form-group"><label class="form-label">Student ID</label><input class="form-control" id="fb-mid" type="text"></div></div></div>
             <button class="text-[12px] font-semibold text-slate-500 hover:text-navy" onclick="toggleFbManual()" id="fb-manual-toggle">+ Enter manually</button>
           </div>
           <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
@@ -459,9 +427,9 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
             <div class="perf-grid"><div class="perf-opt sel" data-value="Excellent" onclick="selectPerf(this)"><div class="perf-emoji">🟢</div><div class="perf-lbl">Excellent</div></div><div class="perf-opt" data-value="Good" onclick="selectPerf(this)"><div class="perf-emoji">🔵</div><div class="perf-lbl">Good</div></div><div class="perf-opt" data-value="Satisfactory" onclick="selectPerf(this)"><div class="perf-emoji">🟡</div><div class="perf-lbl">Satisfactory</div></div><div class="perf-opt" data-value="Needs Improvement" onclick="selectPerf(this)"><div class="perf-emoji">🔴</div><div class="perf-lbl">Needs Improvement</div></div></div>
           </div>
           <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-4">Detailed Feedback &amp; Recommendations</div>
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-4">Feedback &amp; Recommendations</div>
             <div class="form-group"><label class="form-label">Detailed Feedback</label><textarea class="form-control" id="fb-text" placeholder="Describe the student's performance in detail…"></textarea></div>
-            <div class="form-group" style="margin-bottom:0"><label class="form-label">Recommendations</label><textarea class="form-control" style="min-height:65px" id="fb-recs" placeholder="Key areas to improve before the actual CAS interview…"></textarea></div>
+            <div class="form-group" style="margin-bottom:0"><label class="form-label">Recommendations</label><textarea class="form-control" style="min-height:65px" id="fb-recs" placeholder="Key areas to improve…"></textarea></div>
           </div>
           <div class="flex gap-2 justify-end">
             <button class="px-4 py-2.5 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50 transition" onclick="fbPreview()">Preview</button>
@@ -474,7 +442,6 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
             <div class="bg-navy px-5 py-3 flex items-center justify-between"><span class="text-white/60 text-[10.5px] font-bold tracking-wider uppercase">Document Preview</span><button class="text-white/50 hover:text-white text-[12px] font-semibold" onclick="document.getElementById('fb-preview').classList.remove('show')">Close ✕</button></div>
             <div class="p-7" id="fb-preview-body"></div>
           </div>
-          <div class="hidden lg:flex items-center justify-center h-full text-slate-300 text-[13px] font-medium" id="fb-preview-placeholder" style="min-height:300px"><span>Preview your feedback document here →</span></div>
         </div>
       </div>
     </div>
@@ -482,10 +449,14 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
     <!-- UPLOAD (admin only) -->
     <div class="view" id="view-upload">
       <div id="upload-access-check">
-        <div class="border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center max-w-xl mx-auto bg-white transition" id="drop-zone" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event)">
+        <div class="border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center max-w-xl mx-auto bg-white" id="drop-zone" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleDrop(event)">
           <div class="w-14 h-14 rounded-2xl bg-gold/10 flex items-center justify-center mx-auto mb-4 text-gold"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16a4.5 4.5 0 010-9 5.5 5.5 0 0110.4-1.7A5 5 0 0117 16"/><path d="M12 11v8"/><path d="M9 14l3-3 3 3"/></svg></div>
           <div class="font-display font-bold text-[17px] text-slate-900 mb-1">Drop your CSV file here</div>
-          <div class="text-slate-400 text-[12.5px] mb-5">Columns must match the Google Sheet headers exactly.</div>
+          <div class="text-slate-400 text-[12.5px] mb-3">Must contain: LEVEL, DOB, STUDENT ID, STUDENT NAME, COURSE, SUBMITTED BY</div>
+          <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5 text-left text-[12px] text-amber-800">
+            <strong>Sheet-only fields (input via CSV/Sheet):</strong> LEVEL · DOB · STUDENT ID · STUDENT NAME · COURSE · SUBMITTED BY<br>
+            <strong class="mt-1 block">Portal-managed fields:</strong> All statuses (call, offer, payment, CAS, visa, scholarship, etc.) are updated from the portal only.
+          </div>
           <input type="file" id="csv-file" accept=".csv" onchange="handleFileSelect(event)" style="display:none">
           <button class="px-5 py-2.5 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90 transition" onclick="document.getElementById('csv-file').click()">Choose file</button>
         </div>
@@ -500,12 +471,7 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
     <!-- REPORTS (admin only) -->
     <div class="view" id="view-reports">
       <div id="reports-access-check">
-        <div class="flex items-center justify-end mb-4">
-          <button class="export-btn" onclick="exportStudentsCSV()" title="Export all student data to CSV">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export CSV
-          </button>
-        </div>
+        <div class="flex justify-end mb-4"><button class="export-btn" onclick="exportStudentsCSV()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button></div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="report-grid"><div class="empty-state">Loading reports…</div></div>
       </div>
     </div>
@@ -513,46 +479,256 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
   </main>
 </div>
 
-<!-- DRAWERS -->
+<!-- DRAWER OVERLAY -->
 <div id="drawer-overlay"></div>
 
-<aside class="drawer" id="modal-prescreening"><div class="drawer-head"><div><div class="drawer-title">Pre-Screening Call</div><div class="drawer-sub" id="ps-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-prescreening')">✕</button></div><div class="drawer-body"><div class="qa-grid" id="ps-options"></div><div class="form-group" style="margin-top:14px"><label class="form-label">Notes</label><textarea class="form-control" id="ps-notes" style="min-height:60px" placeholder="Optional call notes…"></textarea></div></div><div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-prescreening')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitQuickStatus('modal-prescreening','PRE-SCREENING CALL STATUS','ps-val','ps-notes')">Save</button></div></aside>
+<!-- PRE-SCREENING MODAL -->
+<aside class="drawer" id="modal-prescreening">
+  <div class="drawer-head"><div><div class="drawer-title">Pre-Screening Call</div><div class="drawer-sub" id="ps-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-prescreening')">✕</button></div>
+  <div class="drawer-body"><div class="qa-grid" id="ps-options"></div><div class="form-group" style="margin-top:14px"><label class="form-label">Notes</label><textarea class="form-control" id="ps-notes" style="min-height:60px" placeholder="Optional call notes…"></textarea></div></div>
+  <div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-prescreening')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitQuickStatus('modal-prescreening','PRE-SCREENING CALL STATUS','ps-notes')">Save</button></div>
+</aside>
 
-<aside class="drawer" id="modal-offer"><div class="drawer-head"><div><div class="drawer-title">Offer Status</div><div class="drawer-sub" id="offer-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-offer')">✕</button></div><div class="drawer-body"><div class="qa-grid" id="offer-options"></div><div id="offer-conditional-notice" class="notice" style="display:none;margin-top:14px"><strong>Conditional offer</strong> — remember to log condition docs in the sheet once received.</div><div class="form-group" style="margin-top:14px"><label class="form-label">Notes / Condition details</label><textarea class="form-control" id="offer-notes" style="min-height:60px" placeholder="e.g. condition: English cert pending"></textarea></div></div><div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-offer')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitQuickStatus('modal-offer','OFFER STATUS','offer-val','offer-notes')">Save</button></div></aside>
+<!-- OFFER MODAL -->
+<aside class="drawer" id="modal-offer">
+  <div class="drawer-head"><div><div class="drawer-title">Offer Status</div><div class="drawer-sub" id="offer-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-offer')">✕</button></div>
+  <div class="drawer-body"><div class="qa-grid" id="offer-options"></div><div id="offer-conditional-notice" class="notice" style="display:none;margin-top:14px"><strong>Conditional offer</strong> — remember to log condition docs once received.</div><div class="form-group" style="margin-top:14px"><label class="form-label">Notes / Condition details</label><textarea class="form-control" id="offer-notes" style="min-height:60px" placeholder="e.g. condition: English cert pending"></textarea></div></div>
+  <div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-offer')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitQuickStatus('modal-offer','OFFER STATUS','offer-notes')">Save</button></div>
+</aside>
 
-<aside class="drawer" id="modal-scholarship"><div class="drawer-head"><div><div class="drawer-title">Scholarship</div><div class="drawer-sub" id="sch-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-scholarship')">✕</button></div><div class="drawer-body"><div class="qa-grid" id="sch-options"></div><div class="form-group" style="margin-top:14px"><label class="form-label">Amount / Reference</label><input class="form-control" id="sch-amount" type="text" placeholder="e.g. £3,000 merit scholarship ref SCH-2026-01"></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="sch-notes" style="min-height:60px"></textarea></div></div><div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-scholarship')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitQuickStatus('modal-scholarship','SCHOLARSHIP','sch-val','sch-notes')">Save</button></div></aside>
+<!-- SCHOLARSHIP MODAL -->
+<aside class="drawer" id="modal-scholarship">
+  <div class="drawer-head"><div><div class="drawer-title">Scholarship</div><div class="drawer-sub" id="sch-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-scholarship')">✕</button></div>
+  <div class="drawer-body"><div class="qa-grid" id="sch-options"></div><div class="form-group" style="margin-top:14px"><label class="form-label">Amount / Reference</label><input class="form-control" id="sch-amount" type="text" placeholder="e.g. £3,000 merit scholarship"></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="sch-notes" style="min-height:60px"></textarea></div></div>
+  <div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-scholarship')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitQuickStatus('modal-scholarship','SCHOLARSHIP','sch-notes')">Save</button></div>
+</aside>
 
-<aside class="drawer drawer-wide" id="modal-payment"><div class="drawer-head"><div><div class="drawer-title">Payment</div><div class="drawer-sub" id="pay-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-payment')">✕</button></div><div class="drawer-body"><div class="qa-grid" id="pay-options" style="grid-template-columns:repeat(2,1fr)"></div><div class="form-grid-2" style="margin-top:14px"><div class="form-group"><label class="form-label">Payment Date</label><input class="form-control" id="pay-date" type="date"></div><div class="form-group"><label class="form-label">Amount (£)</label><input class="form-control" id="pay-amount" type="text" placeholder="e.g. 5000"></div></div><div class="form-group"><label class="form-label">Reference / Receipt No.</label><input class="form-control" id="pay-ref" type="text" placeholder="e.g. TXN-2026-REF"></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="pay-notes" style="min-height:55px"></textarea></div></div><div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-payment')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitPayment()">Save Payment</button></div></aside>
+<!-- PAYMENT MODAL -->
+<aside class="drawer drawer-wide" id="modal-payment">
+  <div class="drawer-head"><div><div class="drawer-title">Payment</div><div class="drawer-sub" id="pay-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-payment')">✕</button></div>
+  <div class="drawer-body">
+    <div class="qa-grid" id="pay-options"></div>
+    <div class="form-grid-2" style="margin-top:14px"><div class="form-group"><label class="form-label">Payment Date</label><input class="form-control" id="pay-date" type="date"></div><div class="form-group"><label class="form-label">Amount (£)</label><input class="form-control" id="pay-amount" type="text" placeholder="e.g. 5000"></div></div>
+    <div class="form-group"><label class="form-label">Reference / Receipt No.</label><input class="form-control" id="pay-ref" type="text" placeholder="e.g. TXN-2026-REF"></div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="pay-notes" style="min-height:55px"></textarea></div>
+  </div>
+  <div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-payment')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitPayment()">Save Payment</button></div>
+</aside>
 
-<aside class="drawer" id="modal-caslink"><div class="drawer-head"><div><div class="drawer-title">CAS Shield Progress</div><div class="drawer-sub" id="caslink-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-caslink')">✕</button></div><div class="drawer-body"><div class="qa-grid" id="caslink-options"></div><div class="form-group" style="margin-top:14px"><label class="form-label">Notes</label><textarea class="form-control" id="caslink-notes" style="min-height:60px"></textarea></div></div><div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-caslink')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitQuickStatus('modal-caslink','CAS SHIELD','caslink-val','caslink-notes')">Save</button></div></aside>
+<!-- CAS LINK MODAL -->
+<aside class="drawer" id="modal-caslink">
+  <div class="drawer-head"><div><div class="drawer-title">CAS Shield Progress</div><div class="drawer-sub" id="caslink-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-caslink')">✕</button></div>
+  <div class="drawer-body"><div class="qa-grid" id="caslink-options"></div><div class="form-group" style="margin-top:14px"><label class="form-label">Notes</label><textarea class="form-control" id="caslink-notes" style="min-height:60px"></textarea></div></div>
+  <div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-caslink')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitQuickStatus('modal-caslink','CAS SHIELD','caslink-notes')">Save</button></div>
+</aside>
 
-<aside class="drawer" id="modal-casstatus"><div class="drawer-head"><div><div class="drawer-title">CAS Status</div><div class="drawer-sub" id="casstatus-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-casstatus')">✕</button></div><div class="drawer-body"><div class="qa-grid" id="casstatus-options"></div><div class="form-group" style="margin-top:14px"><label class="form-label">CAS Number (if issued)</label><input class="form-control" id="cas-number" type="text" placeholder="e.g. ABC123456789"></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="casstatus-notes" style="min-height:55px"></textarea></div></div><div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-casstatus')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitCASStatus()">Save</button></div></aside>
+<!-- CAS STATUS MODAL -->
+<aside class="drawer" id="modal-casstatus">
+  <div class="drawer-head"><div><div class="drawer-title">CAS Status</div><div class="drawer-sub" id="casstatus-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-casstatus')">✕</button></div>
+  <div class="drawer-body"><div class="qa-grid" id="casstatus-options"></div><div class="form-group" style="margin-top:14px"><label class="form-label">CAS Number (if issued)</label><input class="form-control" id="cas-number" type="text" placeholder="e.g. ABC123456789"></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="casstatus-notes" style="min-height:55px"></textarea></div></div>
+  <div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-casstatus')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitCASStatus()">Save</button></div>
+</aside>
 
-<aside class="drawer drawer-wide" id="modal-visa"><div class="drawer-head"><div><div class="drawer-title">Visa Status</div><div class="drawer-sub" id="visa-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-visa')">✕</button></div><div class="drawer-body"><div class="qa-grid" id="visa-options"></div><div class="form-grid-2" style="margin-top:14px"><div class="form-group"><label class="form-label">Application Date</label><input class="form-control" id="visa-appdate" type="date"></div><div class="form-group"><label class="form-label">Decision Date</label><input class="form-control" id="visa-decdate" type="date"></div></div><div class="form-group"><label class="form-label">GWF / Ref Number</label><input class="form-control" id="visa-ref" type="text" placeholder="e.g. GWF059123456"></div><div id="visa-refusal-section" style="display:none"><div class="notice"><strong>Visa Refused</strong> — please capture the refusal reason below for CAS Shield records.</div><div class="form-group"><label class="form-label">Refusal Reason</label><textarea class="form-control" id="visa-refusal-reason" style="min-height:65px" placeholder="Summarise the ECO refusal notice…"></textarea></div></div><div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="visa-notes" style="min-height:55px"></textarea></div></div><div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-visa')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitVisa()">Save Visa Update</button></div></aside>
+<!-- VISA MODAL -->
+<aside class="drawer drawer-wide" id="modal-visa">
+  <div class="drawer-head"><div><div class="drawer-title">Visa Status</div><div class="drawer-sub" id="visa-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-visa')">✕</button></div>
+  <div class="drawer-body">
+    <div class="qa-grid" id="visa-options"></div>
+    <div class="form-grid-2" style="margin-top:14px"><div class="form-group"><label class="form-label">Application Date</label><input class="form-control" id="visa-appdate" type="date"></div><div class="form-group"><label class="form-label">Decision Date</label><input class="form-control" id="visa-decdate" type="date"></div></div>
+    <div class="form-group"><label class="form-label">GWF / Ref Number</label><input class="form-control" id="visa-ref" type="text" placeholder="e.g. GWF059123456"></div>
+    <div id="visa-refusal-section" style="display:none"><div class="notice"><strong>Visa Refused</strong> — capture the refusal reason for CAS Shield records.</div><div class="form-group"><label class="form-label">Refusal Reason</label><textarea class="form-control" id="visa-refusal-reason" style="min-height:65px" placeholder="Summarise the ECO refusal notice…"></textarea></div></div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-control" id="visa-notes" style="min-height:55px"></textarea></div>
+  </div>
+  <div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-visa')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitVisa()">Save Visa Update</button></div>
+</aside>
 
-<aside class="drawer" id="modal-feedback"><div class="drawer-head"><div><div class="drawer-title">Mock Pre-CAS Feedback</div><div class="drawer-sub" id="mfb-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-feedback')">✕</button></div><div class="drawer-body"><div class="form-grid-2"><div class="form-group"><label class="form-label">Session Date</label><input type="date" class="form-control" id="mfb-date"></div><div class="form-group"><label class="form-label">Overall Performance</label><select class="form-control" id="mfb-perf"><option>Excellent</option><option>Good</option><option>Satisfactory</option><option>Needs Improvement</option></select></div></div><div class="form-group"><label class="form-label">Detailed Feedback</label><textarea class="form-control" id="mfb-text" placeholder="Write mock pre-CAS interview feedback here…"></textarea></div><div class="form-group" style="margin-bottom:0"><label class="form-label">Recommendations</label><textarea class="form-control" id="mfb-recs" style="min-height:65px" placeholder="Key areas to improve…"></textarea></div></div><div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-feedback')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitFeedback()">Generate Doc &amp; Save</button></div></aside>
+<!-- FEEDBACK MODAL (from table) -->
+<aside class="drawer" id="modal-feedback">
+  <div class="drawer-head"><div><div class="drawer-title">Mock Pre-CAS Feedback</div><div class="drawer-sub" id="mfb-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-feedback')">✕</button></div>
+  <div class="drawer-body"><div class="form-grid-2"><div class="form-group"><label class="form-label">Session Date</label><input type="date" class="form-control" id="mfb-date"></div><div class="form-group"><label class="form-label">Overall Performance</label><select class="form-control" id="mfb-perf"><option>Excellent</option><option>Good</option><option>Satisfactory</option><option>Needs Improvement</option></select></div></div><div class="form-group"><label class="form-label">Detailed Feedback</label><textarea class="form-control" id="mfb-text" placeholder="Write mock pre-CAS interview feedback here…"></textarea></div><div class="form-group" style="margin-bottom:0"><label class="form-label">Recommendations</label><textarea class="form-control" id="mfb-recs" style="min-height:65px" placeholder="Key areas to improve…"></textarea></div></div>
+  <div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-feedback')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitFeedback()">Generate Doc &amp; Save</button></div>
+</aside>
 
-<aside class="drawer" id="modal-submission"><div class="drawer-head"><div><div class="drawer-title">Application Submission</div><div class="drawer-sub" id="sub-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-submission')">✕</button></div><div class="drawer-body"><div class="form-grid-2"><div class="form-group"><label class="form-label">Application Submitted Date</label><input type="date" class="form-control" id="sub-date"></div><div class="form-group"><label class="form-label">Submitted By</label><input type="text" class="form-control" id="sub-by" placeholder="Staff name"></div></div><div class="form-group" style="margin-bottom:0"><label class="form-label">Notes</label><textarea class="form-control" id="sub-notes" style="min-height:55px"></textarea></div></div><div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-submission')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitApplication()">Save</button></div></aside>
+<!-- SUBMISSION MODAL -->
+<aside class="drawer" id="modal-submission">
+  <div class="drawer-head"><div><div class="drawer-title">Application Submission</div><div class="drawer-sub" id="sub-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-submission')">✕</button></div>
+  <div class="drawer-body"><div class="form-grid-2"><div class="form-group"><label class="form-label">Application Submitted Date</label><input type="date" class="form-control" id="sub-date"></div><div class="form-group"><label class="form-label">Submitted By</label><input type="text" class="form-control" id="sub-by" placeholder="Staff name"></div></div><div class="form-group" style="margin-bottom:0"><label class="form-label">Notes</label><textarea class="form-control" id="sub-notes" style="min-height:55px"></textarea></div></div>
+  <div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-submission')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitApplication()">Save</button></div>
+</aside>
 
-<aside class="drawer drawer-wide" id="modal-cas"><div class="drawer-head"><div><div class="drawer-title">Update CAS Shield Record</div><div class="drawer-sub" id="cas-ms-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-cas')">✕</button></div><div class="drawer-body"><div class="form-grid-2"><div class="form-group"><label class="form-label">Ready for PCI</label><select class="form-control" id="cas-pci"><option>Yes</option><option>No</option></select></div><div class="form-group"><label class="form-label">Visa Refusal Y/N</label><select class="form-control" id="cas-visa-r"><option>No</option><option>Yes</option></select></div><div class="form-group"><label class="form-label">Info Check Complete</label><select class="form-control" id="cas-info"><option>Yes</option><option>No</option></select></div><div class="form-group"><label class="form-label">Pre-CAS Questionnaire</label><select class="form-control" id="cas-precas"><option>Yes</option><option>No</option></select></div><div class="form-group"><label class="form-label">Study Gap Y/N</label><select class="form-control" id="cas-gap"><option>No</option><option>Yes</option></select></div><div class="form-group"><label class="form-label">Same Level Studies</label><select class="form-control" id="cas-same"><option>No</option><option>Yes</option></select></div></div><div class="form-group"><label class="form-label">PCI Invite Date</label><input type="date" class="form-control" id="cas-invite"></div><div class="form-group" style="margin-bottom:0"><label class="form-label">Team Comment</label><textarea class="form-control" id="cas-comment" style="min-height:70px"></textarea></div></div><div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-cas')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitCASUpdate()">Save Changes</button></div></aside>
+<!-- CAS SHIELD UPDATE MODAL -->
+<aside class="drawer drawer-wide" id="modal-cas">
+  <div class="drawer-head"><div><div class="drawer-title">Update CAS Shield Record</div><div class="drawer-sub" id="cas-ms-sub"></div></div><button class="drawer-close" onclick="closeModal('modal-cas')">✕</button></div>
+  <div class="drawer-body">
+    <div class="form-grid-2">
+      <div class="form-group"><label class="form-label">Ready for PCI</label><select class="form-control" id="cas-pci"><option>Yes</option><option>No</option></select></div>
+      <div class="form-group"><label class="form-label">Visa Refusal Y/N</label><select class="form-control" id="cas-visa-r"><option>No</option><option>Yes</option></select></div>
+      <div class="form-group"><label class="form-label">Info Check Complete</label><select class="form-control" id="cas-info"><option>Yes</option><option>No</option></select></div>
+      <div class="form-group"><label class="form-label">Pre-CAS Questionnaire</label><select class="form-control" id="cas-precas"><option>Yes</option><option>No</option></select></div>
+      <div class="form-group"><label class="form-label">Study Gap Y/N</label><select class="form-control" id="cas-gap"><option>No</option><option>Yes</option></select></div>
+      <div class="form-group"><label class="form-label">Same Level Studies</label><select class="form-control" id="cas-same"><option>No</option><option>Yes</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">PCI Invite Date</label><input type="date" class="form-control" id="cas-invite"></div>
+    <div class="form-group" style="margin-bottom:0"><label class="form-label">Team Comment</label><textarea class="form-control" id="cas-comment" style="min-height:70px"></textarea></div>
+  </div>
+  <div class="drawer-foot"><button class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50" onclick="closeModal('modal-cas')">Cancel</button><button class="px-4 py-2 rounded-lg bg-gold text-navy text-[12.5px] font-bold hover:opacity-90" onclick="submitCASUpdate()">Save Changes</button></div>
+</aside>
 
-<!-- PROFILE DRAWER -->
+<!-- PROFILE DRAWER — Full pipeline + contact + all portal-managed statuses -->
 <aside class="profile-drawer" id="profile-drawer" role="dialog" aria-modal="true">
-  <div class="profile-drawer-head">
-    <div><div class="profile-drawer-title" id="profile-drawer-title">Student Profile</div><div class="profile-drawer-sub" id="profile-drawer-sub"></div></div>
-    <button class="profile-drawer-close" onclick="closeProfileDrawer()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  <div class="border-b border-slate-200 px-6 py-5 flex items-start justify-between flex-shrink-0">
+    <div>
+      <div class="font-display font-bold text-[15.5px] text-slate-900" id="profile-drawer-title">Student Profile</div>
+      <div class="text-[11.5px] text-slate-400 font-medium mt-0.5" id="profile-drawer-sub"></div>
+    </div>
+    <button class="w-8 h-8 rounded-lg bg-slate-100 border-none cursor-pointer flex items-center justify-center text-slate-500 hover:bg-slate-200 transition flex-shrink-0 ml-3" onclick="closeProfileDrawer()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
   </div>
-  <div class="profile-drawer-body" id="profile-drawer-body">
-    <div class="pd-section"><div class="pd-section-title">Pipeline Progress</div><div id="pd-pipeline-list"></div></div>
-    <div class="pd-section"><div class="pd-section-title">Contact &amp; Personal</div><div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-mobile">Mobile</label><input class="pd-input" id="pd-mobile" type="tel" placeholder="+44 7XXX XXXXXX"></div><div class="pd-field"><label class="pd-label" for="pd-email">Email</label><input class="pd-input" id="pd-email" type="email" placeholder="student@email.com"></div></div><div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-dob">Date of Birth</label><input class="pd-input" id="pd-dob" type="date"></div><div class="pd-field"><label class="pd-label" for="pd-edu">Education Type</label><select class="pd-input" id="pd-edu"><option value="">— Select —</option><option>High School</option><option>Foundation</option><option>Diploma</option><option>Bachelor's</option><option>Master's</option><option>PhD</option><option>Professional</option></select></div></div></div>
-    <div class="pd-section"><div class="pd-section-title">Stage 1 · Application &amp; Offer</div><div class="pd-field"><label class="pd-label" for="pd-app-date">Application Submitted Date</label><input class="pd-input" id="pd-app-date" type="date"></div><div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-call">Pre-Screening Call</label><select class="pd-input" id="pd-call"><option value="">— Select —</option><option>Not Called</option><option>Scheduled</option><option>Called – Interested</option><option>Called – Not Interested</option><option>No Answer</option><option>Voicemail Left</option></select></div><div class="pd-field"><label class="pd-label" for="pd-offer">Offer Status</label><select class="pd-input" id="pd-offer"><option value="">— Select —</option><option>Pending</option><option>Conditional</option><option>Unconditional</option><option>Received</option><option>Rejected</option><option>Withdrawn</option></select></div></div><div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-scholarship">Scholarship</label><select class="pd-input" id="pd-scholarship"><option value="">— Select —</option><option>None</option><option>Partial</option><option>Full</option><option>Bursary</option><option>Sponsorship</option></select></div><div class="pd-field"><label class="pd-label" for="pd-payment">Payment (Tuition)</label><select class="pd-input" id="pd-payment"><option value="">— Select —</option><option>Unpaid</option><option>Deposit Paid</option><option>Partially Paid</option><option>Paid</option><option>Refunded</option><option>Deferred</option></select></div></div></div>
-    <div class="pd-section"><div class="pd-section-title">Stage 2 · Mock &amp; Pre-CAS</div><div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-mock">Mock Interview Prep</label><select class="pd-input" id="pd-mock"><option value="">— Select —</option><option>Not Scheduled</option><option>Scheduled</option><option>Completed</option></select></div><div class="pd-field"><label class="pd-label" for="pd-precas">Pre-CAS Interview</label><select class="pd-input" id="pd-precas"><option value="">— Select —</option><option>Not Scheduled</option><option>Scheduled</option><option>Completed</option><option>Passed</option><option>Failed</option></select></div></div><div class="pd-field"><label class="pd-label" for="pd-cas-shield">CAS Shield</label><select class="pd-input" id="pd-cas-shield"><option value="">— Select —</option><option>Not Started</option><option>In Progress</option><option>Completed</option><option>On Hold</option></select></div></div>
-    <div class="pd-section"><div class="pd-section-title">Stage 3 · CAS &amp; Visa</div><div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-cas-payment">CAS Payment</label><select class="pd-input" id="pd-cas-payment"><option value="">— Select —</option><option>Unpaid</option><option>Paid</option></select></div><div class="pd-field"><label class="pd-label" for="pd-cas-requested">CAS Requested</label><select class="pd-input" id="pd-cas-requested"><option value="">— Select —</option><option>Not Requested</option><option>Requested</option></select></div></div><div class="pd-field"><label class="pd-label" for="pd-cas-status">CAS Status</label><select class="pd-input" id="pd-cas-status"><option value="">— Select —</option><option>Not Applied</option><option>Applied</option><option>Pending</option><option>Issued</option><option>Rejected</option><option>Withdrawn</option></select></div><div class="pd-field"><label class="pd-label" for="pd-visa">Visa Status</label><select class="pd-input" id="pd-visa"><option value="">— Select —</option><option>Not Applied</option><option>Biometrics Booked</option><option>Submitted</option><option>Pending</option><option>Approved</option><option>Refused</option><option>Withdrawn</option></select></div></div>
-    <div class="pd-section"><div class="pd-section-title">Key Dates</div><div class="pd-row-2"><div class="pd-field"><label class="pd-label" for="pd-cond-date">Condition Docs Received</label><input class="pd-input" id="pd-cond-date" type="date"></div><div class="pd-field"><label class="pd-label" for="pd-pay-date">Payment Date</label><input class="pd-input" id="pd-pay-date" type="date"></div></div></div>
-    <div class="pd-save-error" id="pd-save-error" style="display:none"></div>
+
+  <div class="flex-1 overflow-y-auto px-6 py-5" id="profile-drawer-body">
+
+    <!-- Sheet-readonly fields -->
+    <div class="pd-section">
+      <div class="pd-section-title">Sheet Fields <span class="readonly-badge">Read-only · Set in Google Sheet</span></div>
+      <div class="pd-row-2">
+        <div class="pd-field"><label class="pd-label">Student ID</label><input class="pd-input" id="pd-sid" type="text" readonly></div>
+        <div class="pd-field"><label class="pd-label">Level</label><input class="pd-input" id="pd-level" type="text" readonly></div>
+      </div>
+      <div class="pd-field"><label class="pd-label">Student Name</label><input class="pd-input" id="pd-sname" type="text" readonly></div>
+      <div class="pd-field"><label class="pd-label">Course</label><input class="pd-input" id="pd-course" type="text" readonly></div>
+      <div class="pd-row-2">
+        <div class="pd-field"><label class="pd-label">Date of Birth</label><input class="pd-input" id="pd-dob" type="text" readonly></div>
+        <div class="pd-field"><label class="pd-label">Submitted By</label><input class="pd-input" id="pd-submittedby" type="text" readonly></div>
+      </div>
+    </div>
+
+    <!-- Pipeline progress -->
+    <div class="pd-section">
+      <div class="pd-section-title">Pipeline Progress (10 stages)</div>
+      <div id="pd-pipeline-list"></div>
+    </div>
+
+    <!-- Portal-managed: Contact -->
+    <div class="pd-section">
+      <div class="pd-section-title">Contact Details</div>
+      <div class="pd-row-2">
+        <div class="pd-field"><label class="pd-label">Mobile</label><input class="pd-input" id="pd-mobile" type="tel" placeholder="+44 7XXX XXXXXX"></div>
+        <div class="pd-field"><label class="pd-label">Email</label><input class="pd-input" id="pd-email" type="email" placeholder="student@email.com"></div>
+      </div>
+      <div class="pd-field"><label class="pd-label">Education Type</label>
+        <select class="pd-input" id="pd-edu">
+          <option value="">— Select —</option>
+          <option>High School</option><option>Foundation</option><option>Diploma</option>
+          <option>Bachelor's</option><option>Master's</option><option>PhD</option><option>Professional</option>
+        </select>
+      </div>
+      <div class="pd-field"><label class="pd-label">Agent</label><input class="pd-input" id="pd-agent" type="text" placeholder="Agent name"></div>
+    </div>
+
+    <!-- Stage 1 -->
+    <div class="pd-section">
+      <div class="pd-section-title">Stage 1 · Pre-Screening &amp; Offer</div>
+      <div class="pd-row-2">
+        <div class="pd-field"><label class="pd-label">Pre-Screening Call</label>
+          <select class="pd-input" id="pd-call">
+            <option value="">— Select —</option>
+            <option>Not Called</option><option>Scheduled</option><option>Called – Interested</option>
+            <option>Called – Not Interested</option><option>No Answer</option><option>Voicemail Left</option>
+          </select>
+        </div>
+        <div class="pd-field"><label class="pd-label">Offer Status</label>
+          <select class="pd-input" id="pd-offer">
+            <option value="">— Select —</option>
+            <option>Pending</option><option>Conditional</option><option>Unconditional</option>
+            <option>Received</option><option>Rejected</option><option>Withdrawn</option>
+          </select>
+        </div>
+      </div>
+      <div class="pd-row-2">
+        <div class="pd-field"><label class="pd-label">Scholarship</label>
+          <select class="pd-input" id="pd-scholarship">
+            <option value="">— Select —</option>
+            <option>None</option><option>Partial</option><option>Full</option><option>Bursary</option><option>Sponsorship</option>
+          </select>
+        </div>
+        <div class="pd-field"><label class="pd-label">Payment (Tuition)</label>
+          <select class="pd-input" id="pd-payment">
+            <option value="">— Select —</option>
+            <option>Unpaid</option><option>Deposit Paid</option><option>Partially Paid</option>
+            <option>Paid</option><option>Refunded</option><option>Deferred</option>
+          </select>
+        </div>
+      </div>
+      <div class="pd-row-2">
+        <div class="pd-field"><label class="pd-label">Payment Date</label><input class="pd-input" id="pd-pay-date" type="date"></div>
+        <div class="pd-field"><label class="pd-label">Condition Docs Received</label><input class="pd-input" id="pd-cond-date" type="date"></div>
+      </div>
+      <div class="pd-field"><label class="pd-label">Application Submitted Date</label><input class="pd-input" id="pd-app-date" type="date"></div>
+    </div>
+
+    <!-- Stage 2 -->
+    <div class="pd-section">
+      <div class="pd-section-title">Stage 2 · Mock &amp; Pre-CAS</div>
+      <div class="pd-row-2">
+        <div class="pd-field"><label class="pd-label">Mock Interview Status</label>
+          <select class="pd-input" id="pd-mock">
+            <option value="">— Select —</option>
+            <option>Not Scheduled</option><option>Scheduled</option><option>Completed</option>
+          </select>
+        </div>
+        <div class="pd-field"><label class="pd-label">Pre-CAS Interview</label>
+          <select class="pd-input" id="pd-precas">
+            <option value="">— Select —</option>
+            <option>Not Scheduled</option><option>Scheduled</option><option>Completed</option>
+            <option>Passed</option><option>Failed</option>
+          </select>
+        </div>
+      </div>
+      <div class="pd-field"><label class="pd-label">CAS Shield Progress</label>
+        <select class="pd-input" id="pd-cas-shield">
+          <option value="">— Select —</option>
+          <option>Not Started</option><option>In Progress</option><option>Completed</option><option>On Hold</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Stage 3 -->
+    <div class="pd-section">
+      <div class="pd-section-title">Stage 3 · CAS &amp; Visa</div>
+      <div class="pd-row-2">
+        <div class="pd-field"><label class="pd-label">CAS Payment</label>
+          <select class="pd-input" id="pd-cas-payment">
+            <option value="">— Select —</option><option>Unpaid</option><option>Paid</option>
+          </select>
+        </div>
+        <div class="pd-field"><label class="pd-label">CAS Requested</label>
+          <select class="pd-input" id="pd-cas-requested">
+            <option value="">— Select —</option><option>Not Requested</option><option>Requested</option>
+          </select>
+        </div>
+      </div>
+      <div class="pd-field"><label class="pd-label">CAS Status</label>
+        <select class="pd-input" id="pd-cas-status">
+          <option value="">— Select —</option>
+          <option>Not Applied</option><option>Applied</option><option>Pending</option>
+          <option>Issued</option><option>Rejected</option><option>Withdrawn</option>
+        </select>
+      </div>
+      <div class="pd-field"><label class="pd-label">Visa Status</label>
+        <select class="pd-input" id="pd-visa">
+          <option value="">— Select —</option>
+          <option>Not Applied</option><option>Biometrics Booked</option><option>Submitted</option>
+          <option>Pending</option><option>Approved</option><option>Refused</option><option>Withdrawn</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-[12px] font-medium" id="pd-save-error" style="display:none"></div>
   </div>
-  <div class="profile-drawer-foot">
-    <button class="pd-btn-cancel" onclick="closeProfileDrawer()">Cancel</button>
+
+  <div class="border-t border-slate-200 px-6 py-4 flex justify-end gap-3 flex-shrink-0 bg-slate-50">
+    <button class="px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-600 text-[12.5px] font-semibold hover:bg-slate-50 cursor-pointer" onclick="closeProfileDrawer()">Cancel</button>
     <button class="pd-btn-save" id="pd-save-btn" onclick="saveStudentProfile()">
       <span id="pd-save-text">Save changes</span>
       <span class="pd-save-spinner" id="pd-save-spinner" style="display:none"></span>
@@ -561,20 +737,24 @@ table.dtable tbody td{padding:12px 16px;color:#1E293B;vertical-align:middle;}
 </aside>
 <div class="profile-drawer-overlay" id="profile-drawer-overlay" onclick="closeProfileDrawer()"></div>
 
+<!-- POPOVERS & UTILS -->
 <div class="pop-card" id="badge-popover"></div>
 <div class="pop-card" id="kebab-menu"></div>
 <div class="fixed bottom-5 right-5 z-[999] space-y-2" id="toast-wrap"></div>
-<div class="hidden fixed inset-0 bg-white/75 z-[90] flex items-center justify-center flex-col gap-3" id="loading"><div class="spinner"></div><span class="font-semibold text-[13px] text-slate-700" id="loading-msg">Processing…</span></div>
+<div class="hidden fixed inset-0 bg-white/75 z-[90] flex items-center justify-center flex-col gap-3" id="loading">
+  <div class="spinner"></div>
+  <span class="font-semibold text-[13px] text-slate-700" id="loading-msg">Processing…</span>
+</div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────────────────────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzVg_S_d8Z8XyTjuF7ri5v9K9swAczaiF_CvruvJC-14fSC1IzEikF4O2YqWR4fR3XR/exec';
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const APPS_SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbzVg_S_d8Z8XyTjuF7ri5v9K9swAczaiF_CvruvJC-14fSC1IzEikF4O2YqWR4fR3XR/exec';
 const SESSION_KEY_ROLE = 'r2u_role';
 const SESSION_KEY_USER = 'r2u_userName';
 const SESSION_KEY_TIME = 'r2u_loginTime';
 const SESSION_TTL_MS   = 12 * 60 * 60 * 1000;
 
-// ── STATE ───────────────────────────────────────────────────────────────────────
+// ── STATE ───────────────────────────────────────────────────────────────────
 let currentStaff      = { name: '', initials: '', role: 'Staff' };
 let allStudents       = [];
 let allCASData        = [];
@@ -587,11 +767,10 @@ let fbManualMode      = false;
 let selectedPerf      = 'Excellent';
 let currentViewId     = 'dashboard';
 let profileActiveId   = null;
-
-let _currentPage   = 1;
-const PAGE_LIMIT   = 50;
-let _totalRecords  = 0;
-let _isLoadingMore = false;
+let _currentPage      = 1;
+const PAGE_LIMIT      = 100; // Larger pages — show all students
+let _totalRecords     = 0;
+let _isLoadingMore    = false;
 
 const PAGE_META = {
   dashboard: ['Dashboard','Every applicant, one screen.'],
@@ -601,6 +780,7 @@ const PAGE_META = {
   reports:   ['Reports','Live pipeline breakdowns.']
 };
 
+// ── PIPELINE STAGES ─────────────────────────────────────────────────────────
 const STAGE_DEFS = [
   { label: 'Application Submitted',     check: s => !!(s['APPLICATION SUBMITTED DATE']) },
   { label: 'Pre-Screening Call',        check: s => /interested|scheduled|no answer|voicemail/i.test(s['PRE-SCREENING CALL STATUS'] || '') },
@@ -608,33 +788,29 @@ const STAGE_DEFS = [
   { label: 'Unconditional Offer',       check: s => /unconditional|received/i.test(s['OFFER STATUS'] || '') },
   { label: 'Mock Interview Prep',       check: s => s['MOCK INTERVIEW STATUS'] === 'Completed' || /^https?:/i.test(s['MOCK PRE-CAS'] || '') },
   { label: 'Pre-CAS Interview Cleared', check: s => /passed/i.test(s['PRE-CAS INTERVIEW'] || '') },
-  { label: 'CAS Payment',              check: s => s['CAS PAYMENT STATUS'] === 'Paid' },
-  { label: 'CAS Requested',            check: s => s['CAS REQUESTED STATUS'] === 'Requested' || /applied|pending|issued/i.test(s['CAS STATUS'] || '') },
-  { label: 'CAS Received',             check: s => /issued/i.test(s['CAS STATUS'] || '') },
-  { label: 'Visa Received',            check: s => /approved/i.test(s['VISA STATUS'] || '') },
+  { label: 'CAS Payment',               check: s => s['CAS PAYMENT STATUS'] === 'Paid' },
+  { label: 'CAS Requested',             check: s => s['CAS REQUESTED STATUS'] === 'Requested' || /applied|pending|issued/i.test(s['CAS STATUS'] || '') },
+  { label: 'CAS Received',              check: s => /issued/i.test(s['CAS STATUS'] || '') },
+  { label: 'Visa Received',             check: s => /approved/i.test(s['VISA STATUS'] || '') },
 ];
 function stageStatusList(s) { return STAGE_DEFS.map(st => ({ label: st.label, done: !!st.check(s) })); }
 function stageCurrentIndex(s) { const list = stageStatusList(s); const idx = list.findIndex(x => !x.done); return idx === -1 ? list.length : idx; }
 
-// ── BOOT ────────────────────────────────────────────────────────────────────────
+// ── BOOT ────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('fb-date').value = today();
-
   const role      = localStorage.getItem(SESSION_KEY_ROLE);
   const loginTime = parseInt(localStorage.getItem(SESSION_KEY_TIME) || '0', 10);
   const expired   = Date.now() - loginTime > SESSION_TTL_MS;
-
   if (role && !expired) {
     const name = localStorage.getItem(SESSION_KEY_USER) || 'Staff';
     bootSession(name, role);
   }
-
   document.addEventListener('click', e => {
     if (!e.target.closest('.lookup-wrap'))     document.getElementById('fb-lookup').classList.remove('open');
     if (!e.target.closest('#badge-popover') && !e.target.closest('.badge')) document.getElementById('badge-popover').classList.remove('show');
     if (!e.target.closest('#kebab-menu') && !e.target.closest('.kebab-trigger')) document.getElementById('kebab-menu').classList.remove('show');
   });
-
   document.getElementById('login-username').addEventListener('keydown', e => { if (e.key === 'Enter') handleLoginSubmit(); });
   document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') handleLoginSubmit(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && profileActiveId) closeProfileDrawer(); });
@@ -642,21 +818,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function today() { return new Date().toISOString().split('T')[0]; }
 
-// Boot the app after successful authentication
 function bootSession(name, role) {
   const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   currentStaff   = { name, initials, role };
-
   document.getElementById('cur-avatar').textContent     = initials;
   document.getElementById('cur-name').textContent       = name;
   document.getElementById('cur-role-label').textContent = role;
-
   applyRoleUI(role);
   hideLoginOverlay();
   loadStudents();
 }
 
-// ── CRYPTO ──────────────────────────────────────────────────────────────────────
+// ── CRYPTO ──────────────────────────────────────────────────────────────────
 async function hashPassword(plainText) {
   const encoder = new TextEncoder();
   const data    = encoder.encode(plainText);
@@ -664,11 +837,7 @@ async function hashPassword(plainText) {
   return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
 
-// ── LOGIN ────────────────────────────────────────────────────────────────────────
-// FIX: Google Apps Script doGet doesn't support CORS for POST properly from browsers.
-// We send login credentials as GET params (still hashed) since Apps Script requires
-// no-cors mode or we use the GET endpoint. The password is SHA-256 hashed so it's
-// never sent in plain text. We use no-cors mode with a workaround via URL params.
+// ── LOGIN ───────────────────────────────────────────────────────────────────
 async function handleLoginSubmit() {
   const usernameEl = document.getElementById('login-username');
   const passwordEl = document.getElementById('login-password');
@@ -676,33 +845,23 @@ async function handleLoginSubmit() {
   const btnText    = document.getElementById('login-btn-text');
   const spinner    = document.getElementById('login-spinner');
   const errorEl    = document.getElementById('login-error');
-
-  const username = usernameEl.value.trim();
-  const password = passwordEl.value.trim();
-
+  const username   = usernameEl.value.trim();
+  const password   = passwordEl.value.trim();
   errorEl.style.display = 'none';
   usernameEl.classList.remove('input-error');
   passwordEl.classList.remove('input-error');
-
   if (!username) { showLoginError('Please enter your username.'); usernameEl.classList.add('input-error'); usernameEl.focus(); return; }
   if (!password) { showLoginError('Please enter your password.'); passwordEl.classList.add('input-error'); passwordEl.focus(); return; }
-
   btn.disabled = true; btnText.textContent = 'Signing in…'; spinner.style.display = 'inline-block';
-
   try {
     const passwordHash = await hashPassword(password);
-
-    // Use GET with URL params — Apps Script handles GET+CORS reliably
-    // Password is SHA-256 hashed before sending, never plain text
     const url = new URL(APPS_SCRIPT_URL);
     url.searchParams.set('action', 'login');
     url.searchParams.set('username', username);
     url.searchParams.set('passwordHash', passwordHash);
-
-    const res  = await fetch(url.toString(), { method: 'GET' });
+    const res  = await fetch(url.toString());
     if (!res.ok) throw new Error('Server returned ' + res.status);
     const data = await res.json();
-
     if (data.success) {
       localStorage.setItem(SESSION_KEY_ROLE, data.role);
       localStorage.setItem(SESSION_KEY_USER, data.name);
@@ -710,41 +869,14 @@ async function handleLoginSubmit() {
       bootSession(data.name, data.role);
     } else {
       showLoginError(data.error || 'Invalid username or password.');
-      usernameEl.classList.add('input-error');
-      passwordEl.classList.add('input-error');
-      passwordEl.value = '';
-      usernameEl.focus();
+      passwordEl.value = ''; usernameEl.focus();
     }
   } catch (err) {
-    // Try without CORS (for Apps Script public deployment)
-    try {
-      const passwordHash = await hashPassword(password);
-      const url = new URL(APPS_SCRIPT_URL);
-      url.searchParams.set('action', 'login');
-      url.searchParams.set('username', username);
-      url.searchParams.set('passwordHash', passwordHash);
-
-      const res  = await fetch(url.toString());
-      const data = await res.json();
-
-      if (data.success) {
-        localStorage.setItem(SESSION_KEY_ROLE, data.role);
-        localStorage.setItem(SESSION_KEY_USER, data.name);
-        localStorage.setItem(SESSION_KEY_TIME, String(Date.now()));
-        bootSession(data.name, data.role);
-      } else {
-        showLoginError(data.error || 'Invalid username or password.');
-        passwordEl.value = '';
-        usernameEl.focus();
-      }
-    } catch (err2) {
-      showLoginError('Could not reach the server. Check your internet connection or try again.');
-    }
+    showLoginError('Could not reach the server. Check your connection.');
   } finally {
     btn.disabled = false; btnText.textContent = 'Sign in'; spinner.style.display = 'none';
   }
 }
-
 function showLoginError(msg) { const el = document.getElementById('login-error'); el.textContent = msg; el.style.display = 'block'; }
 function hideLoginOverlay() { const o = document.getElementById('login-overlay'); o.classList.add('login-hidden'); setTimeout(() => { o.style.display = 'none'; }, 280); }
 function togglePasswordVisibility() {
@@ -756,48 +888,21 @@ function togglePasswordVisibility() {
     ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.44 18.44 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
     : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
 }
+function signOut() { localStorage.removeItem(SESSION_KEY_ROLE); localStorage.removeItem(SESSION_KEY_USER); localStorage.removeItem(SESSION_KEY_TIME); location.reload(); }
 
-function signOut() {
-  localStorage.removeItem(SESSION_KEY_ROLE);
-  localStorage.removeItem(SESSION_KEY_USER);
-  localStorage.removeItem(SESSION_KEY_TIME);
-  location.reload();
-}
-
-// ── ROLE UI ─────────────────────────────────────────────────────────────────────
-// FIX: Admin-only items now SHOWN only for Admin. Staff blocked from Reports & Upload.
+// ── ROLE UI ─────────────────────────────────────────────────────────────────
 function applyRoleUI(role) {
   const isAdmin = role === 'Admin';
-
-  // Show/hide nav items
-  document.querySelectorAll('.admin-only').forEach(el => {
-    el.style.display = isAdmin ? '' : 'none';
-  });
-
-  // Reports view: show access-denied for non-admins
-  const reportsCheck = document.getElementById('reports-access-check');
-  if (!isAdmin && reportsCheck) {
-    reportsCheck.innerHTML = `
-      <div class="access-denied">
-        <div class="access-denied-icon">🔒</div>
-        <div class="font-bold text-slate-600 text-[15px] mb-2">Access Restricted</div>
-        <div class="text-[13px]">Reports are available to Admin users only.<br>Contact your administrator if you need access.</div>
-      </div>`;
-  }
-
-  // Upload view: show access-denied for non-admins
-  const uploadCheck = document.getElementById('upload-access-check');
-  if (!isAdmin && uploadCheck) {
-    uploadCheck.innerHTML = `
-      <div class="access-denied">
-        <div class="access-denied-icon">🔒</div>
-        <div class="font-bold text-slate-600 text-[15px] mb-2">Access Restricted</div>
-        <div class="text-[13px]">CSV Import is available to Admin users only.<br>Contact your administrator if you need access.</div>
-      </div>`;
+  document.querySelectorAll('.admin-only').forEach(el => { el.style.display = isAdmin ? '' : 'none'; });
+  if (!isAdmin) {
+    const reportsCheck = document.getElementById('reports-access-check');
+    if (reportsCheck) reportsCheck.innerHTML = `<div class="access-denied"><div style="font-size:32px;margin-bottom:12px">🔒</div><div class="font-bold text-slate-600 text-[15px] mb-2">Access Restricted</div><div class="text-[13px]">Reports are available to Admin users only.</div></div>`;
+    const uploadCheck = document.getElementById('upload-access-check');
+    if (uploadCheck) uploadCheck.innerHTML = `<div class="access-denied"><div style="font-size:32px;margin-bottom:12px">🔒</div><div class="font-bold text-slate-600 text-[15px] mb-2">Access Restricted</div><div class="text-[13px]">CSV Import is available to Admin users only.</div></div>`;
   }
 }
 
-// ── ICONS ────────────────────────────────────────────────────────────────────────
+// ── ICONS ────────────────────────────────────────────────────────────────────
 const ICN = {
   phone:    '<path d="M5 4h4l2 5-2.3 1.5a11.5 11.5 0 005.3 5.3L15.5 13l5 2v4a2 2 0 01-2.2 2A16.5 16.5 0 013 6.2 2 2 0 015 4z"/>',
   cap:      '<path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11.5v4.5c0 1.3 2.8 2.5 6 2.5s6-1.2 6-2.5v-4.5"/><path d="M22 9v5"/>',
@@ -810,7 +915,7 @@ const ICN = {
 };
 function icon(name, cls) { return `<svg class="${cls||''}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICN[name]||''}</svg>`; }
 
-// ── VIEW SWITCHING ───────────────────────────────────────────────────────────────
+// ── VIEW SWITCHING ───────────────────────────────────────────────────────────
 function switchView(id, tab) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(t => t.classList.remove('active'));
@@ -828,10 +933,10 @@ function refreshCurrentView() {
   if (currentViewId === 'dashboard')      loadStudents();
   else if (currentViewId === 'casshield') loadCASShield();
   else if (currentViewId === 'reports')   loadReports();
-  else showToast('Nothing to refresh here.', 'success');
+  else showToast('Nothing to refresh here.','success');
 }
 
-// ── API HELPERS ──────────────────────────────────────────────────────────────────
+// ── API HELPERS ──────────────────────────────────────────────────────────────
 async function appsScriptGet(action, params = {}) {
   const url = new URL(APPS_SCRIPT_URL);
   url.searchParams.set('action', action);
@@ -842,13 +947,18 @@ async function appsScriptGet(action, params = {}) {
 async function appsScriptPost(action, body = {}) {
   const url = new URL(APPS_SCRIPT_URL);
   url.searchParams.set('action', action);
-  if (action === 'uploadCSV') { url.searchParams.set('rows', JSON.stringify(body.rows || [])); }
-  else { Object.entries(body).forEach(([k,v]) => { if (v !== undefined && v !== null) url.searchParams.set(k, String(v)); }); }
+  if (action === 'uploadCSV') {
+    url.searchParams.set('rows', JSON.stringify(body.rows || []));
+  } else {
+    Object.entries(body).forEach(([k,v]) => { if (v !== undefined && v !== null) url.searchParams.set(k, String(v)); });
+  }
   const res = await fetch(url.toString());
   return res.json();
 }
 
-// ── STUDENTS ─────────────────────────────────────────────────────────────────────
+// ── STUDENTS ─────────────────────────────────────────────────────────────────
+// FIX: Load ALL students — no role-based filtering on visibility
+// Staff can see everyone; role filtering only affects Reports/Upload access
 async function loadStudents() {
   _currentPage = 1; _totalRecords = 0; allStudents = []; _isLoadingMore = false;
   const existingBtn = document.getElementById('load-more-btn');
@@ -860,7 +970,8 @@ async function loadStudents() {
     allStudents   = data.students     || [];
     _totalRecords = data.totalRecords ?? allStudents.length;
     _currentPage  = data.page         ?? 1;
-  } catch {
+  } catch(e) {
+    console.warn('API failed, using mock data:', e.message);
     allStudents   = getMockStudents();
     _totalRecords = allStudents.length;
   } finally {
@@ -869,7 +980,7 @@ async function loadStudents() {
     populateAgentFilter(allStudents);
     _renderLoadMoreButton();
     hideLoading();
-    showToast('Data loaded ✓', 'success');
+    showToast(`Loaded ${allStudents.length} students ✓`, 'success');
   }
 }
 
@@ -881,7 +992,7 @@ async function loadMoreStudents() {
   if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
   try {
     const data = await appsScriptGet('getStudents', { page: nextPage, limit: PAGE_LIMIT });
-    if (!data.success) throw new Error(data.error || 'Error');
+    if (!data.success) throw new Error(data.error);
     const incoming = data.students || [];
     allStudents    = allStudents.concat(incoming);
     _currentPage   = data.page ?? nextPage;
@@ -889,8 +1000,8 @@ async function loadMoreStudents() {
     _appendTableRows(incoming);
     updateStats(allStudents);
     _renderLoadMoreButton();
-    showToast(`Loaded ${incoming.length} more students ✓`, 'success');
-  } catch (e) {
+    showToast(`Loaded ${incoming.length} more ✓`, 'success');
+  } catch(e) {
     showToast('Failed to load more: ' + e.message, 'error');
     if (btn) { btn.disabled = false; btn.textContent = 'Load more students'; }
   } finally {
@@ -902,7 +1013,10 @@ function _buildStudentRow(s) {
   const sid = s['STUDENT ID'] || '';
   return `<tr>
     <td><span class="font-semibold text-[12.5px] text-slate-700">${sid}</span></td>
-    <td><div class="font-semibold text-[13px] text-slate-800">${s['STUDENT NAME']||''}</div><div class="text-[10.5px] text-slate-400 mt-0.5">${s['LEVEL']||''}</div></td>
+    <td>
+      <div class="font-semibold text-[13px] text-slate-800">${s['STUDENT NAME']||'—'}</div>
+      <div class="text-[10.5px] text-slate-400 mt-0.5">${s['LEVEL']||''}</div>
+    </td>
     <td><div class="text-[12px] text-slate-600 max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap" title="${s['COURSE']||''}">${s['COURSE']||'—'}</div></td>
     <td><div class="text-[12px] text-slate-500">${s['AGENT']||'—'}</div></td>
     <td>${renderPipelineCell(s)}</td>
@@ -931,24 +1045,23 @@ function _renderLoadMoreButton() {
     btn.addEventListener('click', loadMoreStudents);
   }
   btn.disabled    = false;
-  btn.textContent = `Load more students — ${remaining} remaining (${loaded} / ${_totalRecords} loaded)`;
+  btn.textContent = `Load more — ${remaining} remaining (${loaded} / ${_totalRecords} loaded)`;
 }
 
 function updateStats(students) {
-  const total   = students.length;
+  const total   = _totalRecords > students.length ? _totalRecords : students.length;
   const pct     = n => total ? Math.round(n/total*100)+'% of total' : '';
   const offers  = students.filter(s => /received|unconditional/i.test(s['OFFER STATUS']||'')).length;
   const cas     = students.filter(s => /pending/i.test(s['CAS STATUS']||'')).length;
   const visa    = students.filter(s => /approved/i.test(s['VISA STATUS']||'')).length;
   const refused = students.filter(s => /refused/i.test(s['VISA STATUS']||'')).length;
-  const payment = students.filter(s => /unpaid|partial/i.test(s['PAYMENT']||'')).length;
-  const displayTotal = _totalRecords > total ? _totalRecords : total;
-  document.getElementById('stat-total').textContent      = displayTotal;
-  document.getElementById('stat-offers').textContent     = offers;  document.getElementById('stat-offers-sub').textContent  = pct(offers)||'\u00A0';
-  document.getElementById('stat-cas').textContent        = cas;     document.getElementById('stat-cas-sub').textContent     = pct(cas)||'\u00A0';
-  document.getElementById('stat-visa').textContent       = visa;    document.getElementById('stat-visa-sub').textContent    = pct(visa)||'\u00A0';
-  document.getElementById('stat-refused').textContent    = refused; document.getElementById('stat-refused-sub').textContent = pct(refused)||'\u00A0';
-  document.getElementById('stat-payment').textContent    = payment; document.getElementById('stat-payment-sub').textContent = pct(payment)||'\u00A0';
+  const payment = students.filter(s => /unpaid|deposit|partial/i.test(s['PAYMENT']||'')).length;
+  document.getElementById('stat-total').textContent      = total;
+  document.getElementById('stat-offers').textContent     = offers; document.getElementById('stat-offers-sub').textContent = pct(offers)||'\u00A0';
+  document.getElementById('stat-cas').textContent        = cas;    document.getElementById('stat-cas-sub').textContent    = pct(cas)||'\u00A0';
+  document.getElementById('stat-visa').textContent       = visa;   document.getElementById('stat-visa-sub').textContent   = pct(visa)||'\u00A0';
+  document.getElementById('stat-refused').textContent    = refused;
+  document.getElementById('stat-payment').textContent    = payment;
 }
 
 function populateAgentFilter(students) {
@@ -958,51 +1071,15 @@ function populateAgentFilter(students) {
   agents.forEach(a => { const o = document.createElement('option'); o.textContent = a; sel.appendChild(o); });
 }
 
-function renderTable(students) {
-  const tbody = document.getElementById('table-body');
-  if (!students.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No students found.</td></tr>'; return; }
-  tbody.innerHTML = students.map(_buildStudentRow).join('');
-}
-
-function renderPipelineCell(s) {
-  const sid      = s['STUDENT ID'] || '';
-  const list     = stageStatusList(s);
-  const curIdx   = stageCurrentIndex(s);
-  const doneCount = list.filter(x => x.done).length;
-  const curLabel  = curIdx >= list.length ? 'Pipeline complete' : list[curIdx].label;
-  const dots = list.map((st,i) => {
-    const cls     = st.done ? 'pl-done' : (i===curIdx ? 'pl-current' : '');
-    const lineCls = (i>0 && list[i-1].done) ? 'pl-line-done' : '';
-    return (i>0 ? `<span class="pl-line ${lineCls}"></span>` : '') +
-           `<span class="pl-dot ${cls}" title="${st.label}: ${st.done?'Done':'Pending'}"></span>`;
-  }).join('');
-  return `<div class="pipeline-wrap" onclick="openStudentProfile('${sid}')" title="${curLabel}">
-    ${dots}
-    <span class="pl-count-chip">${doneCount}/10</span>
-    <span class="pl-label">${curLabel}</span>
-  </div>`;
-}
-
+// FIX: filterTable — NO role-based hiding, all staff see all students
 function filterTable() {
-  const role     = currentStaff.role || localStorage.getItem(SESSION_KEY_ROLE) || 'Staff';
-  const userName = currentStaff.name.toLowerCase().trim();
-  const q        = (document.getElementById('search-input').value||'').toLowerCase();
-  const agent    = document.getElementById('filter-agent').value;
-  const level    = document.getElementById('filter-level').value;
-  const offer    = document.getElementById('filter-offer').value;
-  const visa     = document.getElementById('filter-visa').value;
-
-  let base = allStudents;
-  // Staff only see their own students
-  if (role !== 'Admin' && userName) {
-    base = allStudents.filter(s =>
-      (s['SUBMITTED BY']||'').toLowerCase().trim() === userName ||
-      (s['AGENT']||'').toLowerCase().trim() === userName
-    );
-  }
-
-  renderTable(base.filter(s =>
-    (!q     || [s['STUDENT NAME'],s['STUDENT ID'],s['COURSE']].some(f => (f||'').toLowerCase().includes(q))) &&
+  const q     = (document.getElementById('search-input').value||'').toLowerCase();
+  const agent = document.getElementById('filter-agent').value;
+  const level = document.getElementById('filter-level').value;
+  const offer = document.getElementById('filter-offer').value;
+  const visa  = document.getElementById('filter-visa').value;
+  renderTable(allStudents.filter(s =>
+    (!q     || [s['STUDENT NAME'],s['STUDENT ID'],s['COURSE'],s['AGENT']].some(f => (f||'').toLowerCase().includes(q))) &&
     (!agent || s['AGENT']        === agent) &&
     (!level || s['LEVEL']        === level) &&
     (!offer || s['OFFER STATUS'] === offer) &&
@@ -1010,24 +1087,32 @@ function filterTable() {
   ));
 }
 
-// ── QUICK POPOVER ────────────────────────────────────────────────────────────────
-function openQuickPopover(e, sid, type) {
-  e.stopPropagation();
-  document.getElementById('kebab-menu').classList.remove('show');
-  const cfgMap = {
-    call:  { field:'PRE-SCREENING CALL STATUS', options:['Not Called','Scheduled','Called – Interested','Called – Not Interested','No Answer','Voicemail Left'] },
-    offer: { field:'OFFER STATUS',              options:['Pending','Conditional','Unconditional','Received','Rejected','Withdrawn'] }
-  };
-  const cfg = cfgMap[type];
-  const s   = allStudents.find(s => s['STUDENT ID'] === sid);
-  const cur = (s && s[cfg.field]) || '';
-  const pop = document.getElementById('badge-popover');
-  pop.innerHTML = cfg.options.map(o =>
-    `<div class="pop-item" onclick="quickSave('${sid}','${cfg.field.replace(/'/g,"\\'")}','${o.replace(/'/g,"\\'")}')"><span style="width:14px;display:inline-flex">${o===cur?icon('check','text-gold'):''}</span>${o}</div>`
-  ).join('');
-  positionPopover(pop, e.currentTarget);
-  pop.classList.add('show');
+function renderTable(students) {
+  const tbody = document.getElementById('table-body');
+  if (!students.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No students found. Try adjusting the filters or click Refresh.</td></tr>'; return; }
+  tbody.innerHTML = students.map(_buildStudentRow).join('');
 }
+
+function renderPipelineCell(s) {
+  const sid       = (s['STUDENT ID'] || '').replace(/'/g, "\\'");
+  const list      = stageStatusList(s);
+  const curIdx    = stageCurrentIndex(s);
+  const doneCount = list.filter(x => x.done).length;
+  const curLabel  = curIdx >= list.length ? 'Pipeline complete ✓' : list[curIdx].label;
+  const dots = list.map((st,i) => {
+    const cls     = st.done ? 'pl-done' : (i===curIdx ? 'pl-current' : '');
+    const lineCls = (i>0 && list[i-1].done) ? 'pl-line-done' : '';
+    return (i>0 ? `<span class="pl-line ${lineCls}"></span>` : '') +
+           `<span class="pl-dot ${cls}" title="${st.label}: ${st.done?'Done':'Pending'}"></span>`;
+  }).join('');
+  return `<div class="pipeline-wrap" onclick="openStudentProfile('${sid}')">
+    ${dots}
+    <span class="pl-count-chip">${doneCount}/10</span>
+    <span class="pl-label">${curLabel}</span>
+  </div>`;
+}
+
+// ── QUICK POPOVER ─────────────────────────────────────────────────────────────
 function positionPopover(pop, anchor) {
   const r = anchor.getBoundingClientRect();
   let left = r.left;
@@ -1035,9 +1120,8 @@ function positionPopover(pop, anchor) {
   pop.style.top  = (r.bottom+6)+'px';
   pop.style.left = Math.max(8,left)+'px';
 }
-function quickSave(sid, field, value) { document.getElementById('badge-popover').classList.remove('show'); saveField(sid,field,value,''); }
 
-// ── KEBAB MENU ───────────────────────────────────────────────────────────────────
+// ── KEBAB MENU ────────────────────────────────────────────────────────────────
 function openKebabMenu(e, sid) {
   e.stopPropagation();
   document.getElementById('badge-popover').classList.remove('show');
@@ -1049,23 +1133,26 @@ function openKebabMenu(e, sid) {
     <div class="pop-item" onclick="hideKebab();openPreScreeningModal('${sid}')">${icon('phone')}Pre-screening call</div>
     <div class="pop-item" onclick="hideKebab();openOfferModal('${sid}')">${icon('send')}Offer status</div>
     <div class="pop-item" onclick="hideKebab();openScholarshipModal('${sid}')">${icon('cap')}Scholarship</div>
-    <div class="pop-item" onclick="hideKebab();openSubmissionModal('${sid}')">${icon('send')}Application submission</div>
+    <div class="pop-item" onclick="hideKebab();openPaymentModal('${sid}')">${icon('clipboard')}Payment</div>
     <div class="pop-item" onclick="hideKebab();openCASLinkModal('${sid}')">${icon('shield')}CAS Shield progress</div>
+    <div class="pop-item" onclick="hideKebab();openCASStatusModal('${sid}')">${icon('shield')}CAS Status</div>
+    <div class="pop-item" onclick="hideKebab();openVisaModal('${sid}')">${icon('send')}Visa status</div>
+    <div class="pop-item" onclick="hideKebab();openSubmissionModal('${sid}')">${icon('send')}Application submission</div>
     <div class="pop-item" onclick="hideKebab();openFeedbackModal('${sid}')">${icon('clipboard')}${hasDoc?'New mock feedback':'Add mock feedback'}</div>
-    <div class="pop-item" onclick="hideKebab();openStudentProfile('${sid}')">${icon('edit')}Full pipeline / profile</div>
+    <div class="pop-item" onclick="hideKebab();openStudentProfile('${sid}')">${icon('edit')}Full profile / pipeline</div>
   `;
   positionPopover(menu, e.currentTarget);
   menu.classList.add('show');
 }
 function hideKebab() { document.getElementById('kebab-menu').classList.remove('show'); }
 
-// ── QA GRID ──────────────────────────────────────────────────────────────────────
-function buildQAGrid(containerId, options, hiddenId, currentVal) {
+// ── QA GRID ──────────────────────────────────────────────────────────────────
+function buildQAGrid(containerId, options, currentVal) {
   const container = document.getElementById(containerId);
   activeQuickVal  = currentVal || null;
   container.innerHTML = options.map(opt => {
     const isSel = opt === currentVal;
-    return `<div class="qa-btn${isSel?' sel':''}" onclick="qaSelect(this,'${hiddenId}','${opt.replace(/'/g,"\\'")}')"><div class="qa-btn-icon">${qaIcon(opt)}</div><div class="qa-btn-lbl">${opt}</div></div>`;
+    return `<div class="qa-btn${isSel?' sel':''}" onclick="qaSelect(this,'${opt.replace(/'/g,"\\'")}')"><div class="qa-btn-icon">${qaIcon(opt)}</div><div class="qa-btn-lbl">${opt}</div></div>`;
   }).join('');
 }
 function qaIcon(val) {
@@ -1073,26 +1160,25 @@ function qaIcon(val) {
   if (v.includes('approved')||v.includes('issued')||v==='paid') return '✅';
   if (v.includes('refused')||v.includes('rejected'))            return '❌';
   if (v.includes('pending')||v.includes('awaiting'))            return '⏳';
-  if (v.includes('conditional'))                                 return '📋';
+  if (v.includes('conditional')&&!v.includes('un'))             return '📋';
   if (v.includes('unconditional')||v.includes('received'))      return '🎉';
   if (v.includes('scheduled'))                                   return '📞';
   if (v.includes('called')&&v.includes('interested'))           return '👍';
   if (v.includes('not interested'))                              return '👎';
   if (v.includes('not called')||v.includes('not applied'))      return '⭕';
   if (v.includes('full'))                                        return '🏆';
-  if (v.includes('partial'))                                     return '🎫';
+  if (v.includes('partial')||v.includes('deposit'))             return '🎫';
   if (v.includes('complete'))                                    return '✅';
   if (v.includes('progress'))                                    return '🔄';
-  if (v.includes('started'))                                     return '⭕';
   if (v.includes('refund'))                                      return '↩️';
   return '•';
 }
-function qaSelect(el, hiddenId, val) {
+function qaSelect(el, val) {
   el.closest('.qa-grid').querySelectorAll('.qa-btn').forEach(b => b.classList.remove('sel'));
   el.classList.add('sel');
   activeQuickVal = val;
 }
-async function submitQuickStatus(modalId, field, valHiddenId, notesId) {
+async function submitQuickStatus(modalId, field, notesId) {
   const value = activeQuickVal;
   if (!value) { showToast('Please select an option.','error'); return; }
   const notes = document.getElementById(notesId)?.value || '';
@@ -1115,24 +1201,173 @@ async function saveField(studentId, field, value, notes='') {
   }
 }
 
-// ── DRAWER OPENERS ───────────────────────────────────────────────────────────────
-function studentSub(sid) { const s=allStudents.find(s=>s['STUDENT ID']===sid); return `${s?s['STUDENT NAME']:''}·${sid}`; }
-function openPreScreeningModal(sid) { activeStudentId=sid;const s=allStudents.find(s=>s['STUDENT ID']===sid);document.getElementById('ps-sub').textContent=studentSub(sid);buildQAGrid('ps-options',['Not Called','Scheduled','Called – Interested','Called – Not Interested','No Answer','Voicemail Left'],'ps-val',s?.['PRE-SCREENING CALL STATUS']||'');document.getElementById('ps-notes').value='';openModal('modal-prescreening'); }
-function openOfferModal(sid) { activeStudentId=sid;const s=allStudents.find(s=>s['STUDENT ID']===sid);document.getElementById('offer-sub').textContent=studentSub(sid);buildQAGrid('offer-options',['Pending','Conditional','Unconditional','Received','Rejected','Withdrawn'],'offer-val',s?.['OFFER STATUS']||'');document.getElementById('offer-notes').value='';document.getElementById('offer-conditional-notice').style.display='none';document.getElementById('offer-options').querySelectorAll('.qa-btn').forEach(b=>{b.addEventListener('click',()=>{document.getElementById('offer-conditional-notice').style.display=activeQuickVal==='Conditional'?'block':'none';});});openModal('modal-offer'); }
-function openScholarshipModal(sid) { activeStudentId=sid;const s=allStudents.find(s=>s['STUDENT ID']===sid);document.getElementById('sch-sub').textContent=studentSub(sid);buildQAGrid('sch-options',['None','Partial','Full','Bursary','Sponsorship'],'sch-val',s?.['SCHOLARSHIP']||'');document.getElementById('sch-notes').value='';document.getElementById('sch-amount').value='';openModal('modal-scholarship'); }
-function openPaymentModal(sid) { activeStudentId=sid;const s=allStudents.find(s=>s['STUDENT ID']===sid);document.getElementById('pay-sub').textContent=studentSub(sid);buildQAGrid('pay-options',['Unpaid','Deposit Paid','Partially Paid','Paid','Refunded','Deferred'],'pay-val',s?.['PAYMENT']||'');document.getElementById('pay-date').value=today();document.getElementById('pay-amount').value='';document.getElementById('pay-ref').value='';document.getElementById('pay-notes').value='';openModal('modal-payment'); }
-async function submitPayment() { const value=activeQuickVal;if(!value){showToast('Please select a payment status.','error');return;}const notes=[document.getElementById('pay-amount').value?'£'+document.getElementById('pay-amount').value:'',document.getElementById('pay-ref').value,document.getElementById('pay-notes').value].filter(Boolean).join(' | ');await saveField(activeStudentId,'PAYMENT',value,notes);const pd=document.getElementById('pay-date').value;if(pd)await saveField(activeStudentId,'PAYMENT DATE',pd,'');closeModal('modal-payment'); }
-function openCASLinkModal(sid) { activeStudentId=sid;const s=allStudents.find(s=>s['STUDENT ID']===sid);document.getElementById('caslink-sub').textContent=studentSub(sid);buildQAGrid('caslink-options',['Not Started','In Progress','Completed','On Hold'],'caslink-val',s?.['CAS SHIELD']||'');document.getElementById('caslink-notes').value='';openModal('modal-caslink'); }
-function openCASStatusModal(sid) { activeStudentId=sid;const s=allStudents.find(s=>s['STUDENT ID']===sid);document.getElementById('casstatus-sub').textContent=studentSub(sid);buildQAGrid('casstatus-options',['Not Applied','Applied','Pending','Issued','Rejected','Withdrawn'],'casstatus-val',s?.['CAS STATUS']||'');document.getElementById('cas-number').value='';document.getElementById('casstatus-notes').value='';openModal('modal-casstatus'); }
-async function submitCASStatus() { const value=activeQuickVal;if(!value){showToast('Please select a CAS status.','error');return;}const casNo=document.getElementById('cas-number').value;const notes=[casNo?'CAS No: '+casNo:'',document.getElementById('casstatus-notes').value].filter(Boolean).join(' | ');await saveField(activeStudentId,'CAS STATUS',value,notes);closeModal('modal-casstatus'); }
-function openVisaModal(sid) { activeStudentId=sid;const s=allStudents.find(s=>s['STUDENT ID']===sid);document.getElementById('visa-sub').textContent=studentSub(sid);buildQAGrid('visa-options',['Not Applied','Biometrics Booked','Submitted','Pending','Approved','Refused','Withdrawn'],'visa-val',s?.['VISA STATUS']||'');document.getElementById('visa-appdate').value=today();document.getElementById('visa-decdate').value='';document.getElementById('visa-ref').value='';document.getElementById('visa-notes').value='';document.getElementById('visa-refusal-section').style.display=(s?.['VISA STATUS']==='Refused')?'block':'none';setTimeout(()=>{document.getElementById('visa-options').querySelectorAll('.qa-btn').forEach(b=>{b.addEventListener('click',()=>{document.getElementById('visa-refusal-section').style.display=activeQuickVal==='Refused'?'block':'none';});});},50);openModal('modal-visa'); }
-async function submitVisa() { const value=activeQuickVal;if(!value){showToast('Please select a visa status.','error');return;}const notesParts=[document.getElementById('visa-ref').value?'GWF: '+document.getElementById('visa-ref').value:'',document.getElementById('visa-appdate').value?'App: '+document.getElementById('visa-appdate').value:'',document.getElementById('visa-decdate').value?'Decision: '+document.getElementById('visa-decdate').value:'',value==='Refused'?'Reason: '+(document.getElementById('visa-refusal-reason').value||''):'',document.getElementById('visa-notes').value].filter(Boolean).join(' | ');await saveField(activeStudentId,'VISA STATUS',value,notesParts);closeModal('modal-visa'); }
-function openSubmissionModal(sid) { activeStudentId=sid;const s=allStudents.find(s=>s['STUDENT ID']===sid);document.getElementById('sub-sub').textContent=studentSub(sid);document.getElementById('sub-date').value=s?.['APPLICATION SUBMITTED DATE']||today();document.getElementById('sub-by').value=s?.['SUBMITTED BY']||currentStaff.name;document.getElementById('sub-notes').value='';openModal('modal-submission'); }
-async function submitApplication() { const date=document.getElementById('sub-date').value;const by=document.getElementById('sub-by').value||currentStaff.name;const notes=document.getElementById('sub-notes').value;await saveField(activeStudentId,'APPLICATION SUBMITTED DATE',date,notes);await saveField(activeStudentId,'SUBMITTED BY',by,'');closeModal('modal-submission'); }
-function openFeedbackModal(sid) { activeStudentId=sid;document.getElementById('mfb-sub').textContent=studentSub(sid);document.getElementById('mfb-date').value=today();document.getElementById('mfb-text').value='';document.getElementById('mfb-recs').value='';openModal('modal-feedback'); }
-async function submitFeedback() { const text=document.getElementById('mfb-text').value.trim();if(!text){showToast('Please write some feedback first.','error');return;}showLoading('Generating feedback doc…');closeModal('modal-feedback');try{const result=await appsScriptPost('generateFeedbackDoc',{studentId:activeStudentId,date:document.getElementById('mfb-date').value,performance:document.getElementById('mfb-perf').value,feedback:text,recommendations:document.getElementById('mfb-recs').value,staffName:currentStaff.name});if(!result.success)throw new Error(result.error);if(result.docUrl){const s=allStudents.find(s=>s['STUDENT ID']===activeStudentId);if(s)s['MOCK PRE-CAS']=result.docUrl;filterTable();}showToast('Feedback doc created ✓','success');}catch(e){showToast('Failed: '+e.message,'error');}finally{hideLoading();} }
+// ── DRAWER OPENERS ────────────────────────────────────────────────────────────
+function studentSub(sid) { const s=allStudents.find(s=>s['STUDENT ID']===sid); return `${s?s['STUDENT NAME']||sid:sid} · ${sid}`; }
 
-// ── CAS SHIELD ───────────────────────────────────────────────────────────────────
+function openPreScreeningModal(sid) {
+  activeStudentId=sid;
+  const s=allStudents.find(s=>s['STUDENT ID']===sid);
+  document.getElementById('ps-sub').textContent=studentSub(sid);
+  buildQAGrid('ps-options',['Not Called','Scheduled','Called – Interested','Called – Not Interested','No Answer','Voicemail Left'],s?.['PRE-SCREENING CALL STATUS']||'');
+  document.getElementById('ps-notes').value='';
+  openModal('modal-prescreening');
+}
+
+function openOfferModal(sid) {
+  activeStudentId=sid;
+  const s=allStudents.find(s=>s['STUDENT ID']===sid);
+  document.getElementById('offer-sub').textContent=studentSub(sid);
+  buildQAGrid('offer-options',['Pending','Conditional','Unconditional','Received','Rejected','Withdrawn'],s?.['OFFER STATUS']||'');
+  document.getElementById('offer-notes').value='';
+  document.getElementById('offer-conditional-notice').style.display='none';
+  setTimeout(()=>{
+    document.getElementById('offer-options').querySelectorAll('.qa-btn').forEach(b=>{
+      b.addEventListener('click',()=>{ document.getElementById('offer-conditional-notice').style.display=activeQuickVal==='Conditional'?'block':'none'; });
+    });
+  },50);
+  openModal('modal-offer');
+}
+
+function openScholarshipModal(sid) {
+  activeStudentId=sid;
+  const s=allStudents.find(s=>s['STUDENT ID']===sid);
+  document.getElementById('sch-sub').textContent=studentSub(sid);
+  buildQAGrid('sch-options',['None','Partial','Full','Bursary','Sponsorship'],s?.['SCHOLARSHIP']||'');
+  document.getElementById('sch-notes').value='';
+  document.getElementById('sch-amount').value='';
+  openModal('modal-scholarship');
+}
+
+function openPaymentModal(sid) {
+  activeStudentId=sid;
+  const s=allStudents.find(s=>s['STUDENT ID']===sid);
+  document.getElementById('pay-sub').textContent=studentSub(sid);
+  buildQAGrid('pay-options',['Unpaid','Deposit Paid','Partially Paid','Paid','Refunded','Deferred'],s?.['PAYMENT']||'');
+  document.getElementById('pay-date').value=today();
+  document.getElementById('pay-amount').value='';
+  document.getElementById('pay-ref').value='';
+  document.getElementById('pay-notes').value='';
+  openModal('modal-payment');
+}
+async function submitPayment() {
+  const value=activeQuickVal;
+  if(!value){showToast('Please select a payment status.','error');return;}
+  const notes=[document.getElementById('pay-amount').value?'£'+document.getElementById('pay-amount').value:'',document.getElementById('pay-ref').value,document.getElementById('pay-notes').value].filter(Boolean).join(' | ');
+  await saveField(activeStudentId,'PAYMENT',value,notes);
+  const pd=document.getElementById('pay-date').value;
+  if(pd) await saveField(activeStudentId,'PAYMENT DATE',pd,'');
+  closeModal('modal-payment');
+}
+
+function openCASLinkModal(sid) {
+  activeStudentId=sid;
+  const s=allStudents.find(s=>s['STUDENT ID']===sid);
+  document.getElementById('caslink-sub').textContent=studentSub(sid);
+  buildQAGrid('caslink-options',['Not Started','In Progress','Completed','On Hold'],s?.['CAS SHIELD']||'');
+  document.getElementById('caslink-notes').value='';
+  openModal('modal-caslink');
+}
+
+function openCASStatusModal(sid) {
+  activeStudentId=sid;
+  const s=allStudents.find(s=>s['STUDENT ID']===sid);
+  document.getElementById('casstatus-sub').textContent=studentSub(sid);
+  buildQAGrid('casstatus-options',['Not Applied','Applied','Pending','Issued','Rejected','Withdrawn'],s?.['CAS STATUS']||'');
+  document.getElementById('cas-number').value='';
+  document.getElementById('casstatus-notes').value='';
+  openModal('modal-casstatus');
+}
+async function submitCASStatus() {
+  const value=activeQuickVal;
+  if(!value){showToast('Please select a CAS status.','error');return;}
+  const casNo=document.getElementById('cas-number').value;
+  const notes=[casNo?'CAS No: '+casNo:'',document.getElementById('casstatus-notes').value].filter(Boolean).join(' | ');
+  await saveField(activeStudentId,'CAS STATUS',value,notes);
+  closeModal('modal-casstatus');
+}
+
+function openVisaModal(sid) {
+  activeStudentId=sid;
+  const s=allStudents.find(s=>s['STUDENT ID']===sid);
+  document.getElementById('visa-sub').textContent=studentSub(sid);
+  buildQAGrid('visa-options',['Not Applied','Biometrics Booked','Submitted','Pending','Approved','Refused','Withdrawn'],s?.['VISA STATUS']||'');
+  document.getElementById('visa-appdate').value=today();
+  document.getElementById('visa-decdate').value='';
+  document.getElementById('visa-ref').value='';
+  document.getElementById('visa-notes').value='';
+  document.getElementById('visa-refusal-section').style.display=(s?.['VISA STATUS']==='Refused')?'block':'none';
+  setTimeout(()=>{
+    document.getElementById('visa-options').querySelectorAll('.qa-btn').forEach(b=>{
+      b.addEventListener('click',()=>{ document.getElementById('visa-refusal-section').style.display=activeQuickVal==='Refused'?'block':'none'; });
+    });
+  },50);
+  openModal('modal-visa');
+}
+async function submitVisa() {
+  const value=activeQuickVal;
+  if(!value){showToast('Please select a visa status.','error');return;}
+  const notesParts=[
+    document.getElementById('visa-ref').value?'GWF: '+document.getElementById('visa-ref').value:'',
+    document.getElementById('visa-appdate').value?'App: '+document.getElementById('visa-appdate').value:'',
+    document.getElementById('visa-decdate').value?'Decision: '+document.getElementById('visa-decdate').value:'',
+    value==='Refused'?'Reason: '+(document.getElementById('visa-refusal-reason').value||''):'',
+    document.getElementById('visa-notes').value
+  ].filter(Boolean).join(' | ');
+  await saveField(activeStudentId,'VISA STATUS',value,notesParts);
+  closeModal('modal-visa');
+}
+
+function openSubmissionModal(sid) {
+  activeStudentId=sid;
+  const s=allStudents.find(s=>s['STUDENT ID']===sid);
+  document.getElementById('sub-sub').textContent=studentSub(sid);
+  document.getElementById('sub-date').value=s?.['APPLICATION SUBMITTED DATE']||today();
+  document.getElementById('sub-by').value=s?.['SUBMITTED BY']||currentStaff.name;
+  document.getElementById('sub-notes').value='';
+  openModal('modal-submission');
+}
+async function submitApplication() {
+  const date=document.getElementById('sub-date').value;
+  const by=document.getElementById('sub-by').value||currentStaff.name;
+  const notes=document.getElementById('sub-notes').value;
+  await saveField(activeStudentId,'APPLICATION SUBMITTED DATE',date,notes);
+  await saveField(activeStudentId,'SUBMITTED BY',by,'');
+  closeModal('modal-submission');
+}
+
+function openFeedbackModal(sid) {
+  activeStudentId=sid;
+  document.getElementById('mfb-sub').textContent=studentSub(sid);
+  document.getElementById('mfb-date').value=today();
+  document.getElementById('mfb-text').value='';
+  document.getElementById('mfb-recs').value='';
+  openModal('modal-feedback');
+}
+async function submitFeedback() {
+  const text=document.getElementById('mfb-text').value.trim();
+  if(!text){showToast('Please write some feedback first.','error');return;}
+  showLoading('Generating feedback doc…');
+  closeModal('modal-feedback');
+  try {
+    const result=await appsScriptPost('generateFeedbackDoc',{
+      studentId:activeStudentId,
+      date:document.getElementById('mfb-date').value,
+      performance:document.getElementById('mfb-perf').value,
+      feedback:text,
+      recommendations:document.getElementById('mfb-recs').value,
+      staffName:currentStaff.name
+    });
+    if(!result.success) throw new Error(result.error);
+    if(result.docUrl){const s=allStudents.find(s=>s['STUDENT ID']===activeStudentId);if(s)s['MOCK PRE-CAS']=result.docUrl;filterTable();}
+    showToast('Feedback doc created ✓','success');
+  } catch(e) {
+    showToast('Failed: '+e.message,'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+// ── CAS SHIELD ────────────────────────────────────────────────────────────────
 async function loadCASShield() {
   try {
     showLoading('Fetching CAS Shield…');
@@ -1151,9 +1386,9 @@ function renderCASTable(records) {
   const tbody = document.getElementById('cas-table-body');
   if (!records.length) { tbody.innerHTML='<tr><td colspan="14" class="empty-state">No records.</td></tr>'; return; }
   tbody.innerHTML = records.map(r => {
-    const aid = r['Applicant ID']||'';
+    const aid = (r['Applicant ID']||'').replace(/'/g,"\\'");
     return `<tr>
-      <td><strong class="text-[12px]">${aid}</strong></td>
+      <td><strong class="text-[12px]">${r['Applicant ID']||''}</strong></td>
       <td>${r['Applicant Name']||''}</td>
       <td class="text-slate-500">${r['Agent (Name)']||''}</td>
       <td class="text-slate-500">${r['Nationality']||''}</td>
@@ -1230,7 +1465,7 @@ async function submitCASUpdate() {
   }
 }
 
-// ── FEEDBACK TOOL ────────────────────────────────────────────────────────────────
+// ── FEEDBACK TOOL ─────────────────────────────────────────────────────────────
 function fbSearchStudents(q) {
   const results = document.getElementById('fb-lookup');
   if (!q.trim()||q.length<2) { results.classList.remove('open'); return; }
@@ -1240,7 +1475,7 @@ function fbSearchStudents(q) {
   ).slice(0,8);
   if (!matches.length) { results.innerHTML='<div style="padding:14px;color:#94A3B8;font-size:12px;text-align:center">No students found</div>'; results.classList.add('open'); return; }
   results.innerHTML = matches.map(s =>
-    `<div class="lookup-item" onclick="fbSelectStudent('${s['STUDENT ID']}')"><div class="lookup-item-name">${s['STUDENT NAME']||'—'}</div><div class="lookup-item-id">${s['STUDENT ID']||''} · ${s['COURSE']||''}</div></div>`
+    `<div class="lookup-item" onclick="fbSelectStudent('${(s['STUDENT ID']||'').replace(/'/g,"\\'")}')"><div class="lookup-item-name">${s['STUDENT NAME']||'—'}</div><div class="lookup-item-id">${s['STUDENT ID']||''} · ${s['COURSE']||''}</div></div>`
   ).join('');
   results.classList.add('open');
 }
@@ -1250,7 +1485,8 @@ function fbSelectStudent(id) {
   document.getElementById('fb-ss-name').textContent = s['STUDENT NAME']||id;
   document.getElementById('fb-ss-meta').textContent = `${s['STUDENT ID']} · ${s['LEVEL']||''} · ${s['COURSE']||''} · Agent: ${s['AGENT']||'—'}`;
   document.getElementById('fb-sel-card').classList.add('show');
-  document.getElementById('fb-search').value = ''; document.getElementById('fb-lookup').classList.remove('open');
+  document.getElementById('fb-search').value = '';
+  document.getElementById('fb-lookup').classList.remove('open');
 }
 function fbClearStudent() { fbSelectedStudent=null;document.getElementById('fb-sel-card').classList.remove('show');document.getElementById('fb-search').value=''; }
 function toggleFbManual() { fbManualMode=!fbManualMode;document.getElementById('fb-manual').style.display=fbManualMode?'block':'none';document.getElementById('fb-manual-toggle').textContent=fbManualMode?'✕ Hide manual entry':'+ Enter manually';if(fbManualMode)fbClearStudent(); }
@@ -1265,9 +1501,15 @@ function getFbData() {
 function buildDocHTML(data) {
   const perfClass={'Excellent':'perf-excellent','Good':'perf-good','Satisfactory':'perf-satisfactory','Needs Improvement':'perf-needs'}[data.performance]||'perf-good';
   const dateFormatted=data.sessionDate?new Date(data.sessionDate).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'—';
-  return `<div class="doc-header"><div class="doc-org">Route 2 University (R2U) — Internal Document</div><div class="doc-title">${data.sessionType} Feedback Report</div><div class="doc-meta"><div class="doc-meta-item"><div class="doc-meta-label">Student</div><div class="doc-meta-value">${data.studentName}</div></div><div class="doc-meta-item"><div class="doc-meta-label">Student ID</div><div class="doc-meta-value">${data.studentId||'—'}</div></div><div class="doc-meta-item"><div class="doc-meta-label">Date</div><div class="doc-meta-value">${dateFormatted}</div></div>${data.studentCourse?`<div class="doc-meta-item"><div class="doc-meta-label">Course</div><div class="doc-meta-value">${data.studentCourse}</div></div>`:''}<div class="doc-meta-item"><div class="doc-meta-label">Performance</div><div class="doc-meta-value"><span class="perf-badge ${perfClass}">${data.performance}</span></div></div></div></div><div class="doc-section"><div class="doc-section-title">Detailed Feedback</div><div class="doc-text">${(data.feedback||'—').replace(/\n/g,'<br>')}</div></div>${data.recommendations?`<div class="doc-section"><div class="doc-section-title">Recommendations</div><div class="doc-text">${data.recommendations.replace(/\n/g,'<br>')}</div></div>`:''}<div class="doc-footer"><span>Generated by R2U Student Portal</span><span>Conducted by: ${data.staffName}</span></div>`;
+  return `<div class="doc-header"><div style="font-size:10px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px">Route 2 University (R2U) — Internal Document</div><div class="doc-title">${data.sessionType} Feedback Report</div><div class="doc-meta"><div class="doc-meta-item"><div class="doc-meta-label">Student</div><div class="doc-meta-value">${data.studentName}</div></div><div class="doc-meta-item"><div class="doc-meta-label">Student ID</div><div class="doc-meta-value">${data.studentId||'—'}</div></div><div class="doc-meta-item"><div class="doc-meta-label">Date</div><div class="doc-meta-value">${dateFormatted}</div></div>${data.studentCourse?`<div class="doc-meta-item"><div class="doc-meta-label">Course</div><div class="doc-meta-value">${data.studentCourse}</div></div>`:''}<div class="doc-meta-item"><div class="doc-meta-label">Performance</div><div class="doc-meta-value"><span class="perf-badge ${perfClass}">${data.performance}</span></div></div></div></div><div class="doc-section"><div class="doc-section-title">Detailed Feedback</div><div class="doc-text">${(data.feedback||'—').replace(/\n/g,'<br>')}</div></div>${data.recommendations?`<div class="doc-section"><div class="doc-section-title">Recommendations</div><div class="doc-text">${data.recommendations.replace(/\n/g,'<br>')}</div></div>`:''}<div class="doc-footer"><span>Generated by R2U Student Portal</span><span>Conducted by: ${data.staffName}</span></div>`;
 }
-function fbPreview() { const data=getFbData();if(!data){showToast('Please select a student first.','error');return;}document.getElementById('fb-preview-body').innerHTML=buildDocHTML(data);document.getElementById('fb-preview').classList.add('show');const ph=document.getElementById('fb-preview-placeholder');if(ph)ph.style.display='none';document.getElementById('fb-preview').scrollIntoView({behavior:'smooth',block:'start'}); }
+function fbPreview() {
+  const data=getFbData();
+  if(!data){showToast('Please select a student first.','error');return;}
+  document.getElementById('fb-preview-body').innerHTML=buildDocHTML(data);
+  document.getElementById('fb-preview').classList.add('show');
+  document.getElementById('fb-preview').scrollIntoView({behavior:'smooth',block:'start'});
+}
 async function fbDownloadPDF() {
   const data=getFbData();if(!data?.studentName){showToast('Please select a student first.','error');return;}if(!data.feedback){showToast('Please write feedback first.','error');return;}
   showLoading('Generating PDF…');
@@ -1295,16 +1537,26 @@ async function fbDownloadPDF() {
 async function fbSaveToDrive() {
   const data=getFbData();if(!data?.studentName){showToast('Please select a student first.','error');return;}if(!data.feedback){showToast('Please write feedback first.','error');return;}if(!data.studentId){showToast('Student ID required to save to Sheet.','error');return;}
   showLoading('Saving to Google Drive & Sheet…');
-  try{const result=await appsScriptPost('generateFeedbackDoc',{studentId:data.studentId,date:data.sessionDate,performance:data.performance,feedback:data.feedback,recommendations:data.recommendations,staffName:data.staffName,sessionType:data.sessionType});if(!result.success)throw new Error(result.error||'Unknown error');document.getElementById('fb-success-title').textContent='Feedback doc created for '+data.studentName;if(result.docUrl)document.getElementById('fb-doc-link').href=result.docUrl;document.getElementById('fb-success').classList.add('show');document.getElementById('fb-success').scrollIntoView({behavior:'smooth',block:'start'});showToast('Saved to Drive & Sheet ✓','success');}catch(e){showToast('Save failed: '+e.message+' — Try Download PDF instead.','error');}finally{hideLoading();}
+  try{
+    const result=await appsScriptPost('generateFeedbackDoc',{studentId:data.studentId,date:data.sessionDate,performance:data.performance,feedback:data.feedback,recommendations:data.recommendations,staffName:data.staffName,sessionType:data.sessionType});
+    if(!result.success)throw new Error(result.error||'Unknown error');
+    document.getElementById('fb-success-title').textContent='Feedback doc created for '+data.studentName;
+    if(result.docUrl)document.getElementById('fb-doc-link').href=result.docUrl;
+    document.getElementById('fb-success').classList.add('show');
+    document.getElementById('fb-success').scrollIntoView({behavior:'smooth',block:'start'});
+    showToast('Saved to Drive & Sheet ✓','success');
+  }catch(e){showToast('Save failed: '+e.message,'error');}finally{hideLoading();}
 }
 function resetFeedback() {
-  fbClearStudent();document.getElementById('fb-text').value='';document.getElementById('fb-recs').value='';document.getElementById('fb-date').value=today();document.getElementById('fb-search').value='';
+  fbClearStudent();
+  document.getElementById('fb-text').value='';document.getElementById('fb-recs').value='';document.getElementById('fb-date').value=today();document.getElementById('fb-search').value='';
   selectPerf(document.querySelector('.perf-opt[data-value="Excellent"]'));
-  document.getElementById('fb-success').classList.remove('show');document.getElementById('fb-preview').classList.remove('show');
-  const ph=document.getElementById('fb-preview-placeholder');if(ph)ph.style.display='flex';window.scrollTo({top:0,behavior:'smooth'});
+  document.getElementById('fb-success').classList.remove('show');
+  document.getElementById('fb-preview').classList.remove('show');
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// ── UPLOAD ───────────────────────────────────────────────────────────────────────
+// ── UPLOAD ────────────────────────────────────────────────────────────────────
 function handleFileSelect(e) { parseFile(e.target.files[0]); }
 function handleDrop(e) { e.preventDefault();document.getElementById('drop-zone').classList.remove('drag-over');parseFile(e.dataTransfer.files[0]); }
 function parseFile(file) { if(!file)return;Papa.parse(file,{header:true,skipEmptyLines:true,complete:r=>{parsedCSVData=r.data;showPreview(file.name,r.data);},error:err=>showToast('Parse error: '+err.message,'error')}); }
@@ -1315,16 +1567,15 @@ async function confirmUpload() {
   try{showLoading('Uploading…');const r=await appsScriptPost('uploadCSV',{rows:parsedCSVData});if(!r.success)throw new Error(r.error);showToast(`Imported ${r.added||0} new, updated ${r.updated||0} records ✓`,'success');clearUpload();loadStudents();}catch(e){showToast('Upload failed: '+e.message,'error');}finally{hideLoading();}
 }
 
-// ── EXPORT CSV ───────────────────────────────────────────────────────────────────
+// ── EXPORT ────────────────────────────────────────────────────────────────────
 function exportStudentsCSV() {
   if(!allStudents.length){showToast('No student data loaded to export.','error');return;}
-  const rows=allStudents.map(s=>{const list=stageStatusList(s);const base={'STUDENT ID':s['STUDENT ID']||'','STUDENT NAME':s['STUDENT NAME']||'','COURSE':s['COURSE']||'','AGENT':s['AGENT']||'','LEVEL':s['LEVEL']||''};list.forEach(st=>{base[st.label]=st.done?'Done':'Pending';});base['PIPELINE PROGRESS']=list.filter(x=>x.done).length+' / '+list.length;return base;});
+  const rows=allStudents.map(s=>{const list=stageStatusList(s);const base={'STUDENT ID':s['STUDENT ID']||'','STUDENT NAME':s['STUDENT NAME']||'','COURSE':s['COURSE']||'','AGENT':s['AGENT']||'','LEVEL':s['LEVEL']||''};list.forEach(st=>{base[st.label]=st.done?'Done':'Pending';});base['PIPELINE PROGRESS']=list.filter(x=>x.done).length+'/'+list.length;return base;});
   try{const csv=Papa.unparse(rows);const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='R2U_Students_Export_'+today()+'.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);showToast('CSV exported ✓','success');}catch(e){showToast('Export failed: '+e.message,'error');}
 }
 
-// ── REPORTS ──────────────────────────────────────────────────────────────────────
+// ── REPORTS ───────────────────────────────────────────────────────────────────
 async function loadReports() {
-  // Block non-admin access
   if (currentStaff.role !== 'Admin') return;
   const grid = document.getElementById('report-grid');
   if (!grid) return;
@@ -1339,32 +1590,38 @@ async function loadReports() {
 }
 function buildLocalReport(students) {
   const cnt=(f,v)=>students.filter(s=>s[f]===v).length;
-  return{offer:{Pending:cnt('OFFER STATUS','Pending'),Conditional:cnt('OFFER STATUS','Conditional'),Unconditional:cnt('OFFER STATUS','Unconditional'),Received:cnt('OFFER STATUS','Received'),Rejected:cnt('OFFER STATUS','Rejected')},cas:{'Not Applied':cnt('CAS STATUS','Not Applied'),Applied:cnt('CAS STATUS','Applied'),Pending:cnt('CAS STATUS','Pending'),Issued:cnt('CAS STATUS','Issued'),Rejected:cnt('CAS STATUS','Rejected')},visa:{'Not Applied':cnt('VISA STATUS','Not Applied'),Pending:cnt('VISA STATUS','Pending'),Approved:cnt('VISA STATUS','Approved'),Refused:cnt('VISA STATUS','Refused')},payment:{Unpaid:cnt('PAYMENT','Unpaid'),'Deposit Paid':cnt('PAYMENT','Deposit Paid'),'Partially Paid':cnt('PAYMENT','Partially Paid'),Paid:cnt('PAYMENT','Paid'),Refunded:cnt('PAYMENT','Refunded')}};
+  return{
+    offer:{Pending:cnt('OFFER STATUS','Pending'),Conditional:cnt('OFFER STATUS','Conditional'),Unconditional:cnt('OFFER STATUS','Unconditional'),Received:cnt('OFFER STATUS','Received'),Rejected:cnt('OFFER STATUS','Rejected')},
+    cas:{'Not Applied':cnt('CAS STATUS','Not Applied'),Applied:cnt('CAS STATUS','Applied'),Pending:cnt('CAS STATUS','Pending'),Issued:cnt('CAS STATUS','Issued'),Rejected:cnt('CAS STATUS','Rejected')},
+    visa:{'Not Applied':cnt('VISA STATUS','Not Applied'),Pending:cnt('VISA STATUS','Pending'),Approved:cnt('VISA STATUS','Approved'),Refused:cnt('VISA STATUS','Refused')},
+    payment:{Unpaid:cnt('PAYMENT','Unpaid'),'Deposit Paid':cnt('PAYMENT','Deposit Paid'),'Partially Paid':cnt('PAYMENT','Partially Paid'),Paid:cnt('PAYMENT','Paid')}
+  };
 }
 function buildPipelineFunnel(students) { const out={};STAGE_DEFS.forEach(st=>{out[st.label]=students.filter(s=>st.check(s)).length;});return out; }
 function renderReports(report) {
   const grid=document.getElementById('report-grid');if(!report){grid.innerHTML='<div class="empty-state">No data.</div>';return;}
   const funnel=buildPipelineFunnel(allStudents.length?allStudents:[]);const funnelTotal=allStudents.length||1;
   const funnelBars=Object.entries(funnel).map(([label,cnt])=>{const pct=Math.round(cnt/funnelTotal*100);return`<div class="report-bar-item"><div class="report-bar-label">${label}</div><div class="report-bar-track"><div class="report-bar-fill" style="width:${pct}%"></div></div><div class="report-bar-count">${cnt}</div></div>`;}).join('');
-  const funnelCard=`<div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm md:col-span-2"><div class="text-[12.5px] font-bold text-slate-800 mb-4 pb-3 border-b border-slate-100 flex items-center justify-between"><span>Pipeline Funnel (10 stages)</span><span class="text-slate-400 font-medium">${allStudents.length} students loaded</span></div>${funnelBars||'<div class="empty-state">No data</div>'}</div>`;
+  const funnelCard=`<div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm md:col-span-2"><div class="text-[12.5px] font-bold text-slate-800 mb-4 pb-3 border-b border-slate-100 flex items-center justify-between"><span>Pipeline Funnel (10 stages)</span><span class="text-slate-400 font-medium">${allStudents.length} students</span></div>${funnelBars||'<div class="empty-state">No data</div>'}</div>`;
   const sections=[{title:'Offer Status',data:report.offer},{title:'CAS Status',data:report.cas},{title:'Visa Status',data:report.visa},{title:'Payment',data:report.payment}];
   const otherCards=sections.map(sec=>{const total=Object.values(sec.data||{}).reduce((a,b)=>a+b,0);const bars=Object.entries(sec.data||{}).map(([label,cnt])=>{const pct=total?Math.round(cnt/total*100):0;return`<div class="report-bar-item"><div class="report-bar-label">${label}</div><div class="report-bar-track"><div class="report-bar-fill" style="width:${pct}%"></div></div><div class="report-bar-count">${cnt}</div></div>`;}).join('');return`<div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"><div class="text-[12.5px] font-bold text-slate-800 mb-4 pb-3 border-b border-slate-100 flex items-center justify-between"><span>${sec.title}</span><span class="text-slate-400 font-medium">${total} total</span></div>${bars||'<div class="empty-state">No data</div>'}</div>`;}).join('');
   grid.innerHTML=funnelCard+otherCards;
 }
 
-// ── DRAWERS ───────────────────────────────────────────────────────────────────────
+// ── DRAWERS ────────────────────────────────────────────────────────────────────
 function openModal(id)  { document.getElementById(id).classList.add('drawer-open');    document.getElementById('drawer-overlay').classList.add('show'); }
 function closeModal(id) { document.getElementById(id).classList.remove('drawer-open'); document.getElementById('drawer-overlay').classList.remove('show'); }
 document.getElementById('drawer-overlay').addEventListener('click', () => {
   document.querySelectorAll('.drawer.drawer-open').forEach(d => closeModal(d.id));
 });
 
-// ── PROFILE DRAWER ────────────────────────────────────────────────────────────────
+// ── PROFILE DRAWER ─────────────────────────────────────────────────────────────
 function renderPipelineList(s) {
   return stageStatusList(s).map((st,i)=>
     `<div class="stage-row"><div class="stage-row-left"><span class="stage-num">${i+1}</span><div class="stage-dot-lg ${st.done?'stage-done':''}">${st.done?'✓':''}</div><span class="stage-name">${st.label}</span></div><span class="badge ${st.done?'badge-green':'badge-gray'}">${st.done?'Done':'Pending'}</span></div>`
   ).join('');
 }
+
 function openStudentProfile(studentId) {
   const s = allStudents.find(s=>s['STUDENT ID']===studentId);
   if (!s) { showToast('Student not found: '+studentId,'error'); return; }
@@ -1372,79 +1629,120 @@ function openStudentProfile(studentId) {
   document.getElementById('profile-drawer-title').textContent = s['STUDENT NAME']||studentId;
   document.getElementById('profile-drawer-sub').textContent   = [studentId,s['LEVEL'],s['COURSE']].filter(Boolean).join(' · ');
   document.getElementById('pd-pipeline-list').innerHTML       = renderPipelineList(s);
-  const set=(id,key)=>{const el=document.getElementById(id);if(el)el.value=s[key]||'';};
-  set('pd-mobile','MOBILE');set('pd-email','EMAIL');set('pd-dob','DOB');set('pd-edu','EDUCATION TYPE');
-  set('pd-call','PRE-SCREENING CALL STATUS');set('pd-offer','OFFER STATUS');
-  set('pd-scholarship','SCHOLARSHIP');set('pd-payment','PAYMENT');
-  set('pd-cas-shield','CAS SHIELD');set('pd-mock','MOCK INTERVIEW STATUS');
-  set('pd-precas','PRE-CAS INTERVIEW');set('pd-cas-status','CAS STATUS');set('pd-visa','VISA STATUS');
-  set('pd-cas-payment','CAS PAYMENT STATUS');set('pd-cas-requested','CAS REQUESTED STATUS');
-  set('pd-cond-date','CONDITION - DOCS / UC RECEIVED DATE');
-  set('pd-pay-date','PAYMENT DATE');set('pd-app-date','APPLICATION SUBMITTED DATE');
-  const errEl=document.getElementById('pd-save-error');if(errEl)errEl.style.display='none';
+
+  // Sheet readonly fields
+  const setRO = (id,key) => { const el=document.getElementById(id); if(el) el.value=s[key]||''; };
+  setRO('pd-sid','STUDENT ID'); setRO('pd-level','LEVEL'); setRO('pd-sname','STUDENT NAME');
+  setRO('pd-course','COURSE');  setRO('pd-dob','DOB'); setRO('pd-submittedby','SUBMITTED BY');
+
+  // Portal-managed fields
+  const set = (id,key) => { const el=document.getElementById(id); if(el) el.value=s[key]||''; };
+  set('pd-mobile','MOBILE');   set('pd-email','EMAIL');
+  set('pd-edu','EDUCATION TYPE'); set('pd-agent','AGENT');
+  set('pd-call','PRE-SCREENING CALL STATUS'); set('pd-offer','OFFER STATUS');
+  set('pd-scholarship','SCHOLARSHIP');        set('pd-payment','PAYMENT');
+  set('pd-pay-date','PAYMENT DATE');          set('pd-cond-date','CONDITION - DOCS / UC RECEIVED DATE');
+  set('pd-app-date','APPLICATION SUBMITTED DATE');
+  set('pd-mock','MOCK INTERVIEW STATUS');     set('pd-precas','PRE-CAS INTERVIEW');
+  set('pd-cas-shield','CAS SHIELD');          set('pd-cas-payment','CAS PAYMENT STATUS');
+  set('pd-cas-requested','CAS REQUESTED STATUS'); set('pd-cas-status','CAS STATUS');
+  set('pd-visa','VISA STATUS');
+
+  const errEl=document.getElementById('pd-save-error'); if(errEl) errEl.style.display='none';
   document.getElementById('profile-drawer').classList.add('pd-open');
   document.getElementById('profile-drawer-overlay').classList.add('pd-overlay-show');
   document.body.style.overflow='hidden';
-  setTimeout(()=>{const f=document.getElementById('pd-mobile');if(f)f.focus();},320);
+  setTimeout(()=>{ const f=document.getElementById('pd-mobile'); if(f) f.focus(); },320);
 }
+
 function closeProfileDrawer() {
   document.getElementById('profile-drawer').classList.remove('pd-open');
   document.getElementById('profile-drawer-overlay').classList.remove('pd-overlay-show');
-  document.body.style.overflow='';profileActiveId=null;
+  document.body.style.overflow=''; profileActiveId=null;
 }
+
 async function saveStudentProfile() {
   if (!profileActiveId) return;
   const studentId = profileActiveId;
   const val = id => (document.getElementById(id)?.value||'').trim();
+
+  // Only portal-managed fields get sent to the server (NOT readonly sheet fields)
   const patch = {
-    'MOBILE':val('pd-mobile'),'EMAIL':val('pd-email'),'DOB':val('pd-dob'),'EDUCATION TYPE':val('pd-edu'),
-    'PRE-SCREENING CALL STATUS':val('pd-call'),'OFFER STATUS':val('pd-offer'),
-    'SCHOLARSHIP':val('pd-scholarship'),'PAYMENT':val('pd-payment'),
-    'CAS SHIELD':val('pd-cas-shield'),'MOCK INTERVIEW STATUS':val('pd-mock'),
-    'PRE-CAS INTERVIEW':val('pd-precas'),'CAS STATUS':val('pd-cas-status'),
-    'VISA STATUS':val('pd-visa'),'CAS PAYMENT STATUS':val('pd-cas-payment'),
-    'CAS REQUESTED STATUS':val('pd-cas-requested'),
+    'MOBILE':                             val('pd-mobile'),
+    'EMAIL':                              val('pd-email'),
+    'EDUCATION TYPE':                     val('pd-edu'),
+    'AGENT':                              val('pd-agent'),
+    'PRE-SCREENING CALL STATUS':          val('pd-call'),
+    'OFFER STATUS':                       val('pd-offer'),
+    'SCHOLARSHIP':                        val('pd-scholarship'),
+    'PAYMENT':                            val('pd-payment'),
+    'PAYMENT DATE':                       val('pd-pay-date'),
     'CONDITION - DOCS / UC RECEIVED DATE':val('pd-cond-date'),
-    'PAYMENT DATE':val('pd-pay-date'),'APPLICATION SUBMITTED DATE':val('pd-app-date'),
+    'APPLICATION SUBMITTED DATE':         val('pd-app-date'),
+    'MOCK INTERVIEW STATUS':              val('pd-mock'),
+    'PRE-CAS INTERVIEW':                  val('pd-precas'),
+    'CAS SHIELD':                         val('pd-cas-shield'),
+    'CAS PAYMENT STATUS':                 val('pd-cas-payment'),
+    'CAS REQUESTED STATUS':               val('pd-cas-requested'),
+    'CAS STATUS':                         val('pd-cas-status'),
+    'VISA STATUS':                        val('pd-visa'),
   };
-  const s=allStudents.find(s=>s['STUDENT ID']===studentId);const snapshot=s?{...s}:null;
-  if(s){Object.assign(s,patch);filterTable();updateStats(allStudents);document.getElementById('pd-pipeline-list').innerHTML=renderPipelineList(s);}
-  closeProfileDrawer();showToast('Saving profile…','success');
+
+  const btn     = document.getElementById('pd-save-btn');
+  const btnText = document.getElementById('pd-save-text');
+  const spinner = document.getElementById('pd-save-spinner');
+  btn.disabled=true; btnText.textContent='Saving…'; spinner.style.display='inline-block';
+
+  // Optimistic update
+  const s = allStudents.find(s=>s['STUDENT ID']===studentId);
+  const snapshot = s ? {...s} : null;
+  if(s){ Object.assign(s, patch); filterTable(); updateStats(allStudents); document.getElementById('pd-pipeline-list').innerHTML=renderPipelineList(s); }
+  closeProfileDrawer();
+  showToast('Saving profile…','success');
+
   try {
-    const url=new URL(APPS_SCRIPT_URL);url.searchParams.set('action','updateStudentProfile');url.searchParams.set('studentId',studentId);url.searchParams.set('updatedBy',currentStaff.name);
-    Object.entries(patch).forEach(([field,value])=>{if(value!=='')url.searchParams.set(field,value);});
-    const res=await fetch(url.toString());const data=await res.json();
-    if(!data.success)throw new Error(data.error||'Unknown error');
+    const url=new URL(APPS_SCRIPT_URL);
+    url.searchParams.set('action','updateStudentProfile');
+    url.searchParams.set('studentId',studentId);
+    url.searchParams.set('updatedBy',currentStaff.name);
+    Object.entries(patch).forEach(([field,value])=>{ if(value!=='') url.searchParams.set(field,value); });
+    const res  = await fetch(url.toString());
+    const data = await res.json();
+    if(!data.success) throw new Error(data.error||'Unknown error');
     showToast('Profile saved ✓','success');
   } catch(err) {
-    if(s&&snapshot){const idx=allStudents.findIndex(x=>x['STUDENT ID']===studentId);if(idx!==-1)allStudents[idx]=snapshot;filterTable();updateStats(allStudents);}
+    if(s&&snapshot){ const idx=allStudents.findIndex(x=>x['STUDENT ID']===studentId); if(idx!==-1) allStudents[idx]=snapshot; filterTable(); updateStats(allStudents); }
     showToast('Save failed — changes reverted. '+err.message,'error');
+  } finally {
+    btn.disabled=false; btnText.textContent='Save changes'; spinner.style.display='none';
   }
 }
 
-// ── HELPERS ───────────────────────────────────────────────────────────────────────
-function showLoading(msg) { document.getElementById('loading-msg').textContent=msg||'Processing…';document.getElementById('loading').classList.remove('hidden'); }
+// ── HELPERS ────────────────────────────────────────────────────────────────────
+function showLoading(msg) { document.getElementById('loading-msg').textContent=msg||'Processing…'; document.getElementById('loading').classList.remove('hidden'); }
 function hideLoading()    { document.getElementById('loading').classList.add('hidden'); }
 function showToast(msg, type='success') {
   const wrap=document.getElementById('toast-wrap');const t=document.createElement('div');
-  t.className='toast '+type;t.innerHTML=(type==='success'?'✓&nbsp;&nbsp;':'✕&nbsp;&nbsp;')+msg;
-  wrap.appendChild(t);setTimeout(()=>t.remove(),4000);
+  t.className='toast '+type;
+  t.innerHTML=(type==='success'?'<span style="color:#D4A833">✓</span>&nbsp;':'<span style="color:#EF4444">✕</span>&nbsp;')+msg;
+  wrap.appendChild(t); setTimeout(()=>t.remove(),4000);
 }
 
-// ── MOCK DATA ─────────────────────────────────────────────────────────────────────
+// ── MOCK DATA ──────────────────────────────────────────────────────────────────
+// These are only used when the API fails, so all staff can see demo data
 function getMockStudents() {
   return [
-    {'STUDENT ID':'R2U001','STUDENT NAME':'Priya Sharma','LEVEL':'PG','COURSE':'MSc Computer Science','AGENT':'Agent A','PRE-SCREENING CALL STATUS':'Called – Interested','OFFER STATUS':'Received','SCHOLARSHIP':'Partial','PAYMENT':'Paid','CAS SHIELD':'Completed','CAS STATUS':'Issued','VISA STATUS':'Approved','SUBMITTED BY':'Sagar Adhikari','APPLICATION SUBMITTED DATE':'2026-03-12','DOB':'2000-05-14','MOBILE':'+977 9801234567','EMAIL':'priya@email.com','MOCK INTERVIEW STATUS':'Completed','PRE-CAS INTERVIEW':'Passed','CAS PAYMENT STATUS':'Paid','CAS REQUESTED STATUS':'Requested'},
-    {'STUDENT ID':'R2U002','STUDENT NAME':'Amit Patel','LEVEL':'UG','COURSE':'BA Business Management','AGENT':'Agent B','PRE-SCREENING CALL STATUS':'Scheduled','OFFER STATUS':'Conditional','SCHOLARSHIP':'None','PAYMENT':'Deposit Paid','CAS SHIELD':'In Progress','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','SUBMITTED BY':'Admin','APPLICATION SUBMITTED DATE':'2026-04-01','DOB':'2002-11-22'},
-    {'STUDENT ID':'R2U003','STUDENT NAME':'Sara Khan','LEVEL':'PG','COURSE':'MBA Finance','AGENT':'Agent A','PRE-SCREENING CALL STATUS':'Called – Interested','OFFER STATUS':'Unconditional','SCHOLARSHIP':'Full','PAYMENT':'Paid','CAS SHIELD':'Completed','CAS STATUS':'Pending','VISA STATUS':'Pending','SUBMITTED BY':'Sagar Adhikari','APPLICATION SUBMITTED DATE':'2026-02-28','DOB':'1999-07-08','MOCK INTERVIEW STATUS':'Completed','PRE-CAS INTERVIEW':'Completed','CAS PAYMENT STATUS':'Paid','CAS REQUESTED STATUS':'Requested'},
-    {'STUDENT ID':'R2U004','STUDENT NAME':'Rahul Singh','LEVEL':'PHD','COURSE':'PhD Engineering','AGENT':'Agent C','PRE-SCREENING CALL STATUS':'Not Called','OFFER STATUS':'Received','SCHOLARSHIP':'None','PAYMENT':'Unpaid','CAS SHIELD':'Not Started','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','SUBMITTED BY':'Admin','APPLICATION SUBMITTED DATE':'','DOB':'1995-03-30'},
-    {'STUDENT ID':'R2U005','STUDENT NAME':'Meena Joshi','LEVEL':'UG','COURSE':'BSc Nursing','AGENT':'Agent B','PRE-SCREENING CALL STATUS':'Called – Not Interested','OFFER STATUS':'Rejected','SCHOLARSHIP':'None','PAYMENT':'Refunded','CAS SHIELD':'Not Started','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','SUBMITTED BY':'Admin','APPLICATION SUBMITTED DATE':'','DOB':'2003-01-15'}
+    {'STUDENT ID':'R2U001','STUDENT NAME':'Priya Sharma','LEVEL':'PG','COURSE':'MSc Computer Science','AGENT':'Agent A','DOB':'2000-05-14','SUBMITTED BY':'Sagar','PRE-SCREENING CALL STATUS':'Called – Interested','OFFER STATUS':'Received','SCHOLARSHIP':'Partial','PAYMENT':'Paid','CAS SHIELD':'Completed','CAS STATUS':'Issued','VISA STATUS':'Approved','APPLICATION SUBMITTED DATE':'2026-03-12','MOBILE':'+977 9801234567','EMAIL':'priya@email.com','MOCK INTERVIEW STATUS':'Completed','PRE-CAS INTERVIEW':'Passed','CAS PAYMENT STATUS':'Paid','CAS REQUESTED STATUS':'Requested'},
+    {'STUDENT ID':'R2U002','STUDENT NAME':'Amit Patel','LEVEL':'UG','COURSE':'BA Business Management','AGENT':'Agent B','DOB':'2002-11-22','SUBMITTED BY':'Sagar','PRE-SCREENING CALL STATUS':'Scheduled','OFFER STATUS':'Conditional','SCHOLARSHIP':'None','PAYMENT':'Deposit Paid','CAS SHIELD':'In Progress','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','APPLICATION SUBMITTED DATE':'2026-04-01'},
+    {'STUDENT ID':'R2U003','STUDENT NAME':'Sara Khan','LEVEL':'PG','COURSE':'MBA Finance','AGENT':'Agent A','DOB':'1999-07-08','SUBMITTED BY':'Admin','PRE-SCREENING CALL STATUS':'Called – Interested','OFFER STATUS':'Unconditional','SCHOLARSHIP':'Full','PAYMENT':'Paid','CAS SHIELD':'Completed','CAS STATUS':'Pending','VISA STATUS':'Pending','APPLICATION SUBMITTED DATE':'2026-02-28','MOCK INTERVIEW STATUS':'Completed','PRE-CAS INTERVIEW':'Completed','CAS PAYMENT STATUS':'Paid','CAS REQUESTED STATUS':'Requested'},
+    {'STUDENT ID':'R2U004','STUDENT NAME':'Rahul Singh','LEVEL':'PHD','COURSE':'PhD Engineering','AGENT':'Agent C','DOB':'1995-03-30','SUBMITTED BY':'Admin','PRE-SCREENING CALL STATUS':'Not Called','OFFER STATUS':'Received','SCHOLARSHIP':'None','PAYMENT':'Unpaid','CAS SHIELD':'Not Started','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','APPLICATION SUBMITTED DATE':''},
+    {'STUDENT ID':'R2U005','STUDENT NAME':'Meena Joshi','LEVEL':'UG','COURSE':'BSc Nursing','AGENT':'Agent B','DOB':'2003-01-15','SUBMITTED BY':'Sagar','PRE-SCREENING CALL STATUS':'Called – Not Interested','OFFER STATUS':'Rejected','SCHOLARSHIP':'None','PAYMENT':'Refunded','CAS SHIELD':'Not Started','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','APPLICATION SUBMITTED DATE':''}
   ];
 }
 function getMockCASData() {
   return [
-    {'Applicant ID':'R2U001','Applicant Name':'Priya Sharma','Agent (Name)':'Agent A','Nationality':'Nepali','Course Name':'MSc Computer Science','Team Member':'Sagar','Study Gap Y/N':'No','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'Yes','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'Yes','PCI Invite':'2026-07-01'},
-    {'Applicant ID':'R2U002','Applicant Name':'Amit Patel','Agent (Name)':'Agent B','Nationality':'Indian','Course Name':'BA Business Management','Team Member':'Admin','Study Gap Y/N':'Yes','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'No','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'No','PCI Invite':''}
+    {'Applicant ID':'R2U001','Applicant Name':'Priya Sharma','Agent (Name)':'Agent A','Nationality':'Nepali','Country of Domicile':'Nepal','Course Name':'MSc Computer Science','Team Member':'Sagar','Study Gap Y/N':'No','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'Yes','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'Yes','PCI Invite':'2026-07-01'},
+    {'Applicant ID':'R2U002','Applicant Name':'Amit Patel','Agent (Name)':'Agent B','Nationality':'Indian','Country of Domicile':'India','Course Name':'BA Business Management','Team Member':'Admin','Study Gap Y/N':'Yes','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'No','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'No','PCI Invite':''}
   ];
 }
 </script>
