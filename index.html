@@ -86,9 +86,9 @@ button{cursor:pointer}
 .sb-divider{height:1px;background:rgba(255,255,255,.07);margin:8px 8px}
 
 .sb-user{
-  margin:6px 8px 8px;border-radius:var(--r-md);
-  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
-  padding:9px 10px;display:flex;align-items:center;gap:9px;flex-shrink:0;
+  margin-top:auto;border-radius:0;
+  background:rgba(255,255,255,.05);border:none;border-top:1px solid rgba(255,255,255,.08);
+  padding:14px 18px;display:flex;align-items:center;gap:9px;flex-shrink:0;
 }
 .sb-avatar{
   width:28px;height:28px;border-radius:50%;
@@ -558,6 +558,10 @@ textarea.form-control{resize:vertical;min-height:72px;line-height:1.55}
       <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       <span>Channel Partners</span>
     </div>
+    <div class="sb-link" data-view="students" onclick="switchView('students',this)">
+      <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><circle cx="17" cy="7" r="3"/></svg>
+      <span>Students</span>
+    </div>
     <div class="sb-link" data-view="followup" onclick="switchView('followup',this)">
       <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.3 1.5a11.5 11.5 0 005.3 5.3L15.5 13l5 2v4a2 2 0 01-2.2 2A16.5 16.5 0 013 6.2 2 2 0 015 4z"/></svg>
       <span>Daily Follow-Up</span>
@@ -793,6 +797,49 @@ textarea.form-control{resize:vertical;min-height:72px;line-height:1.55}
       </div>
       <div class="cp-grid" id="full-cp-grid">
         <div class="empty-state" style="grid-column:1/-1">Loading…</div>
+      </div>
+    </div>
+
+    <!-- STUDENTS PAGE -->
+    <div class="view" id="view-students">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div>
+          <h2 style="font-size:15px;font-weight:700;color:var(--text-primary);letter-spacing:-.01em">Students</h2>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">All enrolled students in the pipeline</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="exportStudentsCSV()">Export CSV</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddStudent()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add student
+          </button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="seg-tabs">
+          <button class="seg-btn active" onclick="setPillFilterStudents('','',this)">All</button>
+          <button class="seg-btn seg-green" onclick="setPillFilterStudents('visa','Approved',this)">Visa approved</button>
+          <button class="seg-btn seg-amber" onclick="setPillFilterStudents('visa','Pending',this)">Visa pending</button>
+          <button class="seg-btn seg-red" onclick="setPillFilterStudents('visa','Refused',this)">Visa refused</button>
+          <button class="seg-btn seg-blue" onclick="setPillFilterStudents('offer','Received',this)">Offer received</button>
+          <button class="seg-btn seg-violet" onclick="setPillFilterStudents('cas','Pending',this)">CAS pending</button>
+        </div>
+        <div class="tbl-search-wrap">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="students-search-input" type="text" oninput="filterTableStudents()" placeholder="Filter students…">
+        </div>
+      </div>
+      <div class="tbl-card">
+        <div class="tbl-header">
+          <div><span class="tbl-title">Student Records</span><span class="tbl-count" id="students-tbl-count"></span></div>
+          <button class="btn btn-secondary btn-sm" onclick="exportStudentsCSV()">Export</button>
+        </div>
+        <div class="tbl-scroll" style="max-height:70vh">
+          <table class="dt" id="students-page-table">
+            <thead><tr><th style="width:100px">Student ID</th><th style="min-width:180px">Name</th><th style="min-width:160px">Course</th><th style="min-width:130px">Channel Partner</th><th style="min-width:180px">Pipeline</th><th style="min-width:110px">Visa Status</th><th style="min-width:80px;text-align:right">Actions</th></tr></thead>
+            <tbody id="students-page-table-body"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -1158,7 +1205,7 @@ function resetCmd(){document.getElementById('cmd-results').innerHTML=`<div class
 function cmdSearch(q){if(!q.trim()||q.length<2){resetCmd();return}const m=students.filter(s=>(s['STUDENT NAME']||'').toLowerCase().includes(q.toLowerCase())||(s['STUDENT ID']||'').toLowerCase().includes(q.toLowerCase())).slice(0,8);if(!m.length){document.getElementById('cmd-results').innerHTML='<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:12px">No students found</div>';return}document.getElementById('cmd-results').innerHTML='<div class="cmd-section">Students</div>'+m.map(s=>`<div class="cmd-item" onclick="closeCmd();openDetail('${esc(s['STUDENT ID']||'')}')"><div class="cmd-item-icon" style="background:${avatarBg(s['STUDENT NAME'])};color:#FFF;font-size:10px;font-weight:700">${initials(s['STUDENT NAME'])}</div><div><div class="cmd-item-name">${s['STUDENT NAME']||'—'}</div><div class="cmd-item-meta">${s['STUDENT ID']||''} · ${s['COURSE']||''}</div></div></div>`).join('')}
 
 /* ═══════════ VIEW SWITCHING ═══════════ */
-const PAGE_META={dashboard:['Dashboard','Pipeline and student overview'],partners:['Channel Partners','Referral agents and partner agencies'],followup:['Daily Follow-Up',"Today's pending calls"],casshield:['CAS Shield','Pre-CAS readiness checks'],feedback:['Mock Pre-CAS','Interview feedback builder'],email:['Direct Email','Send messages to students and agents'],reports:['Reports','Pipeline breakdowns and insights'],upload:['Import CSV','Upload new student records'],'student-detail':['Student Detail','Manage profile and pipeline']};
+const PAGE_META={dashboard:['Dashboard','Pipeline and student overview'],partners:['Channel Partners','Referral agents and partner agencies'],students:['Students','All enrolled students in the pipeline'],followup:['Daily Follow-Up',"Today's pending calls"],casshield:['CAS Shield','Pre-CAS readiness checks'],feedback:['Mock Pre-CAS','Interview feedback builder'],email:['Direct Email','Send messages to students and agents'],reports:['Reports','Pipeline breakdowns and insights'],upload:['Import CSV','Upload new student records'],'student-detail':['Student Detail','Manage profile and pipeline']};
 function switchView(id,tab){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.sb-link').forEach(t=>t.classList.remove('active'));
@@ -1172,6 +1219,7 @@ function switchView(id,tab){
   if(id==='casshield')loadCAS();
   if(id==='followup')renderFollowup();
   if(id==='partners')renderPartners();
+  if(id==='students')filterTableStudents();
 }
 function goHome(){switchView('dashboard',document.querySelector('.sb-link[data-view="dashboard"]'))}
 function refreshView(){if(currentView==='dashboard')loadStudents();else if(currentView==='casshield')loadCAS();else if(currentView==='reports')loadReports();else if(currentView==='followup')renderFollowup();else if(currentView==='partners')renderPartners();else toast('Nothing to refresh here','info')}
@@ -1258,6 +1306,28 @@ function filterTable(){
   });
   renderTable(filtered);
   const c=document.getElementById('tbl-count');if(c)c.textContent=`${filtered.length} of ${students.length}`;
+}
+
+/* ═══════════ STUDENTS PAGE (full list, separate from dashboard preview) ═══════════ */
+let pillFilterStudents={type:'',value:''};
+function setPillFilterStudents(type,value,btn){pillFilterStudents={type,value};btn.closest('.seg-tabs').querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');filterTableStudents()}
+function filterTableStudents(){
+  const qEl=document.getElementById('students-search-input');
+  const q=(qEl&&qEl.value||'').toLowerCase();
+  const filtered=students.filter(s=>{
+    if(q&&!['STUDENT NAME','STUDENT ID','COURSE','AGENT'].some(f=>(s[f]||'').toLowerCase().includes(q)))return false;
+    const pf=pillFilterStudents;
+    if(pf.type==='visa'&&s['VISA STATUS']!==pf.value)return false;
+    if(pf.type==='offer'&&s['OFFER STATUS']!==pf.value)return false;
+    if(pf.type==='cas'&&s['CAS STATUS']!==pf.value)return false;
+    return true;
+  });
+  const tb=document.getElementById('students-page-table-body');
+  if(tb){
+    if(!filtered.length){tb.innerHTML='<tr><td colspan="7" class="empty-state">No students match current filters</td></tr>'}
+    else{tb.innerHTML=filtered.map(buildRow).join('')}
+  }
+  const c=document.getElementById('students-tbl-count');if(c)c.textContent=`${filtered.length} of ${students.length}`;
 }
 
 /* ═══════════ ROW MENU ═══════════ */
