@@ -87,6 +87,19 @@ button{cursor:pointer}
 .sb-link:hover .sb-link-icon{opacity:.7}
 .sb-divider{height:1px;background:rgba(255,255,255,.07);margin:8px 8px}
 
+/* ── COMMUNICATION SECTION (new) ── */
+.sb-section-label-comm{
+  font-size:11px;font-weight:700;color:#94A3B8;
+  text-transform:uppercase;letter-spacing:.14em;
+  padding:14px 10px 5px;
+}
+.sb-link-comm{font-size:14px;font-weight:500}
+.sb-badge-soon{
+  margin-left:auto;font-size:8.5px;font-weight:700;letter-spacing:.04em;
+  color:rgba(255,255,255,.3);background:rgba(255,255,255,.06);
+  border-radius:4px;padding:1px 5px;flex-shrink:0;text-transform:uppercase;
+}
+
 .sb-user{
   margin-top:auto;border-radius:0;
   background:rgba(255,255,255,.05);border:none;border-top:1px solid rgba(255,255,255,.08);
@@ -583,6 +596,41 @@ textarea.form-control{resize:vertical;min-height:72px;line-height:1.55}
     <div class="sb-link" data-view="reports" onclick="switchView('reports',this)">
       <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="4" y2="11"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="20" y1="20" x2="20" y2="15"/></svg>
       <span>Reports</span>
+    </div>
+    <div class="sb-divider"></div>
+    <div class="sb-section-label-comm">Communication</div>
+    <div class="sb-link sb-link-comm" onclick="switchView('email',document.querySelector('.sb-link[data-view=email]'))">
+      <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      <span>Email</span>
+    </div>
+    <div class="sb-link sb-link-comm" onclick="toast('WhatsApp integration coming soon','info')">
+      <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+      <span>WhatsApp</span>
+      <span class="sb-badge-soon">Soon</span>
+    </div>
+    <div class="sb-link sb-link-comm" onclick="toast('Internal team chat coming soon','info')">
+      <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9a2 2 0 01-2 2H6l-4 4V4a2 2 0 012-2h8a2 2 0 012 2z"/><path d="M18 9h2a2 2 0 012 2v11l-4-4h-6a2 2 0 01-2-2v-1"/></svg>
+      <span>Internal Chat</span>
+      <span class="sb-badge-soon">Soon</span>
+    </div>
+    <div class="sb-link sb-link-comm" onclick="toast('No new notifications','info')">
+      <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span>Notifications</span>
+    </div>
+    <div class="sb-link sb-link-comm" onclick="toast('AI Assistant coming soon','info')">
+      <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="9" width="14" height="10" rx="2"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M12 9V5"/><circle cx="12" cy="3" r="1"/><path d="M5 13H3"/><path d="M21 13h-2"/></svg>
+      <span>AI Assistant</span>
+      <span class="sb-badge-soon">Soon</span>
+    </div>
+    <div class="sb-link sb-link-comm" onclick="toast('Message templates coming soon','info')">
+      <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+      <span>Templates</span>
+      <span class="sb-badge-soon">Soon</span>
+    </div>
+    <div class="sb-link sb-link-comm" onclick="toast('Activity history coming soon','info')">
+      <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+      <span>Activity History</span>
+      <span class="sb-badge-soon">Soon</span>
     </div>
     <div class="sb-divider"></div>
     <div class="sb-section-label admin-only" style="display:none">Admin</div>
