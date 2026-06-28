@@ -46,11 +46,13 @@ button{cursor:pointer}
 .view.active{display:block!important}
 
 /* ── SIDEBAR ── */
+/* FIX 3: Added height:100% and min-height:100vh so sidebar always reaches the footer */
 #sidebar{
   position:fixed;inset-y:0;left:0;width:var(--sidebar-w);z-index:50;
   background:#0A1628;
   display:flex;flex-direction:column;
   border-right:1px solid rgba(255,255,255,.06);
+  height:100%;min-height:100vh;
 }
 .sb-logo-row{
   height:var(--header-h);display:flex;align-items:center;gap:10px;
@@ -1025,123 +1027,26 @@ let detailStudentId=null;
 let stageEdits={};
 
 /* ═══════════ PIPELINE STAGES ═══════════ */
-/*
-  Sequential lock system:
-  Each stage checks if previous stage is "done" before unlocking.
-  Stages: 0=AppSubmit, 1=Prescreening, 2=Offer, 3=Payment(CAS shield),
-          4=Mock(4 steps), 5=PreCAS(pass/fail), 6=CAS Requested, 7=CAS Received, 8=Visa
-*/
-
 const STAGE_DEFS=[
-  {
-    id:'app_submitted',label:'Application submitted',
-    key:'APPLICATION SUBMITTED DATE',
-    done:s=>!!(s['APPLICATION SUBMITTED DATE']),
-    prevDone:s=>true, // always first
-    type:'date',
-    desc:'Record the date the application was submitted to the university.'
-  },
-  {
-    id:'prescreening',label:'Pre-screening call',
-    key:'PRE-SCREENING CALL STATUS',
-    done:s=>/received|no connectivity|on hold|scheduled|withdrew|interested/i.test(s['PRE-SCREENING CALL STATUS']||''),
-    prevDone:s=>!!(s['APPLICATION SUBMITTED DATE']),
-    type:'select',
-    options:[
-      {val:'Received',icon:'📥'},
-      {val:'No Connectivity',icon:'📵'},
-      {val:'On Hold',icon:'⏸️'},
-      {val:'Scheduled',icon:'📅'},
-      {val:'Withdrew',icon:'🚫'},
-      {val:'Called – Interested',icon:'👍'},
-      {val:'Called – Not Interested',icon:'👎'},
-    ],
-    desc:'Log the outcome of the initial pre-screening call with the student.'
-  },
-  {
-    id:'offer',label:'Offer received',
-    key:'OFFER STATUS',
-    done:s=>/conditional|unconditional|received/i.test(s['OFFER STATUS']||''),
-    prevDone:s=>!!(s['PRE-SCREENING CALL STATUS']),
-    type:'select',
-    options:[
-      {val:'Conditional',icon:'📋'},
-      {val:'Unconditional',icon:'🎉'},
-      {val:'Received',icon:'✅'},
-      {val:'Pending',icon:'⏳'},
-      {val:'Rejected',icon:'❌'},
-    ],
-    desc:'Update the offer status from the university.'
-  },
-  {
-    id:'cas_payment',label:'Payment for CAS Shield',
-    key:'CAS PAYMENT STATUS',
-    done:s=>s['CAS PAYMENT STATUS']==='Paid',
-    prevDone:s=>/conditional|unconditional|received/i.test(s['OFFER STATUS']||''),
-    type:'select',
-    options:[{val:'Paid',icon:'💳'},{val:'Unpaid',icon:'⏳'}],
-    desc:'Confirm payment has been received for CAS Shield processing.'
-  },
-  {
-    id:'mock',label:'Mock interview',
-    key:'MOCK INTERVIEW STATUS',
-    done:s=>s['MOCK INTERVIEW STATUS']==='Stage 4 Done',
-    prevDone:s=>s['CAS PAYMENT STATUS']==='Paid',
-    type:'mock_stages',
-    desc:'Track progress through all 4 mock interview preparation stages.'
-  },
-  {
-    id:'precas',label:'Pre-CAS interview',
-    key:'PRE-CAS INTERVIEW',
-    done:s=>s['PRE-CAS INTERVIEW']==='Pass',
-    prevDone:s=>s['MOCK INTERVIEW STATUS']==='Stage 4 Done',
-    type:'select',
-    options:[{val:'Pass',icon:'✅'},{val:'Fail',icon:'❌'}],
-    desc:'Record the result of the Pre-CAS interview. Pass required to proceed.'
-  },
-  {
-    id:'cas_requested',label:'CAS requested',
-    key:'CAS REQUESTED STATUS',
-    done:s=>s['CAS REQUESTED STATUS']==='Requested',
-    prevDone:s=>s['PRE-CAS INTERVIEW']==='Pass',
-    type:'select',
-    options:[{val:'Requested',icon:'📨'},{val:'Not Requested',icon:'⭕'}],
-    desc:'Confirm that the CAS has been formally requested from the university.'
-  },
-  {
-    id:'cas_received',label:'CAS received',
-    key:'CAS STATUS',
-    done:s=>/issued/i.test(s['CAS STATUS']||''),
-    prevDone:s=>s['CAS REQUESTED STATUS']==='Requested',
-    type:'select',
-    options:[{val:'Issued',icon:'✅'},{val:'Pending',icon:'⏳'},{val:'Rejected',icon:'❌'}],
-    desc:'Update when the CAS document has been issued by the university.'
-  },
-  {
-    id:'visa',label:'Visa status',
-    key:'VISA STATUS',
-    done:s=>/approved/i.test(s['VISA STATUS']||''),
-    prevDone:s=>/issued/i.test(s['CAS STATUS']||''),
-    type:'select',
-    options:[{val:'Approved',icon:'🎉'},{val:'Submitted',icon:'📤'},{val:'Biometrics Booked',icon:'🖐️'},{val:'Pending',icon:'⏳'},{val:'Refused',icon:'❌'},{val:'Withdrawn',icon:'🚫'}],
-    desc:'Track the student\'s visa application status.'
-  },
+  {id:'app_submitted',label:'Application submitted',key:'APPLICATION SUBMITTED DATE',done:s=>!!(s['APPLICATION SUBMITTED DATE']),prevDone:s=>true,type:'date',desc:'Record the date the application was submitted to the university.'},
+  {id:'prescreening',label:'Pre-screening call',key:'PRE-SCREENING CALL STATUS',done:s=>/received|no connectivity|on hold|scheduled|withdrew|interested/i.test(s['PRE-SCREENING CALL STATUS']||''),prevDone:s=>!!(s['APPLICATION SUBMITTED DATE']),type:'select',options:[{val:'Received',icon:'📥'},{val:'No Connectivity',icon:'📵'},{val:'On Hold',icon:'⏸️'},{val:'Scheduled',icon:'📅'},{val:'Withdrew',icon:'🚫'},{val:'Called – Interested',icon:'👍'},{val:'Called – Not Interested',icon:'👎'}],desc:'Log the outcome of the initial pre-screening call with the student.'},
+  {id:'offer',label:'Offer received',key:'OFFER STATUS',done:s=>/conditional|unconditional|received/i.test(s['OFFER STATUS']||''),prevDone:s=>!!(s['PRE-SCREENING CALL STATUS']),type:'select',options:[{val:'Conditional',icon:'📋'},{val:'Unconditional',icon:'🎉'},{val:'Received',icon:'✅'},{val:'Pending',icon:'⏳'},{val:'Rejected',icon:'❌'}],desc:'Update the offer status from the university.'},
+  {id:'cas_payment',label:'Payment for CAS Shield',key:'CAS PAYMENT STATUS',done:s=>s['CAS PAYMENT STATUS']==='Paid',prevDone:s=>/conditional|unconditional|received/i.test(s['OFFER STATUS']||''),type:'select',options:[{val:'Paid',icon:'💳'},{val:'Unpaid',icon:'⏳'}],desc:'Confirm payment has been received for CAS Shield processing.'},
+  {id:'mock',label:'Mock interview',key:'MOCK INTERVIEW STATUS',done:s=>s['MOCK INTERVIEW STATUS']==='Stage 4 Done',prevDone:s=>s['CAS PAYMENT STATUS']==='Paid',type:'mock_stages',desc:'Track progress through all 4 mock interview preparation stages.'},
+  {id:'precas',label:'Pre-CAS interview',key:'PRE-CAS INTERVIEW',done:s=>s['PRE-CAS INTERVIEW']==='Pass',prevDone:s=>s['MOCK INTERVIEW STATUS']==='Stage 4 Done',type:'select',options:[{val:'Pass',icon:'✅'},{val:'Fail',icon:'❌'}],desc:'Record the result of the Pre-CAS interview. Pass required to proceed.'},
+  {id:'cas_requested',label:'CAS requested',key:'CAS REQUESTED STATUS',done:s=>s['CAS REQUESTED STATUS']==='Requested',prevDone:s=>s['PRE-CAS INTERVIEW']==='Pass',type:'select',options:[{val:'Requested',icon:'📨'},{val:'Not Requested',icon:'⭕'}],desc:'Confirm that the CAS has been formally requested from the university.'},
+  {id:'cas_received',label:'CAS received',key:'CAS STATUS',done:s=>/issued/i.test(s['CAS STATUS']||''),prevDone:s=>s['CAS REQUESTED STATUS']==='Requested',type:'select',options:[{val:'Issued',icon:'✅'},{val:'Pending',icon:'⏳'},{val:'Rejected',icon:'❌'}],desc:'Update when the CAS document has been issued by the university.'},
+  {id:'visa',label:'Visa status',key:'VISA STATUS',done:s=>/approved/i.test(s['VISA STATUS']||''),prevDone:s=>/issued/i.test(s['CAS STATUS']||''),type:'select',options:[{val:'Approved',icon:'🎉'},{val:'Submitted',icon:'📤'},{val:'Biometrics Booked',icon:'🖐️'},{val:'Pending',icon:'⏳'},{val:'Refused',icon:'❌'},{val:'Withdrawn',icon:'🚫'}],desc:'Track the student\'s visa application status.'},
 ];
 
-// compute done count for progress display
 const stageDoneCount=s=>STAGE_DEFS.filter(sd=>sd.done(s)).length;
-
-// For the existing funnel/pipeline display compatibility
 const STAGES=STAGE_DEFS.map(sd=>({label:sd.label,ok:sd.done}));
 const stageList=s=>STAGE_DEFS.map(sd=>({label:sd.label,done:!!sd.done(s)}));
 const stageCurrent=s=>{const l=stageList(s);const i=l.findIndex(x=>!x.done);return i===-1?l.length:i};
 
 /* ═══════════ MOCK STAGES ═══════════ */
 const MOCK_STAGES=['Stage 1 Done','Stage 2 Done','Stage 3 Done','Stage 4 Done'];
-function mockStageLevel(s){
-  const v=s['MOCK INTERVIEW STATUS']||'';
-  const idx=MOCK_STAGES.indexOf(v);return idx; // -1 if none
-}
+function mockStageLevel(s){const v=s['MOCK INTERVIEW STATUS']||'';const idx=MOCK_STAGES.indexOf(v);return idx;}
 
 /* ═══════════ BOOT ═══════════ */
 document.addEventListener('DOMContentLoaded',()=>{
@@ -1226,7 +1131,15 @@ function refreshView(){if(currentView==='dashboard')loadStudents();else if(curre
 
 /* ═══════════ API ═══════════ */
 async function apiGet(action,params={}){const url=new URL(SCRIPT_URL);url.searchParams.set('action',action);Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));return(await fetch(url.toString())).json()}
-async function apiPost(action,body={}){const url=new URL(SCRIPT_URL);url.searchParams.set('action',action);if(action==='uploadCSV'){url.searchParams.set('rows',JSON.stringify(body.rows||[]))}else{Object.entries(body).forEach(([k,v])=>{if(v!==null&&v!==undefined)url.searchParams.set(k,String(v))})}return(await fetch(url.toString())).json()}
+
+/* FIX 1: apiPost now sends a real POST with text/plain body to avoid CORS preflight */
+async function apiPost(action,body={}){
+  return(await fetch(SCRIPT_URL,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify({action,...body})
+  })).json();
+}
 
 /* ═══════════ STUDENTS LOAD ═══════════ */
 async function loadStudents(){
@@ -1308,7 +1221,7 @@ function filterTable(){
   const c=document.getElementById('tbl-count');if(c)c.textContent=`${filtered.length} of ${students.length}`;
 }
 
-/* ═══════════ STUDENTS PAGE (full list, separate from dashboard preview) ═══════════ */
+/* ═══════════ STUDENTS PAGE ═══════════ */
 let pillFilterStudents={type:'',value:''};
 function setPillFilterStudents(type,value,btn){pillFilterStudents={type,value};btn.closest('.seg-tabs').querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');filterTableStudents()}
 function filterTableStudents(){
@@ -1379,12 +1292,11 @@ function renderStagePipeline(s){
 
     let contentHTML=`<div class="stage-title">${sd.label}</div>`;
     if(isDone&&curVal)contentHTML+=`<div class="stage-current-val">✓ ${curVal}</div>`;
-    if(!isDone&&!isLocked&&curVal)contentHTML+=`<div class="stage-current-val" style="">${curVal}</div>`;
+    if(!isDone&&!isLocked&&curVal)contentHTML+=`<div class="stage-current-val">${curVal}</div>`;
 
     if(isLocked){
       contentHTML+=`<div class="stage-locked-msg">Complete "${STAGE_DEFS[i-1]?.label||'previous stage'}" first to unlock this stage.</div>`;
     } else {
-      // Render options
       if(sd.type==='date'){
         contentHTML+=`<div style="margin-top:6px"><input type="date" class="form-control" style="max-width:180px" value="${curVal}" onchange="stageEdits[${i}]={key:'${sd.key}',val:this.value}"></div>`;
       } else if(sd.type==='select'){
@@ -1395,17 +1307,15 @@ function renderStagePipeline(s){
         });
         contentHTML+=`</div>`;
       } else if(sd.type==='mock_stages'){
-        const curLevel=MOCK_STAGES.indexOf(curVal); // -1 to 3
+        const curLevel=MOCK_STAGES.indexOf(curVal);
         contentHTML+=`<div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">${sd.desc}</div><div class="stage-options">`;
         MOCK_STAGES.forEach((ms,mi)=>{
           const isSel=curVal===ms;
-          // Each mock stage only clickable if previous mock stage done or it's stage 1
           const mockUnlocked=mi===0||curLevel>=mi-1||(stageEdits[i]&&MOCK_STAGES.indexOf(stageEdits[i].val)>=mi-1);
           contentHTML+=`<div class="stage-opt${isSel?' selected':''}${!mockUnlocked?' locked-row':''}" onclick="pickMockStage(this,${i},'${esc(ms)}',${mi},${curLevel})" style="${!mockUnlocked?'opacity:.4;pointer-events:none':''}"><span class="stage-opt-icon">${isSel||curLevel>=mi?'✅':'⭕'}</span>Mock ${ms}</div>`;
         });
         contentHTML+=`</div>`;
       }
-      // Notes field for important stages
       if(sd.type!=='date'){
         contentHTML+=`<div class="stage-notes" style="margin-top:8px"><label>Notes (optional)</label><textarea placeholder="Add notes…" id="stage-note-${i}" style="min-height:40px"></textarea></div>`;
       }
@@ -1424,10 +1334,8 @@ function pickStageOpt(el,idx,key,val){
 
 function pickMockStage(el,idx,val,mi,curLevel){
   stageEdits[idx]={key:'MOCK INTERVIEW STATUS',val};
-  // re-render to update lock states for subsequent mock steps
   const s=students.find(s=>s['STUDENT ID']===activeStudentId);
   if(s)renderStagePipeline({...s,'MOCK INTERVIEW STATUS':val});
-  // re-apply edits
 }
 
 async function saveStages(){
@@ -1439,13 +1347,10 @@ async function saveStages(){
   const patch={};
   Object.values(stageEdits).forEach(e=>{if(e.val)patch[e.key]=e.val});
   Object.assign(s,patch);filterTable();updateStats();updateFunnel();renderDashboardPartners();
-  // refresh detail if open
   if(currentView==='student-detail'&&detailStudentId===activeStudentId)openDetail(activeStudentId);
   try{
-    const url=new URL(SCRIPT_URL);url.searchParams.set('action','updateStudentProfile');url.searchParams.set('studentId',activeStudentId);url.searchParams.set('updatedBy',staff.name);
-    Object.entries(patch).forEach(([k,v])=>url.searchParams.set(k,v));
-    const res=await fetch(url.toString());const data=await res.json();
-    if(!data.success)throw new Error(data.error||'Save error');
+    const res=await apiPost('updateStudentProfile',{studentId:activeStudentId,updatedBy:staff.name,...patch});
+    if(!res.success)throw new Error(res.error||'Save error');
     toast('Pipeline updated','success');
   }catch(e){toast('Saved locally, sync may have failed: '+e.message,'info')}
   finally{txt.textContent='Save changes';spin.style.display='none';closeDrawer('drw-stage');stageEdits={}}
@@ -1470,7 +1375,6 @@ function openDetail(sid){
     const sd=STAGE_DEFS[i];const locked=!sd.prevDone(s)&&!st.done;
     return`<div class="stage-row${locked?' locked-row':''}"><div class="stage-left"><span class="stage-num">${i+1}</span><div class="stage-check ${st.done?'done':''}">${st.done?`<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#FFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`:''}</div><span class="stage-name">${st.label}</span></div><span class="badge ${st.done?'badge-green':locked?'badge-slate':'badge-amber'}" style="font-size:9px">${st.done?'Done':locked?'Locked':'Pending'}</span></div>`;
   }).join('');
-  // Stage summary
   document.getElementById('dp-stage-summary').innerHTML=STAGE_DEFS.map(sd=>{
     const val=s[sd.key]||'—';const isDone=sd.done(s);const isLocked=!sd.prevDone(s)&&!isDone;
     return`<div style="padding:10px 12px;border:1px solid var(--border-subtle);border-radius:var(--r-md);background:${isDone?'var(--emerald-50)':isLocked?'var(--surface-inset)':'var(--amber-50)'}">
@@ -1617,18 +1521,18 @@ function getMock(){return[{'STUDENT ID':'STU-2026-001','STUDENT NAME':'Aarav Sha
 function getMockCAS(){return[{'Applicant ID':'STU-2026-001','Applicant Name':'Aarav Sharma','Agent (Name)':'RD Pokhara','Nationality':'Nepali','Course Name':'BSc Computer Science','Study Gap Y/N':'No','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'No','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'No','PCI Invite':''},{'Applicant ID':'STU-2026-002','Applicant Name':'Priya Karki','Agent (Name)':'Bright Future Consultancy','Nationality':'Nepali','Course Name':'MSc Data Science','Study Gap Y/N':'Yes','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'Yes','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'Yes','PCI Invite':'2026-07-10'},{'Applicant ID':'STU-2026-005','Applicant Name':'Kiran Gurung','Agent (Name)':'NextStep Consultancy','Nationality':'Nepali','Course Name':'MBA','Study Gap Y/N':'No','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'Yes','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'Yes','PCI Invite':'2026-06-15'}]}
 
 /* ════════════════════════════════════════════════════════════════════
-   PERFORMANCE PATCH (added) — client cache, save queue, lazy loading,
-   pagination, parallel fetch. Purely additive; nothing above is removed.
+   PERFORMANCE PATCH — client cache, save queue, lazy loading,
+   pagination, parallel fetch.
    ════════════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
 
-  const CLIENT_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+  const CLIENT_CACHE_TTL_MS = 10 * 60 * 1000;
   const QUEUE_FLUSH_MIN_MS  = 2000;
   const QUEUE_FLUSH_MAX_MS  = 5000;
   const QUEUE_RETRY_BASE_MS = 1500;
 
-  // ── Client memory cache ───────────────────────────────────────────
+  /* ── Client memory cache ── */
   const clientCache = new Map();
   function cacheKey(action, params) { return action + ':' + JSON.stringify(params || {}); }
   function getCached(action, params) {
@@ -1650,7 +1554,7 @@ function getMockCAS(){return[{'Applicant ID':'STU-2026-001','Applicant Name':'Aa
   };
   window.invalidateClientCache = invalidateClientCache;
 
-  // ── Background save queue ─────────────────────────────────────────
+  /* ── Background save queue ── */
   const saveQueue = new Map();
   let flushTimer = null, inFlight = false, retryDelay = QUEUE_RETRY_BASE_MS;
 
@@ -1660,17 +1564,18 @@ function getMockCAS(){return[{'Applicant ID':'STU-2026-001','Applicant Name':'Aa
     flushTimer = setTimeout(flushQueue, delay);
   }
 
+  /* FIX 2: flushQueue now uses POST with text/plain to avoid CORS preflight */
   async function flushQueue() {
     flushTimer = null;
     if (inFlight || saveQueue.size === 0) return;
     const updates = Array.from(saveQueue.values());
     inFlight = true;
     try {
-      const url = new URL(SCRIPT_URL);
-      url.searchParams.set('action', 'batchUpdate');
-      url.searchParams.set('updates', JSON.stringify(updates));
-      url.searchParams.set('updatedBy', staff.name || 'Staff');
-      const res = await fetch(url.toString());
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ action: 'batchUpdate', updates, updatedBy: staff.name || 'Staff' })
+      });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Batch save failed');
       updates.forEach(u => saveQueue.delete(u.studentId + '|' + u.field));
@@ -1705,7 +1610,7 @@ function getMockCAS(){return[{'Applicant ID':'STU-2026-001','Applicant Name':'Aa
     if (document.visibilityState === 'hidden' && saveQueue.size > 0) flushQueue();
   });
 
-  // ── Optimized stage save (instant UI, background batched write) ──
+  /* ── Optimized stage save ── */
   window.saveStagesOptimized = function () {
     if (!Object.keys(window.stageEdits || {}).length) { closeDrawer('drw-stage'); return; }
     const sid = window.activeStudentId;
@@ -1725,7 +1630,7 @@ function getMockCAS(){return[{'Applicant ID':'STU-2026-001','Applicant Name':'Aa
     window.stageEdits = {};
   };
 
-  // ── Lazy dashboard loading ────────────────────────────────────────
+  /* ── Lazy dashboard loading ── */
   function nextFrame() { return new Promise(resolve => requestAnimationFrame(() => resolve())); }
 
   window.loadDashboardLazy = async function () {
@@ -1768,12 +1673,12 @@ function getMockCAS(){return[{'Applicant ID':'STU-2026-001','Applicant Name':'Aa
     }
   };
 
-  // ── Parallel fetch helper ─────────────────────────────────────────
+  /* ── Parallel fetch helper ── */
   window.fetchAllParallel = function (calls) {
     return Promise.all(calls.map(([action, params]) => window.apiGetCached(action, params)));
   };
 
-  // ── Incremental row patch ─────────────────────────────────────────
+  /* ── Incremental row patch ── */
   window.patchStudentRow = function (studentId) {
     const s = (window.students || []).find(s => s['STUDENT ID'] === studentId);
     if (!s) return;
@@ -1791,7 +1696,7 @@ function getMockCAS(){return[{'Applicant ID':'STU-2026-001','Applicant Name':'Aa
     }
   };
 
-  // ── Pagination ("load more") ──────────────────────────────────────
+  /* ── Pagination ("load more") ── */
   window.initLoadMore = function (pageSize = 50) {
     const tblCard = document.querySelector('.tbl-card');
     if (!tblCard || document.getElementById('load-more-btn')) return;
