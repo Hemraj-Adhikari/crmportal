@@ -1126,7 +1126,7 @@ function bootSession(name,role){
   document.getElementById('sb-role').textContent=role;
   document.getElementById('hdr-avatar').textContent=ini.slice(0,1);
   document.getElementById('page-subtitle').textContent='Welcome back, '+name.split(' ')[0]+'!';
-  applyRole(role);hideLogin();loadStudents();
+  applyRole(role);hideLogin();loadDashboardLazy();
 }
 
 /* ═══════════ AUTH ═══════════ */
@@ -1187,7 +1187,7 @@ async function loadStudents(){
   loading('Fetching students…');
   try{const data=await apiGet('getStudents',{page:currentPage,limit:100});if(!data.success)throw new Error(data.error);students=data.students||[];totalRecords=data.totalRecords??students.length;currentPage=data.page??1}
   catch(e){console.warn('Using mock data:',e.message);students=getMock();totalRecords=students.length}
-  finally{filterTable();updateStats();updateFunnel();renderDashboardPartners();hideLoading();toast('Loaded '+students.length+' students','success')}
+  finally{filterTable();updateStats();updateFunnel();renderDashboardPartners();hideLoading();toast('Loaded '+students.length+' students','success');if(typeof initLoadMore==='function')initLoadMore(100)}
 }
 
 /* ═══════════ STATS & FUNNEL ═══════════ */
@@ -1361,6 +1361,7 @@ function pickMockStage(el,idx,val,mi,curLevel){
 }
 
 async function saveStages(){
+  if(typeof saveStagesOptimized==='function'){saveStagesOptimized();return}
   if(!Object.keys(stageEdits).length){closeDrawer('drw-stage');return}
   const s=students.find(s=>s['STUDENT ID']===activeStudentId);if(!s)return;
   const txt=document.getElementById('stage-save-txt'),spin=document.getElementById('stage-save-spin');
@@ -1544,6 +1545,222 @@ function hideLoading(){document.getElementById('global-loading').classList.remov
 /* ═══════════ MOCK DATA ═══════════ */
 function getMock(){return[{'STUDENT ID':'STU-2026-001','STUDENT NAME':'Aarav Sharma','LEVEL':'UG','COURSE':'BSc (Hons) Computer Science','AGENT':'RD Pokhara','DOB':'2002-03-15','SUBMITTED BY':'Sagar','PRE-SCREENING CALL STATUS':'Called – Interested','OFFER STATUS':'Conditional','SCHOLARSHIP':'None','PAYMENT':'Deposit Paid','CAS SHIELD':'In Progress','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','APPLICATION SUBMITTED DATE':'2026-04-10','MOBILE':'986552121','EMAIL':'hemrajhadhikari@gmail.com','MOCK INTERVIEW STATUS':'Stage 2 Done','PRE-CAS INTERVIEW':'','CAS PAYMENT STATUS':'Unpaid','CAS REQUESTED STATUS':'Not Requested'},{'STUDENT ID':'STU-2026-002','STUDENT NAME':'Priya Karki','LEVEL':'PG','COURSE':'MSc Data Science','AGENT':'Bright Future Consultancy','DOB':'1999-07-22','SUBMITTED BY':'Admin','PRE-SCREENING CALL STATUS':'Scheduled','OFFER STATUS':'Unconditional','SCHOLARSHIP':'Partial','PAYMENT':'Paid','CAS PAYMENT STATUS':'Paid','CAS SHIELD':'Completed','CAS STATUS':'Pending','VISA STATUS':'Pending','APPLICATION SUBMITTED DATE':'2026-03-01','MOCK INTERVIEW STATUS':'Stage 4 Done','PRE-CAS INTERVIEW':'Pass','CAS REQUESTED STATUS':'Requested'},{'STUDENT ID':'STU-2026-003','STUDENT NAME':'Rohan Thapa','LEVEL':'UG','COURSE':'BBA Business Management','AGENT':'ABC Education','DOB':'2003-01-08','SUBMITTED BY':'Sagar','PRE-SCREENING CALL STATUS':'Not Called','OFFER STATUS':'Pending','SCHOLARSHIP':'None','PAYMENT':'Unpaid','CAS SHIELD':'Not Started','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','APPLICATION SUBMITTED DATE':'2026-05-12'},{'STUDENT ID':'STU-2026-004','STUDENT NAME':'Anisha Rai','LEVEL':'UG','COURSE':'Engineering Foundation','AGENT':'RD Pokhara','DOB':'2002-09-30','SUBMITTED BY':'Admin','PRE-SCREENING CALL STATUS':'Received','OFFER STATUS':'Conditional','CAS PAYMENT STATUS':'Paid','PAYMENT':'Deposit Paid','CAS SHIELD':'In Progress','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','APPLICATION SUBMITTED DATE':'2026-04-20','MOCK INTERVIEW STATUS':'Stage 3 Done','PRE-CAS INTERVIEW':''},{'STUDENT ID':'STU-2026-005','STUDENT NAME':'Kiran Gurung','LEVEL':'PG','COURSE':'MBA','AGENT':'NextStep Consultancy','DOB':'1998-11-14','SUBMITTED BY':'Sagar','PRE-SCREENING CALL STATUS':'Called – Interested','OFFER STATUS':'Received','SCHOLARSHIP':'Full','PAYMENT':'Paid','CAS PAYMENT STATUS':'Paid','CAS SHIELD':'Completed','CAS STATUS':'Issued','VISA STATUS':'Approved','APPLICATION SUBMITTED DATE':'2026-02-15','MOCK INTERVIEW STATUS':'Stage 4 Done','PRE-CAS INTERVIEW':'Pass','CAS REQUESTED STATUS':'Requested'},{'STUDENT ID':'STU-2026-006','STUDENT NAME':'Bishwas Shrestha','LEVEL':'PG','COURSE':'MBA Finance','AGENT':'Bright Future Consultancy','DOB':'2000-06-05','SUBMITTED BY':'Admin','PRE-SCREENING CALL STATUS':'On Hold','OFFER STATUS':'Unconditional','CAS PAYMENT STATUS':'Paid','PAYMENT':'Partially Paid','CAS SHIELD':'In Progress','CAS STATUS':'Applied','VISA STATUS':'Submitted','APPLICATION SUBMITTED DATE':'2026-03-18','MOCK INTERVIEW STATUS':'Stage 4 Done','PRE-CAS INTERVIEW':'Pass','CAS REQUESTED STATUS':'Requested'},{'STUDENT ID':'STU-2026-007','STUDENT NAME':'Puja Sharma','LEVEL':'PG','COURSE':'MA International Relations','AGENT':'ABC Education','DOB':'2001-02-19','SUBMITTED BY':'Sagar','PRE-SCREENING CALL STATUS':'Scheduled','OFFER STATUS':'Conditional','SCHOLARSHIP':'Bursary','PAYMENT':'Deposit Paid','CAS SHIELD':'Not Started','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied','APPLICATION SUBMITTED DATE':'2026-05-02'},{'STUDENT ID':'STU-2026-008','STUDENT NAME':'Nikhil Raimajhi','LEVEL':'PG','COURSE':'MCS Software Engineering','AGENT':'NextStep Consultancy','DOB':'1997-12-11','SUBMITTED BY':'Admin','PRE-SCREENING CALL STATUS':'Called – Interested','OFFER STATUS':'Received','SCHOLARSHIP':'None','PAYMENT':'Paid','CAS PAYMENT STATUS':'Paid','CAS SHIELD':'Completed','CAS STATUS':'Issued','VISA STATUS':'Approved','APPLICATION SUBMITTED DATE':'2026-01-25','MOCK INTERVIEW STATUS':'Stage 4 Done','PRE-CAS INTERVIEW':'Pass','CAS REQUESTED STATUS':'Requested'},{'STUDENT ID':'STU-2026-009','STUDENT NAME':'Sita Magar','LEVEL':'UG','COURSE':'BSc Nursing','AGENT':'RD Pokhara','DOB':'2003-08-28','SUBMITTED BY':'Sagar','PRE-SCREENING CALL STATUS':'Withdrew','OFFER STATUS':'Pending','SCHOLARSHIP':'None','PAYMENT':'Unpaid','CAS SHIELD':'Not Started','CAS STATUS':'Not Applied','VISA STATUS':'Not Applied'},{'STUDENT ID':'STU-2026-010','STUDENT NAME':'Dipesh Tamang','LEVEL':'PHD','COURSE':'PhD Biomedical Engineering','AGENT':'Bright Future Consultancy','DOB':'1995-04-03','SUBMITTED BY':'Admin','PRE-SCREENING CALL STATUS':'Called – Interested','OFFER STATUS':'Unconditional','CAS PAYMENT STATUS':'Paid','SCHOLARSHIP':'Sponsorship','PAYMENT':'Paid','CAS SHIELD':'Completed','CAS STATUS':'Issued','VISA STATUS':'Refused','APPLICATION SUBMITTED DATE':'2026-02-28','MOCK INTERVIEW STATUS':'Stage 4 Done','PRE-CAS INTERVIEW':'Pass','CAS REQUESTED STATUS':'Requested'}]}
 function getMockCAS(){return[{'Applicant ID':'STU-2026-001','Applicant Name':'Aarav Sharma','Agent (Name)':'RD Pokhara','Nationality':'Nepali','Course Name':'BSc Computer Science','Study Gap Y/N':'No','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'No','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'No','PCI Invite':''},{'Applicant ID':'STU-2026-002','Applicant Name':'Priya Karki','Agent (Name)':'Bright Future Consultancy','Nationality':'Nepali','Course Name':'MSc Data Science','Study Gap Y/N':'Yes','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'Yes','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'Yes','PCI Invite':'2026-07-10'},{'Applicant ID':'STU-2026-005','Applicant Name':'Kiran Gurung','Agent (Name)':'NextStep Consultancy','Nationality':'Nepali','Course Name':'MBA','Study Gap Y/N':'No','Same Level Studies Y/N':'No','Visa Refusal Y/N':'No','Ready for PCI':'Yes','Information check on CAS Shield completed? Y/N':'Yes','Pre-CAS questionnaire on CAS shield Completed? Y/N':'Yes','PCI Invite':'2026-06-15'}]}
+
+/* ════════════════════════════════════════════════════════════════════
+   PERFORMANCE PATCH (added) — client cache, save queue, lazy loading,
+   pagination, parallel fetch. Purely additive; nothing above is removed.
+   ════════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  const CLIENT_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+  const QUEUE_FLUSH_MIN_MS  = 2000;
+  const QUEUE_FLUSH_MAX_MS  = 5000;
+  const QUEUE_RETRY_BASE_MS = 1500;
+
+  // ── Client memory cache ───────────────────────────────────────────
+  const clientCache = new Map();
+  function cacheKey(action, params) { return action + ':' + JSON.stringify(params || {}); }
+  function getCached(action, params) {
+    const entry = clientCache.get(cacheKey(action, params));
+    if (!entry) return null;
+    if (Date.now() - entry.ts > CLIENT_CACHE_TTL_MS) { clientCache.delete(cacheKey(action, params)); return null; }
+    return entry.data;
+  }
+  function setCached(action, params, data) { clientCache.set(cacheKey(action, params), { data, ts: Date.now() }); }
+  function invalidateClientCache(actionPrefix) {
+    for (const key of clientCache.keys()) { if (key.indexOf(actionPrefix + ':') === 0) clientCache.delete(key); }
+  }
+  window.apiGetCached = async function (action, params = {}) {
+    const cached = getCached(action, params);
+    if (cached) return cached;
+    const data = await apiGet(action, params);
+    if (data && data.success) setCached(action, params, data);
+    return data;
+  };
+  window.invalidateClientCache = invalidateClientCache;
+
+  // ── Background save queue ─────────────────────────────────────────
+  const saveQueue = new Map();
+  let flushTimer = null, inFlight = false, retryDelay = QUEUE_RETRY_BASE_MS;
+
+  function scheduleFlush() {
+    if (flushTimer) return;
+    const delay = QUEUE_FLUSH_MIN_MS + Math.random() * (QUEUE_FLUSH_MAX_MS - QUEUE_FLUSH_MIN_MS);
+    flushTimer = setTimeout(flushQueue, delay);
+  }
+
+  async function flushQueue() {
+    flushTimer = null;
+    if (inFlight || saveQueue.size === 0) return;
+    const updates = Array.from(saveQueue.values());
+    inFlight = true;
+    try {
+      const url = new URL(SCRIPT_URL);
+      url.searchParams.set('action', 'batchUpdate');
+      url.searchParams.set('updates', JSON.stringify(updates));
+      url.searchParams.set('updatedBy', staff.name || 'Staff');
+      const res = await fetch(url.toString());
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Batch save failed');
+      updates.forEach(u => saveQueue.delete(u.studentId + '|' + u.field));
+      invalidateClientCache('getStudents');
+      retryDelay = QUEUE_RETRY_BASE_MS;
+    } catch (e) {
+      toast('Sync delayed, retrying… (' + (e.message || 'network issue') + ')', 'info');
+      retryDelay = Math.min(retryDelay * 1.7, 30000);
+      flushTimer = setTimeout(flushQueue, retryDelay);
+    } finally {
+      inFlight = false;
+      if (saveQueue.size > 0 && !flushTimer) scheduleFlush();
+    }
+  }
+
+  window.queueFieldEdit = function (studentId, field, value) {
+    saveQueue.set(studentId + '|' + field, { studentId, field, value });
+    const s = (window.students || []).find(s => s['STUDENT ID'] === studentId);
+    if (s) s[field] = value;
+    toast('✓ Saved', 'success');
+    scheduleFlush();
+  };
+  window.queueBatchEdit = function (studentId, fieldValueMap) {
+    Object.entries(fieldValueMap).forEach(([field, value]) => window.queueFieldEdit(studentId, field, value));
+  };
+  window.flushSaveQueueNow = function () {
+    if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
+    return flushQueue();
+  };
+  window.addEventListener('beforeunload', () => { if (saveQueue.size > 0) flushQueue(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && saveQueue.size > 0) flushQueue();
+  });
+
+  // ── Optimized stage save (instant UI, background batched write) ──
+  window.saveStagesOptimized = function () {
+    if (!Object.keys(window.stageEdits || {}).length) { closeDrawer('drw-stage'); return; }
+    const sid = window.activeStudentId;
+    const s = (window.students || []).find(s => s['STUDENT ID'] === sid);
+    if (!s) return;
+    const patch = {};
+    Object.values(window.stageEdits).forEach(e => { if (e.val) patch[e.key] = e.val; });
+    Object.assign(s, patch);
+    if (typeof filterTable === 'function') filterTable();
+    if (typeof updateStats === 'function') updateStats();
+    if (typeof updateFunnel === 'function') updateFunnel();
+    if (typeof renderDashboardPartners === 'function') renderDashboardPartners();
+    if (currentView === 'student-detail' && detailStudentId === sid && typeof openDetail === 'function') openDetail(sid);
+    toast('✓ Saved', 'success');
+    closeDrawer('drw-stage');
+    window.queueBatchEdit(sid, patch);
+    window.stageEdits = {};
+  };
+
+  // ── Lazy dashboard loading ────────────────────────────────────────
+  function nextFrame() { return new Promise(resolve => requestAnimationFrame(() => resolve())); }
+
+  window.loadDashboardLazy = async function () {
+    const cached = getCached('getStudents', { page: 1, limit: 100 });
+    if (cached) {
+      window.students = cached.students || [];
+      window.totalRecords = cached.totalRecords ?? window.students.length;
+      if (typeof updateStats === 'function') updateStats();
+      if (typeof updateFunnel === 'function') updateFunnel();
+    } else {
+      loading('Fetching students…');
+    }
+
+    await nextFrame();
+    if (typeof filterTable === 'function') filterTable();
+
+    await nextFrame();
+    if (typeof renderDashboardPartners === 'function') renderDashboardPartners();
+
+    try {
+      const data = await window.apiGetCached('getStudents', { page: 1, limit: 100 });
+      if (data && data.success) {
+        window.students = data.students || [];
+        window.totalRecords = data.totalRecords ?? window.students.length;
+        window.currentPage = data.page ?? 1;
+      } else if (!cached) {
+        console.warn('Using mock data:', data && data.error);
+        window.students = getMock();
+        window.totalRecords = window.students.length;
+      }
+    } catch (e) {
+      if (!cached) { console.warn('Using mock data:', e.message); window.students = getMock(); window.totalRecords = window.students.length; }
+    } finally {
+      if (typeof filterTable === 'function') filterTable();
+      if (typeof updateStats === 'function') updateStats();
+      if (typeof updateFunnel === 'function') updateFunnel();
+      if (typeof renderDashboardPartners === 'function') renderDashboardPartners();
+      hideLoading();
+      if (typeof initLoadMore === 'function') initLoadMore(100);
+    }
+  };
+
+  // ── Parallel fetch helper ─────────────────────────────────────────
+  window.fetchAllParallel = function (calls) {
+    return Promise.all(calls.map(([action, params]) => window.apiGetCached(action, params)));
+  };
+
+  // ── Incremental row patch ─────────────────────────────────────────
+  window.patchStudentRow = function (studentId) {
+    const s = (window.students || []).find(s => s['STUDENT ID'] === studentId);
+    if (!s) return;
+    const table = document.getElementById('student-table');
+    if (!table) return;
+    const rows = table.querySelectorAll('tbody tr');
+    for (const tr of rows) {
+      const firstCellText = tr.children[0] && tr.children[0].textContent.trim();
+      if (firstCellText === studentId && typeof buildRow === 'function') {
+        const tmp = document.createElement('table');
+        tmp.innerHTML = buildRow(s);
+        tr.replaceWith(tmp.querySelector('tr'));
+        return;
+      }
+    }
+  };
+
+  // ── Pagination ("load more") ──────────────────────────────────────
+  window.initLoadMore = function (pageSize = 50) {
+    const tblCard = document.querySelector('.tbl-card');
+    if (!tblCard || document.getElementById('load-more-btn')) return;
+    if ((window.students || []).length >= (window.totalRecords || 0)) return;
+    const btn = document.createElement('button');
+    btn.id = 'load-more-btn';
+    btn.textContent = 'Load more students';
+    btn.onclick = async () => {
+      btn.disabled = true; btn.textContent = 'Loading…';
+      try {
+        const nextPage = (window.currentPage || 1) + 1;
+        const data = await window.apiGetCached('getStudents', { page: nextPage, limit: pageSize });
+        if (data && data.success && data.students && data.students.length) {
+          window.students = (window.students || []).concat(data.students);
+          window.currentPage = nextPage;
+          if (typeof filterTable === 'function') filterTable();
+          btn.textContent = 'Load more students';
+          if (window.students.length >= (window.totalRecords || 0)) btn.remove();
+        } else {
+          btn.textContent = 'No more records'; btn.disabled = true;
+        }
+      } catch (e) {
+        toast('Could not load more: ' + e.message, 'error');
+        btn.textContent = 'Load more students';
+      } finally { btn.disabled = false; }
+    };
+    tblCard.appendChild(btn);
+  };
+
+  window.searchStudentsLocal = function (query) {
+    const q = (query || '').toLowerCase();
+    if (!q) return window.students || [];
+    return (window.students || []).filter(s =>
+      ['STUDENT NAME', 'STUDENT ID', 'COURSE', 'AGENT'].some(f => (s[f] || '').toLowerCase().includes(q))
+    );
+  };
+
+  console.log('[R2U perf patch] loaded — client cache, save queue, lazy load, batchUpdate helpers ready.');
+})();
 </script>
 </body>
 </html>
