@@ -482,7 +482,24 @@ window.queueBatchEdit=function(sid,map){Object.entries(map).forEach(([f,v])=>win
 window.flushSaveQueueNow=function(){if(flushTimer){clearTimeout(flushTimer);flushTimer=null}return flushQueue()};
 window.addEventListener('beforeunload',()=>{if(saveQueue.size>0)flushQueue()});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&saveQueue.size>0)flushQueue()});
-window.saveStagesOptimized=function(){if(!Object.keys(window.stageEdits||{}).length){closeDrawer('drw-stage');return}const sid=window.activeStudentId;const s=(window.students||[]).find(s=>s['STUDENT ID']===sid);if(!s)return;const patch={};Object.values(window.stageEdits).forEach(e=>{if(e.val)patch[e.key]=e.val});Object.assign(s,patch);if(typeof filterTableStudents==='function')filterTableStudents();if(typeof updateStats==='function')updateStats();if(typeof updateFunnel==='function')updateFunnel();if(typeof renderDashboardPartners==='function')renderDashboardPartners();if(currentView==='student-detail'&&detailStudentId===sid&&typeof openDetail==='function')openDetail(sid);toast('✓ Saved','success');closeDrawer('drw-stage');window.queueBatchEdit(sid,patch);window.stageEdits={}};
+window.saveStagesOptimized = function() {
+  if(!Object.keys(stageEdits||{}).length){closeDrawer('drw-stage');return}
+  const sid = activeStudentId;
+  const s = (students||[]).find(s=>s['STUDENT ID']===sid);
+  if(!s) return;
+  const patch = {};
+  Object.values(stageEdits).forEach(e=>{if(e.val)patch[e.key]=e.val});
+  Object.assign(s,patch);
+  if(typeof filterTableStudents==='function') filterTableStudents();
+  if(typeof updateStats==='function') updateStats();
+  if(typeof updateFunnel==='function') updateFunnel();
+  if(typeof renderDashboardPartners==='function') renderDashboardPartners();
+  if(currentView==='student-detail' && detailStudentId===sid && typeof openDetail==='function') openDetail(sid);
+  toast('✓ Saved','success');
+  closeDrawer('drw-stage');
+  window.queueBatchEdit(sid,patch);
+  stageEdits = {};
+};
 function nextFrame(){return new Promise(r=>requestAnimationFrame(()=>r()))}
 window.loadDashboardLazy=async function(){const cached=getCached('getStudents',{page:1,limit:100});if(cached){window.students=cached.students||[];window.totalRecords=cached.totalRecords??window.students.length;if(typeof updateStats==='function')updateStats();if(typeof updateFunnel==='function')updateFunnel()}else{loading('Fetching students…')}
 await nextFrame();if(typeof filterTableStudents==='function')filterTableStudents();
