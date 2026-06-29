@@ -1,5 +1,5 @@
 /* ═══════════ CONFIG ═══════════ */
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwRHGyPqmZU5Rp-Xb5nPux8Vt4nf36GrPzLCvZm3bVp3KmY4hGWY6ZEwZc.../exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxcj94FfV5QzK7HlKXsQMK6-p2pmUlI7QLiAK6cM6BRfNRAxQa93WCtFSgA-5zC0G4b/exec';
 const SK_ROLE='r2u_role',SK_USER='r2u_user',SK_TIME='r2u_time',SESSION_TTL=12*60*60*1000;
 
 /* ═══════════ STATE ═══════════ */
