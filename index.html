@@ -66,6 +66,9 @@
   </div>
 </div>
 
+<!-- SIDEBAR BACKDROP (mobile) -->
+<div id="sidebar-backdrop" onclick="closeSidebarMobile()"></div>
+
 <!-- SIDEBAR -->
 <aside id="sidebar">
   <a class="sb-logo-row" onclick="goHome()" href="javascript:void(0)">
@@ -137,10 +140,9 @@
           <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           <span>Email</span>
         </div>
-        <div class="sb-link" onclick="toast('WhatsApp integration coming soon','info')">
+        <div class="sb-link" data-view="whatsapp" onclick="switchView('whatsapp',this)">
           <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
           <span>WhatsApp</span>
-          <span class="sb-badge sb-badge-soon">Soon</span>
         </div>
         <div class="sb-link" onclick="toast('Internal team chat coming soon','info')">
           <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9a2 2 0 01-2 2H6l-4 4V4a2 2 0 012-2h8a2 2 0 012 2z"/><path d="M18 9h2a2 2 0 012 2v11l-4-4h-6a2 2 0 01-2-2v-1"/></svg>
@@ -219,6 +221,17 @@
 <!-- MAIN -->
 <div id="app-main">
   <header id="app-header">
+    <button class="hdr-icon-btn hdr-hamburger" onclick="toggleSidebarMobile()" title="Menu">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="topnav-group">
+      <button class="topnav-circle-btn" id="topnav-back-btn" onclick="goBack()" title="Back" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </button>
+      <button class="topnav-circle-btn" id="topnav-home-btn" onclick="goHome()" title="Home">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5L12 4l9 7.5"/><path d="M5 10v10a1 1 0 001 1h12a1 1 0 001-1V10"/><path d="M9 21v-6h6v6"/></svg>
+      </button>
+    </div>
     <div>
       <div class="hdr-title" id="page-title">Students</div>
       <div class="hdr-sub" id="page-subtitle">Loading…</div>
@@ -331,8 +344,8 @@
         </div>
         <div class="tbl-scroll" style="max-height:55vh">
           <table class="dt" id="students-page-table">
-            <thead><tr><th style="width:100px">Student ID</th><th style="min-width:180px">Name</th><th style="min-width:160px">Course</th><th style="min-width:130px">Channel Partner</th><th style="min-width:180px">Pipeline</th><th style="min-width:110px">Visa Status</th><th style="min-width:80px;text-align:right">Actions</th></tr></thead>
-            <tbody id="students-page-table-body"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
+            <thead><tr><th style="width:36px;text-align:center"><input type="checkbox" id="select-all-students" title="Select all" onchange="toggleSelectAllStudents(this.checked)" style="cursor:pointer;accent-color:var(--navy-700)"></th><th style="width:100px">Student ID</th><th style="min-width:180px">Name</th><th style="min-width:160px">Course</th><th style="min-width:130px">Channel Partner</th><th style="min-width:180px">Pipeline</th><th style="min-width:110px">Visa Status</th><th style="min-width:80px;text-align:right">Actions</th></tr></thead>
+            <tbody id="students-page-table-body"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -376,6 +389,12 @@
       </div>
       <div class="detail-layout">
         <div class="detail-sidebar">
+          <div class="detail-section">
+            <div class="detail-section-head"><div class="detail-section-title">Documents</div><span class="badge badge-slate" style="font-size:9.5px">From Drive</span></div>
+            <div class="detail-section-body" style="padding:12px 16px">
+              <div id="dp-docs-section" style="font-size:11.5px;color:var(--text-muted)">Loading…</div>
+            </div>
+          </div>
           <div class="detail-section">
             <div class="detail-section-head"><div class="detail-section-title">Record</div><span class="badge badge-slate" style="font-size:9.5px">Read-only</span></div>
             <div class="detail-section-body" style="padding:0">
@@ -505,17 +524,183 @@
 
     <!-- REPORTS -->
     <div class="view" id="view-reports">
+
+      <!-- Top actions bar -->
       <div class="page-header">
-        <div class="page-header-left"><h2>Reports</h2><p>Pipeline breakdowns and conversion insights</p></div>
-        <button class="btn btn-secondary btn-sm" onclick="exportStudentsCSV()">Export CSV</button>
+        <div class="page-header-left">
+          <h2>Reports Dashboard</h2>
+          <p>Real-time overview of your student pipeline</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="live-pill"><span class="live-dot"></span>Live</div>
+          <span style="font-size:11px;color:var(--text-muted)" id="rpt-timestamp"></span>
+          <button class="btn btn-secondary btn-sm" onclick="exportStudentsCSV()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </button>
+        </div>
       </div>
+
+      <!-- KPI Row -->
       <div class="report-stat-grid">
-        <div class="rpt-stat"><div class="rpt-stat-val" id="rpt-total">—</div><div class="rpt-stat-label">Total students</div></div>
-        <div class="rpt-stat"><div class="rpt-stat-val" style="color:var(--emerald-700)" id="rpt-visa-rate">—</div><div class="rpt-stat-label">Visa success rate</div></div>
-        <div class="rpt-stat"><div class="rpt-stat-val" style="color:var(--gold-700)" id="rpt-avg-stage">—</div><div class="rpt-stat-label">Avg pipeline stage</div></div>
-        <div class="rpt-stat"><div class="rpt-stat-val" style="color:var(--violet-700)" id="rpt-partners">—</div><div class="rpt-stat-label">Channel partners</div></div>
+        <div class="report-stat-card" style="--kpi-accent:var(--navy-600)">
+          <div class="report-stat-icon" style="background:var(--navy-50)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--navy-600)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><circle cx="17" cy="7" r="3"/></svg>
+          </div>
+          <div style="flex:1">
+            <div class="report-stat-label">Total Students</div>
+            <div class="report-stat-val" id="rpt-total">—</div>
+            <div class="report-stat-delta up" id="rpt-total-delta">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+              All enrolled
+            </div>
+          </div>
+        </div>
+        <div class="report-stat-card">
+          <div class="report-stat-icon" style="background:var(--emerald-50)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-600)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <div style="flex:1">
+            <div class="report-stat-label">Visa Success Rate</div>
+            <div class="report-stat-val" style="color:var(--emerald-600)" id="rpt-visa-rate">—</div>
+            <div class="report-stat-delta up" id="rpt-visa-delta">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+              Visa approved
+            </div>
+          </div>
+        </div>
+        <div class="report-stat-card">
+          <div class="report-stat-icon" style="background:var(--gold-50)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold-600)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="4" y2="11"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="20" y1="20" x2="20" y2="15"/></svg>
+          </div>
+          <div style="flex:1">
+            <div class="report-stat-label">Avg Pipeline Stage</div>
+            <div class="report-stat-val" style="color:var(--gold-600)" id="rpt-avg-stage">—</div>
+            <div class="report-stat-delta flat">Current avg. stage</div>
+          </div>
+        </div>
+        <div class="report-stat-card">
+          <div class="report-stat-icon" style="background:var(--violet-50)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--violet-600)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <div style="flex:1">
+            <div class="report-stat-label">Channel Partners</div>
+            <div class="report-stat-val" style="color:var(--violet-600)" id="rpt-partners">—</div>
+            <div class="report-stat-delta flat">Active partners</div>
+          </div>
+        </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="report-grid"><div class="empty-state">Loading…</div></div>
+
+      <!-- Pipeline Funnel + Donut row -->
+      <div class="pipeline-row" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Pipeline Funnel</div>
+              <div class="card-subtitle" id="rpt-funnel-label">— students total</div>
+            </div>
+          </div>
+          <div class="funnel-stages" id="rpt-funnel"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Pipeline Distribution</div></div>
+          <div style="padding:18px">
+            <div style="display:flex;align-items:center;gap:16px">
+              <div style="position:relative;width:90px;height:90px;flex-shrink:0">
+                <svg width="90" height="90" viewBox="0 0 90 90">
+                  <circle cx="45" cy="45" r="35" fill="none" stroke="var(--surface-inset)" stroke-width="10"/>
+                  <circle id="rpt-d-applied" cx="45" cy="45" r="35" fill="none" stroke="var(--navy-600)" stroke-width="10" stroke-dasharray="0 220" stroke-dashoffset="55" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .9s ease"/>
+                  <circle id="rpt-d-cond" cx="45" cy="45" r="35" fill="none" stroke="var(--gold-500)" stroke-width="10" stroke-dasharray="0 220" stroke-dashoffset="55" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .9s ease"/>
+                  <circle id="rpt-d-mock" cx="45" cy="45" r="35" fill="none" stroke="var(--violet-500)" stroke-width="10" stroke-dasharray="0 220" stroke-dashoffset="55" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .9s ease"/>
+                  <circle id="rpt-d-cas" cx="45" cy="45" r="35" fill="none" stroke="#0EA5E9" stroke-width="10" stroke-dasharray="0 220" stroke-dashoffset="55" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .9s ease"/>
+                  <circle id="rpt-d-visa" cx="45" cy="45" r="35" fill="none" stroke="var(--emerald-500)" stroke-width="10" stroke-dasharray="0 220" stroke-dashoffset="55" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .9s ease"/>
+                  <text x="45" y="41" text-anchor="middle" font-family="Inter,sans-serif" font-weight="800" font-size="17" fill="var(--text-primary)" id="rpt-d-center">0</text>
+                  <text x="45" y="53" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" fill="var(--text-muted)" font-weight="500">Students</text>
+                </svg>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;align-items:center;gap:7px"><span class="legend-dot" style="background:var(--navy-600)"></span><span class="legend-name">Applied &amp; called</span><span class="legend-num" id="rpt-l-applied">0</span></div>
+                <div style="display:flex;align-items:center;gap:7px"><span class="legend-dot" style="background:var(--gold-500)"></span><span class="legend-name">Conditional offer</span><span class="legend-num" id="rpt-l-cond">0</span></div>
+                <div style="display:flex;align-items:center;gap:7px"><span class="legend-dot" style="background:var(--violet-500)"></span><span class="legend-name">Mock / Pre-CAS</span><span class="legend-num" id="rpt-l-mock">0</span></div>
+                <div style="display:flex;align-items:center;gap:7px"><span class="legend-dot" style="background:#0EA5E9"></span><span class="legend-name">CAS in progress</span><span class="legend-num" id="rpt-l-cas">0</span></div>
+                <div style="display:flex;align-items:center;gap:7px"><span class="legend-dot" style="background:var(--emerald-500)"></span><span class="legend-name">Visa received</span><span class="legend-num" id="rpt-l-visa">0</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status breakdowns -->
+      <div class="report-section-title">Status Breakdowns</div>
+      <div class="report-status-grid">
+        <div class="report-status-card">
+          <div class="report-status-title">Offer Status <span class="report-status-total" id="rpt-offer-total">— total</span></div>
+          <div id="rpt-offer-bars"></div>
+        </div>
+        <div class="report-status-card">
+          <div class="report-status-title">Visa Status <span class="report-status-total" id="rpt-visa-total">— total</span></div>
+          <div id="rpt-visa-bars"></div>
+        </div>
+        <div class="report-status-card">
+          <div class="report-status-title">CAS Status <span class="report-status-total" id="rpt-cas-total">— total</span></div>
+          <div id="rpt-cas-bars"></div>
+        </div>
+        <div class="report-status-card">
+          <div class="report-status-title">Payment Status <span class="report-status-total" id="rpt-pay-total">— total</span></div>
+          <div id="rpt-pay-bars"></div>
+        </div>
+        <div class="report-status-card">
+          <div class="report-status-title">Interview Status <span class="report-status-total" id="rpt-int-total">— total</span></div>
+          <div id="rpt-int-bars"></div>
+        </div>
+        <div class="report-status-card">
+          <div class="report-status-title">Document Status <span class="report-status-total" id="rpt-doc-total">— total</span></div>
+          <div id="rpt-doc-bars"></div>
+        </div>
+      </div>
+
+      <!-- Student table filter -->
+      <div class="filter-bar" style="margin-top:8px">
+        <div class="seg-tabs">
+          <button class="seg-btn active" onclick="setPillFilterStudents('','',this);switchView('students',document.querySelector('.sb-link[data-view=students]'))">All</button>
+          <button class="seg-btn seg-green" onclick="setPillFilterStudents('visa','Approved',this);switchView('students',document.querySelector('.sb-link[data-view=students]'))">Visa approved</button>
+          <button class="seg-btn seg-amber" onclick="setPillFilterStudents('visa','Pending',this);switchView('students',document.querySelector('.sb-link[data-view=students]'))">Visa pending</button>
+          <button class="seg-btn seg-red" onclick="setPillFilterStudents('visa','Refused',this);switchView('students',document.querySelector('.sb-link[data-view=students]'))">Visa refused</button>
+          <button class="seg-btn seg-blue" onclick="setPillFilterStudents('offer','Received',this);switchView('students',document.querySelector('.sb-link[data-view=students]'))">Offer received</button>
+          <button class="seg-btn seg-violet" onclick="setPillFilterStudents('cas','Pending',this);switchView('students',document.querySelector('.sb-link[data-view=students]'))">CAS pending</button>
+        </div>
+        <div class="tbl-search-wrap">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="rpt-filter-input" placeholder="Filter students…" oninput="">
+        </div>
+      </div>
+
+      <!-- Channel partners sidebar -->
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:14px;margin-top:0">
+        <div class="tbl-card">
+          <div class="tbl-header">
+            <div><span class="tbl-title">Student Records</span><span class="tbl-count" id="rpt-records-count"></span></div>
+          </div>
+          <div class="tbl-scroll" style="max-height:42vh">
+            <table class="dt" id="rpt-student-table">
+              <thead><tr><th style="width:100px">Student ID</th><th>Name</th><th>Course</th><th>Channel Partner</th><th>Pipeline</th><th>Visa Status</th><th style="min-width:90px">Last Updated</th></tr></thead>
+              <tbody id="rpt-student-body"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Channel Partners</div>
+              <button class="btn btn-ghost btn-sm" onclick="switchView('partners',document.querySelector('.sb-link[data-view=partners]'))" style="font-size:10.5px">View all</button>
+            </div>
+            <div id="rpt-cp-list" style="padding:8px 0">
+              <div class="empty-state" style="padding:16px">Loading…</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- UPLOAD (Admin only) -->
@@ -540,12 +725,210 @@
     </div>
 
     <!-- PARTNER UNIVERSITIES -->
-    <div class="view" id="view-universities" style="padding:0;height:calc(100vh - 56px)">
-      <iframe id="uni-iframe" src="route2uni-updated.html" style="width:100%;height:100%;border:none;display:block" title="Partner University Directory"></iframe>
+    <div class="view" id="view-universities">
+      <!-- GRID VIEW -->
+      <div id="uni-list-view">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2>Partner Universities</h2>
+            <p>Sep 2026 intake — courses, entry criteria &amp; fees</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:5px 10px;box-shadow:var(--shadow-xs);display:flex;align-items:center;gap:6px">
+              <span style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Total</span>
+              <span style="font-size:14px;font-weight:700;color:var(--text-primary)" id="uni-total-count">44</span>
+            </div>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <div class="seg-tabs">
+            <button class="seg-btn active" onclick="setUniFilter('all',this)">All</button>
+            <button class="seg-btn seg-blue" onclick="setUniFilter('UNDERGRADUATE',this)">Undergraduate</button>
+            <button class="seg-btn seg-violet" onclick="setUniFilter('POSTGRADUATE',this)">Postgraduate</button>
+          </div>
+          <div class="tbl-search-wrap">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input id="uni-search-input" type="text" oninput="filterUniGrid()" placeholder="Search universities, courses…">
+          </div>
+        </div>
+        <div id="uni-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;padding:4px 0 24px"></div>
+      </div>
+
+      <!-- DETAIL VIEW -->
+      <div id="uni-detail-view" style="display:none">
+        <div class="detail-breadcrumb">
+          <a onclick="showUniList()" style="cursor:pointer">Partner Universities</a>
+          <span class="detail-breadcrumb-sep">›</span>
+          <span class="detail-breadcrumb-cur" id="uni-detail-breadcrumb"></span>
+        </div>
+        <div class="detail-top">
+          <div class="detail-hero">
+            <div class="detail-avatar" id="uni-detail-avatar" style="font-size:13px;font-weight:800;letter-spacing:.02em;width:56px;height:56px;border-radius:10px"></div>
+            <div>
+              <div class="detail-name" id="uni-detail-title"></div>
+              <div class="detail-meta" id="uni-detail-cats" style="flex-wrap:wrap;gap:4px;margin-top:4px"></div>
+            </div>
+          </div>
+          <div class="detail-actions">
+            <button class="btn btn-secondary btn-sm" onclick="uniNavStep(-1)" id="uni-prev-btn">← Prev</button>
+            <button class="btn btn-ghost btn-sm" onclick="showUniList()">All Universities</button>
+            <button class="btn btn-secondary btn-sm" onclick="uniNavStep(1)" id="uni-next-btn">Next →</button>
+          </div>
+        </div>
+
+        <!-- TABS -->
+        <div class="detail-tabs" style="margin-bottom:16px">
+          <button class="dtab active" id="udctab-criteria" onclick="showUniDetailTab('criteria')">Entry Criteria</button>
+          <button class="dtab" id="udctab-courses" onclick="showUniDetailTab('courses')">Courses (<span id="uni-course-count">0</span>)</button>
+        </div>
+
+        <!-- CRITERIA PANEL -->
+        <div id="uni-panel-criteria">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px" id="uni-criteria-grid"></div>
+        </div>
+
+        <!-- COURSES PANEL -->
+        <div id="uni-panel-courses" style="display:none">
+          <div class="filter-bar" style="margin-bottom:12px">
+            <div class="tbl-search-wrap">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input id="course-search-input" type="text" oninput="filterCourses()" placeholder="Filter courses…">
+            </div>
+            <select class="form-control" id="course-level-filter" onchange="filterCourses()" style="width:auto;padding:6px 10px;font-size:12px">
+              <option value="">All levels</option>
+            </select>
+          </div>
+          <div class="tbl-card">
+            <div class="tbl-scroll" style="max-height:60vh">
+              <table class="dt" id="uni-courses-table">
+                <thead><tr><th>Course</th><th style="width:110px">Level</th><th style="width:130px">Campus</th><th style="width:140px">Intake</th><th style="width:140px">Extra Requirements</th></tr></thead>
+                <tbody id="uni-courses-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div><!-- /app-content -->
 </div><!-- /app-main -->
+
+<!-- ADD STUDENT MODAL -->
+<div id="add-student-overlay" style="display:none;position:fixed;inset:0;background:rgba(10,15,30,.55);z-index:500;overflow-y:auto;padding:32px 16px" onclick="e=>{if(e.target===this)closeAddStudent()}">
+  <div style="background:var(--surface-card);border-radius:var(--r-xl);max-width:720px;margin:0 auto;box-shadow:var(--shadow-xl);border:1px solid var(--border-subtle)" onclick="event.stopPropagation()">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border-subtle)">
+      <div>
+        <div style="font-size:16px;font-weight:700;color:var(--text-primary);letter-spacing:-.02em">Add New Student</div>
+        <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px">Details saved to Google Sheet · Files uploaded to Drive</div>
+      </div>
+      <button onclick="closeAddStudent()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:4px;border-radius:var(--r-sm);font-size:18px;line-height:1">✕</button>
+    </div>
+    <!-- Body -->
+    <div style="padding:24px">
+      <!-- Section: Personal Info -->
+      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Personal Information</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="form-group">
+          <label class="form-label">Full Name <span style="color:var(--crimson-500)">*</span></label>
+          <input class="form-control" id="as-name" type="text" placeholder="e.g. Ram Bahadur Shrestha">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Student ID <span style="color:var(--crimson-500)">*</span></label>
+          <input class="form-control" id="as-id" type="text" placeholder="e.g. R2U-2026-001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date of Birth <span style="color:var(--crimson-500)">*</span></label>
+          <input class="form-control" id="as-dob" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nationality</label>
+          <input class="form-control" id="as-nationality" type="text" placeholder="e.g. Nepali">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mobile</label>
+          <input class="form-control" id="as-mobile" type="tel" placeholder="+977 98xxxxxxxx">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-control" id="as-email" type="email" placeholder="student@email.com">
+        </div>
+      </div>
+      <!-- Section: Course Info -->
+      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;padding-top:8px;border-top:1px solid var(--border-subtle)">Course &amp; Application</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="form-group">
+          <label class="form-label">Level <span style="color:var(--crimson-500)">*</span></label>
+          <select class="form-control" id="as-level">
+            <option value="">Select level</option>
+            <option>UG</option><option>PG</option><option>PHD</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Course <span style="color:var(--crimson-500)">*</span></label>
+          <input class="form-control" id="as-course" type="text" placeholder="e.g. MSc Computer Science">
+        </div>
+        <div class="form-group">
+          <label class="form-label">University</label>
+          <input class="form-control" id="as-university" type="text" placeholder="e.g. University of East London">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Channel Partner / Agent</label>
+          <input class="form-control" id="as-agent" type="text" placeholder="Agent or agency name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Submitted By</label>
+          <input class="form-control" id="as-submitted-by" type="text" placeholder="Staff name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <input class="form-control" id="as-notes" type="text" placeholder="Any additional notes">
+        </div>
+      </div>
+      <!-- Section: Documents -->
+      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;padding-top:8px;border-top:1px solid var(--border-subtle)">
+        Documents <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-muted);font-size:10px">(uploaded to student's Drive folder)</span>
+      </div>
+      <!-- File drop zone -->
+      <div id="as-drop-zone" style="border:2px dashed var(--border-subtle);border-radius:var(--r-lg);padding:24px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;margin-bottom:12px"
+        ondragover="event.preventDefault();this.style.borderColor='var(--navy-500)';this.style.background='var(--navy-50)'"
+        ondragleave="this.style.borderColor='';this.style.background=''"
+        ondrop="asHandleDrop(event)"
+        onclick="document.getElementById('as-files').click()">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--navy-400)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 10px;display:block"><path d="M7 16a4.5 4.5 0 010-9 5.5 5.5 0 0110.4-1.7A5 5 0 0117 16"/><path d="M12 11v8"/><path d="M9 14l3-3 3 3"/></svg>
+        <div style="font-size:13px;font-weight:600;color:var(--text-secondary)">Drop files here or click to browse</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Passport, offer letter, transcripts, IELTS, etc.</div>
+        <input type="file" id="as-files" multiple style="display:none" onchange="asHandleFiles(this.files)">
+      </div>
+      <!-- File list -->
+      <div id="as-file-list" style="display:none;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:8px">Selected files</div>
+        <div id="as-file-items"></div>
+      </div>
+      <!-- Error message -->
+      <div id="as-error" style="display:none;background:var(--crimson-50);border:1px solid var(--crimson-100);color:var(--crimson-700);border-radius:var(--r-md);padding:10px 14px;font-size:12px;font-weight:500;margin-bottom:12px"></div>
+      <!-- Success message -->
+      <div id="as-success" style="display:none;background:var(--emerald-50);border:1px solid var(--emerald-100);color:var(--emerald-700);border-radius:var(--r-md);padding:14px;font-size:12px;margin-bottom:12px">
+        <div style="font-weight:700;font-size:13px;margin-bottom:4px">✓ Student added successfully!</div>
+        <div id="as-success-detail" style="color:var(--emerald-600)"></div>
+        <div id="as-drive-link-wrap" style="margin-top:8px;display:none">
+          <a id="as-drive-link" href="#" target="_blank" style="display:inline-flex;align-items:center;gap:5px;font-weight:600;color:var(--emerald-700);text-decoration:none;background:var(--emerald-100);padding:5px 10px;border-radius:var(--r-md);font-size:11.5px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Open Drive folder ↗
+          </a>
+        </div>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div style="padding:16px 24px;border-top:1px solid var(--border-subtle);display:flex;gap:8px;justify-content:flex-end;background:var(--surface-inset);border-radius:0 0 var(--r-xl) var(--r-xl)">
+      <button class="btn btn-ghost btn-sm" onclick="closeAddStudent()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="as-submit-btn" onclick="submitAddStudent()">
+        <span id="as-submit-lbl">Add Student</span>
+        <span class="spinner-sm" id="as-submit-spin" style="display:none"></span>
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- DRAWER OVERLAY -->
 <div id="drawer-overlay" onclick="closeAllDrawers()"></div>
@@ -611,5 +994,55 @@
 </div>
 
 <script src="script.js"></script>
+
+<!-- ── BULK ACTION FLOATING BAR ── -->
+<div id="bulk-action-bar" style="
+  display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--navy-800);color:#fff;border-radius:var(--r-lg);
+  box-shadow:var(--shadow-xl);padding:10px 16px;
+  display:none;align-items:center;gap:12px;z-index:200;
+  border:1px solid rgba(255,255,255,.1);min-width:360px;
+">
+  <span id="bulk-count-label" style="font-size:12px;font-weight:600;color:var(--gold-300);white-space:nowrap">0 selected</span>
+  <div style="flex:1;height:1px;background:rgba(255,255,255,.12)"></div>
+  <button onclick="bulkEmail()" style="
+    background:var(--navy-600);border:1px solid rgba(255,255,255,.15);color:#fff;
+    border-radius:var(--r-md);padding:6px 14px;font-size:11.5px;font-weight:600;
+    cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s
+  " onmouseover="this.style.background='var(--navy-500)'" onmouseout="this.style.background='var(--navy-600)'">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    Bulk Email
+  </button>
+  <button onclick="bulkStatusUpdate()" style="
+    background:var(--gold-500);border:none;color:var(--navy-900);
+    border-radius:var(--r-md);padding:6px 14px;font-size:11.5px;font-weight:700;
+    cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s
+  " onmouseover="this.style.background='var(--gold-400)'" onmouseout="this.style.background='var(--gold-500)'">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    Bulk Status Update
+  </button>
+  <button onclick="clearStudentSelection()" title="Clear selection" style="
+    background:transparent;border:none;color:rgba(255,255,255,.45);
+    cursor:pointer;padding:4px;border-radius:var(--r-sm);line-height:1;
+    font-size:16px;transition:color .13s
+  " onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.45)'">✕</button>
+</div>
+
+<script>
+// Load university data from external JSON file
+(async function() {
+  try {
+    const res = await fetch('universities.json');
+    const data = await res.json();
+    const el = document.createElement('script');
+    el.id = 'uni-rawdata';
+    el.type = 'application/json';
+    el.textContent = JSON.stringify(data);
+    document.head.appendChild(el);
+    // Fire event so uni module knows data is ready
+    document.dispatchEvent(new Event('uni-data-ready'));
+  } catch(e) { console.warn('Could not load universities.json:', e); }
+})();
+</script>
 </body>
 </html>
