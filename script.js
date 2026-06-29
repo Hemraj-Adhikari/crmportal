@@ -65,6 +65,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('fb-date').value=today();
   document.getElementById('drw-fb-date').value=today();
   renderQARows();
+  setInterval(updateTimestamps,60000);
   const role=localStorage.getItem(SK_ROLE);
   const t=parseInt(localStorage.getItem(SK_TIME)||'0',10);
   if(role&&Date.now()-t<=SESSION_TTL){bootSession(localStorage.getItem(SK_USER)||'Staff',role)}
@@ -214,6 +215,15 @@ async function loadStudents(){
 }
 
 /* ═══════════ STATS & FUNNEL ═══════════ */
+const FUNNEL_GROUPS=[{label:'Applied & called',si:1},{label:'Conditional offer',si:2},{label:'Offer received',si:3},{label:'CAS payment',si:4},{label:'Mock done',si:5},{label:'Pre-CAS cleared',si:6},{label:'CAS requested',si:7},{label:'CAS received',si:8}];
+const DISTRIBUTION_SEGMENTS=[
+  {label:'Applied & called',si:1,color:'#3B82F6'},
+  {label:'Conditional offer',si:2,color:'#F59E0B'},
+  {label:'Mock / Pre-CAS',si:5,color:'#7C3AED'},
+  {label:'CAS in progress',si:7,color:'#0EA5E9'},
+  {label:'Visa received',si:8,color:'#10B981'},
+];
+
 function updateStats(){
   const total=Math.max(totalRecords,students.length);
   const cas=students.filter(s=>/pending/i.test(s['CAS STATUS']||'')).length;
@@ -221,20 +231,72 @@ function updateStats(){
   const refused=students.filter(s=>/refused/i.test(s['VISA STATUS']||'')).length;
   const set=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val};
   set('stat-total',total);set('stat-cas',cas);set('stat-visa',visa);set('stat-refused',refused);
-  document.getElementById('pipeline-total-label').textContent=total+' students total';
+
+  // KPI cards
+  const visaApplied=students.filter(s=>/applied|pending|approved|refused|submitted|biometrics/i.test(s['VISA STATUS']||'')).length;
+  const visaRate=visaApplied?Math.round(visa/visaApplied*100):0;
+  const avgStage=students.length?Math.round(students.reduce((a,s)=>a+stageCurrent(s),0)/students.length):0;
+  const partnerCount=buildPartnerData().length;
+  set('kpi-total',total);
+  set('kpi-visa-rate',visaApplied?visaRate+'%':'—');
+  set('kpi-avg-stage',avgStage+'/'+STAGE_DEFS.length);
+  set('kpi-partners',partnerCount);
+
+  const lbl=document.getElementById('pipeline-total-label');if(lbl)lbl.textContent=total+' students total';
+  updateTimestamps();
 }
+
+function updateTimestamps(){
+  const now=new Date().toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true});
+  const set=(id)=>{const e=document.getElementById(id);if(e)e.textContent=now};
+  set('students-timestamp');set('reports-timestamp');
+}
+
 function updateFunnel(){
-  const total=students.length||1;
-  const groups=[{label:'Applied & called',si:1},{label:'Conditional offer',si:2},{label:'Offer received',si:3},{label:'CAS payment',si:4},{label:'Mock done',si:5},{label:'Pre-CAS cleared',si:6},{label:'CAS requested',si:7},{label:'CAS received',si:8}];
-  const max=groups.reduce((a,g)=>{const c=students.filter(s=>STAGE_DEFS[g.si]?.done(s)).length;return Math.max(a,c)},1);
-  const grid=document.getElementById('pipeline-funnel');if(!grid)return;
-  grid.innerHTML=groups.map(g=>{const c=students.filter(s=>STAGE_DEFS[g.si]?.done(s)).length;const w=Math.round(c/max*100);return`<div class="funnel-item"><div class="funnel-label">${g.label}</div><div class="funnel-bar-track"><div class="funnel-bar-fill" style="width:${w}%"></div></div><div class="funnel-count">${c}</div></div>`}).join('');
-  const C=2*Math.PI*34;
-  const cnts=[students.filter(s=>STAGE_DEFS[1].done(s)).length,students.filter(s=>STAGE_DEFS[2].done(s)).length,students.filter(s=>STAGE_DEFS[4].done(s)).length,students.filter(s=>STAGE_DEFS[7].done(s)).length,students.filter(s=>STAGE_DEFS[8].done(s)).length];
-  const ids=['d-applied','d-cond','d-mock','d-cas','d-visa'],lids=['l-applied','l-cond','l-mock','l-cas','l-visa'];
-  let offset=0;
-  cnts.forEach((c,i)=>{const el=document.getElementById(ids[i]);if(!el)return;const seg=Math.round(c/total*C);el.setAttribute('stroke-dasharray',`${seg} ${C-seg}`);el.setAttribute('stroke-dashoffset',String(C-offset));offset+=seg;const le=document.getElementById(lids[i]);if(le)le.textContent=c});
-  const cn=document.getElementById('d-center');if(cn)cn.textContent=students.length;
+  renderFunnelInto('pipeline-funnel');
+  renderDonut('dash-donut-chart','dash-donut-legend','dash-donut-total');
+  renderStageOverviewChart('dash-linechart-wrap');
+}
+
+function renderFunnelInto(elId){
+  const grid=document.getElementById(elId);if(!grid)return;
+  const max=FUNNEL_GROUPS.reduce((a,g)=>{const c=students.filter(s=>STAGE_DEFS[g.si]?.done(s)).length;return Math.max(a,c)},1);
+  grid.innerHTML=FUNNEL_GROUPS.map(g=>{const c=students.filter(s=>STAGE_DEFS[g.si]?.done(s)).length;const w=Math.round(c/max*100);return`<div class="funnel-item"><div class="funnel-label">${g.label}</div><div class="funnel-bar-track"><div class="funnel-bar-fill" style="width:${w}%"></div></div><div class="funnel-count">${c}</div></div>`}).join('');
+}
+
+function renderDonut(chartId,legendId,totalId){
+  const segments=DISTRIBUTION_SEGMENTS.map(g=>({label:g.label,color:g.color,count:students.filter(s=>STAGE_DEFS[g.si]?.done(s)).length}));
+  const segSum=segments.reduce((a,s)=>a+s.count,0);
+  const others=Math.max(students.length-segSum,0);
+  if(others>0)segments.push({label:'Others',color:'#CBD5E1',count:others});
+  const total=segments.reduce((a,s)=>a+s.count,0)||1;
+  let acc=0;
+  const stops=segments.map(s=>{const start=acc/total*360;acc+=s.count;const end=acc/total*360;return`${s.color} ${start}deg ${end}deg`}).join(', ');
+  const chart=document.getElementById(chartId);if(chart)chart.style.setProperty('--donut-stops',segSum?stops:'#E5E7EB 0deg 360deg');
+  const tot=document.getElementById(totalId);if(tot)tot.textContent=students.length;
+  const legend=document.getElementById(legendId);
+  if(legend)legend.innerHTML=segments.map(s=>{const pct=total?Math.round(s.count/total*100):0;return`<div class="donut-legend-row"><span class="donut-legend-dot" style="background:${s.color}"></span><span class="donut-legend-name">${s.label}</span><span class="donut-legend-num">${s.count} (${pct}%)</span></div>`}).join('');
+}
+
+function renderStageOverviewChart(wrapId){
+  const el=document.getElementById(wrapId);if(!el)return;
+  const labels=DISTRIBUTION_SEGMENTS.map(g=>g.label).concat(students.length-DISTRIBUTION_SEGMENTS.reduce((a,g)=>a+students.filter(s=>STAGE_DEFS[g.si]?.done(s)).length,0)>0?['Others']:[]);
+  const values=DISTRIBUTION_SEGMENTS.map(g=>students.filter(s=>STAGE_DEFS[g.si]?.done(s)).length);
+  if(labels.length>values.length)values.push(Math.max(students.length-values.reduce((a,b)=>a+b,0),0));
+  const w=600,h=180,padX=36,padY=22;
+  const max=Math.max(...values,1);
+  const stepX=values.length>1?(w-2*padX)/(values.length-1):0;
+  const pts=values.map((v,i)=>[padX+i*stepX,h-padY-(v/max)*(h-2*padY)]);
+  const linePath=pts.map((p,i)=>(i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+  const areaPath=linePath+` L${pts[pts.length-1][0].toFixed(1)},${h-padY} L${pts[0][0].toFixed(1)},${h-padY} Z`;
+  const dots=pts.map((p,i)=>`<circle class="linechart-dot" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4"></circle><text class="linechart-dot-label" x="${p[0].toFixed(1)}" y="${(p[1]-10).toFixed(1)}" text-anchor="middle">${values[i]}</text>`).join('');
+  const axis=pts.map((p,i)=>`<text class="linechart-axis-label" x="${p[0].toFixed(1)}" y="${h-4}" text-anchor="middle">${labels[i]||''}</text>`).join('');
+  el.innerHTML=`<svg class="linechart-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <defs><linearGradient id="lineAreaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3B82F6" stop-opacity="0.22"/><stop offset="100%" stop-color="#3B82F6" stop-opacity="0"/></linearGradient></defs>
+    <path class="linechart-area" d="${areaPath}"></path>
+    <path class="linechart-line" d="${linePath}"></path>
+    ${dots}${axis}
+  </svg>`;
 }
 
 /* ═══════════ TABLE ═══════════ */
@@ -491,7 +553,20 @@ function renderPartnerCard(p){
     </div>
   </div>`;
 }
-function renderDashboardPartners(){const partners=buildPartnerData().slice(0,6);const grid=document.getElementById('dashboard-cp-grid');if(!grid)return;grid.innerHTML=partners.length?partners.map(renderPartnerCard).join(''):'<div class="empty-state" style="grid-column:1/-1">No partner data yet</div>'}
+function renderPartnerSideRow(p){
+  const bg=avatarBg(p.name);const ini=initials(p.name);
+  const convRate=p.students.length?Math.round(p.visaApproved/p.students.length*100):0;
+  return`<div class="cp-side-row">
+    <div class="cp-side-avatar" style="background:${bg};color:#fff">${ini}</div>
+    <div><div class="cp-side-name">${p.name}</div><div class="cp-side-type">Channel Partner</div></div>
+    <div class="cp-side-stats">
+      <div><div class="cp-side-stat-val">${p.students.length}</div><div class="cp-side-stat-lbl">Students</div></div>
+      <div><div class="cp-side-stat-val">${p.offers}</div><div class="cp-side-stat-lbl">Offers</div></div>
+      <div><div class="cp-side-stat-val" style="color:${convRate>50?'var(--emerald-700)':'var(--amber-700)'}">${convRate}%</div><div class="cp-side-stat-lbl">Visa rate</div></div>
+    </div>
+  </div>`;
+}
+function renderDashboardPartners(){const partners=buildPartnerData().slice(0,6);const grid=document.getElementById('dashboard-cp-grid');if(!grid)return;grid.innerHTML=partners.length?partners.map(renderPartnerSideRow).join(''):'<div class="empty-state" style="padding:20px">No partner data yet</div>'}
 function renderPartners(){const partners=buildPartnerData();const grid=document.getElementById('full-cp-grid');if(!grid)return;grid.innerHTML=partners.length?partners.map(renderPartnerCard).join(''):'<div class="empty-state" style="grid-column:1/-1">No partners found</div>'}
 function openAddPartner(){toast('Add partner form coming soon','info')}
 /* ═══════════ ADD STUDENT ═══════════ */
@@ -787,13 +862,33 @@ function renderEmailHistory(){const wrap=document.getElementById('email-history-
 async function loadReports(){
   const total=students.length;const visaApp=students.filter(s=>/applied|pending|approved|refused|submitted|biometrics/i.test(s['VISA STATUS']||'')).length;const visaOK=students.filter(s=>/approved/i.test(s['VISA STATUS']||'')).length;const avgStage=total?Math.round(students.reduce((a,s)=>a+stageCurrent(s),0)/total):0;const partners=buildPartnerData().length;
   const se=id=>document.getElementById(id);
-  if(se('rpt-total'))se('rpt-total').textContent=total;if(se('rpt-visa-rate'))se('rpt-visa-rate').textContent=visaApp?Math.round(visaOK/visaApp*100)+'%':'—';if(se('rpt-avg-stage'))se('rpt-avg-stage').textContent=avgStage+'/'+STAGE_DEFS.length;if(se('rpt-partners'))se('rpt-partners').textContent=partners;
-  const grid=document.getElementById('report-grid');if(!grid)return;grid.innerHTML='';
+  if(se('rpt-total'))se('rpt-total').textContent=total;
+  if(se('rpt-visa-rate'))se('rpt-visa-rate').textContent=visaApp?Math.round(visaOK/visaApp*100)+'%':'—';
+  if(se('rpt-avg-stage'))se('rpt-avg-stage').textContent=avgStage+'/'+STAGE_DEFS.length;
+  if(se('rpt-partners'))se('rpt-partners').textContent=partners;
+
+  const lbl=se('reports-pipeline-total-label');if(lbl)lbl.textContent=total+' students total';
+  renderFunnelInto('reports-pipeline-funnel');
+  renderDonut('rpt-donut-chart','rpt-donut-legend','rpt-donut-total');
+  updateTimestamps();
+
+  const grid=document.getElementById('report-grid');if(!grid)return;
   const report=buildLocalReport();
-  const funnel=STAGE_DEFS.map(sd=>({label:sd.label,cnt:students.filter(s=>sd.done(s)).length}));const fmax=Math.max(...funnel.map(f=>f.cnt),1);
-  const mkCard=(title,data)=>{const tot=Object.values(data||{}).reduce((a,b)=>a+b,0)||1;const bars=Object.entries(data||{}).map(([l,c])=>{const p=Math.round(c/tot*100);return`<div class="rpt-bar-row"><div class="rpt-bar-label">${l}</div><div class="rpt-bar-track"><div class="rpt-bar-fill" style="width:${p}%"></div></div><div class="rpt-bar-num">${c}</div></div>`}).join('');return`<div class="card" style="padding:16px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div class="card-title">${title}</div><span style="font-size:10.5px;color:var(--text-muted)">${tot} total</span></div>${bars||'<div class="empty-state" style="padding:20px">No data</div>'}</div>`};
-  const funnelCard=`<div class="card" style="padding:16px;grid-column:span 2"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div class="card-title">Pipeline funnel</div><span style="font-size:10.5px;color:var(--text-muted)">${students.length} students</span></div>${funnel.map(f=>{const p=Math.round(f.cnt/fmax*100);return`<div class="rpt-bar-row"><div class="rpt-bar-label">${f.label}</div><div class="rpt-bar-track"><div class="rpt-bar-fill" style="width:${p}%"></div></div><div class="rpt-bar-num">${f.cnt}</div></div>`}).join('')}</div>`;
-  grid.innerHTML=funnelCard+mkCard('Offer status',report.offer)+mkCard('Visa status',report.visa)+mkCard('CAS status',report.cas)+mkCard('Payment',report.payment);
+  const statusColors={Pending:'#F59E0B',Conditional:'#3B82F6',Unconditional:'#10B981',Received:'#10B981',Rejected:'#DC2626','Not Applied':'#9CA3AF',Applied:'#3B82F6',Issued:'#7C3AED',Approved:'#10B981',Refused:'#DC2626',Unpaid:'#9CA3AF','Deposit Paid':'#3B82F6','Partially Paid':'#F59E0B',Paid:'#10B981'};
+  const mkStatusCard=(title,data)=>{
+    const entries=Object.entries(data||{});
+    const tot=entries.reduce((a,[,c])=>a+c,0);
+    const max=Math.max(...entries.map(([,c])=>c),1);
+    const rows=entries.map(([l,c])=>{const p=Math.round(c/max*100);const color=statusColors[l]||'var(--navy-600)';return`<div class="rpt-status-row"><div class="rpt-status-label">${l}</div><div class="rpt-status-track"><div class="rpt-status-fill" style="width:${p}%;background:${color}"></div></div><div class="rpt-status-num">${c}</div></div>`}).join('');
+    return`<div class="rpt-status-card"><div class="rpt-status-head"><div class="rpt-panel-title">${title}</div><div class="rpt-status-total">${tot} total</div></div>${rows||'<div class="empty-state" style="padding:14px 0">No data</div>'}</div>`;
+  };
+  grid.innerHTML=
+    mkStatusCard('Offer Status',report.offer)+
+    mkStatusCard('Visa Status',report.visa)+
+    mkStatusCard('CAS Status',report.cas)+
+    mkStatusCard('Payment Status',report.payment)+
+    mkStatusCard('Interview Status',report.interview||{})+
+    mkStatusCard('Document Status',report.document||{});
 }
 function buildLocalReport(){const cnt=(f,v)=>students.filter(s=>s[f]===v).length;return{offer:{Pending:cnt('OFFER STATUS','Pending'),Conditional:cnt('OFFER STATUS','Conditional'),Unconditional:cnt('OFFER STATUS','Unconditional'),Received:cnt('OFFER STATUS','Received'),Rejected:cnt('OFFER STATUS','Rejected')},cas:{'Not Applied':cnt('CAS STATUS','Not Applied'),Applied:cnt('CAS STATUS','Applied'),Pending:cnt('CAS STATUS','Pending'),Issued:cnt('CAS STATUS','Issued'),Rejected:cnt('CAS STATUS','Rejected')},visa:{'Not Applied':cnt('VISA STATUS','Not Applied'),Pending:cnt('VISA STATUS','Pending'),Approved:cnt('VISA STATUS','Approved'),Refused:cnt('VISA STATUS','Refused')},payment:{Unpaid:cnt('PAYMENT','Unpaid'),'Deposit Paid':cnt('PAYMENT','Deposit Paid'),'Partially Paid':cnt('PAYMENT','Partially Paid'),Paid:cnt('PAYMENT','Paid')}}}
 
