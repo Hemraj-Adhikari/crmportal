@@ -605,3 +605,105 @@ textarea.form-control{resize:vertical;min-height:72px;line-height:1.55}
 }
 .btn-edit-large:hover { background: var(--navy-600); transform: translateY(-1px); }
 .btn-edit-large svg { color: var(--gold-400); }
+
+/* ══════════════════════════════════════════
+   TOP-NAV — fixed Back/Home, every page
+══════════════════════════════════════════ */
+.topnav-group{display:flex;align-items:center;gap:6px;flex-shrink:0;padding-right:6px;margin-right:2px;border-right:1px solid var(--border-subtle)}
+.topnav-circle-btn{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--surface-card);border:1px solid var(--border-default);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text-tertiary);cursor:pointer;transition:all .14s;
+  box-shadow:var(--shadow-xs);flex-shrink:0;
+}
+.topnav-circle-btn:hover:not(:disabled){border-color:var(--navy-400);color:var(--navy-700);background:var(--navy-50);box-shadow:var(--shadow-sm)}
+.topnav-circle-btn:disabled{opacity:.35;cursor:not-allowed}
+#topnav-home-btn{background:var(--navy-800);border-color:var(--navy-800);color:var(--gold-300)}
+#topnav-home-btn:hover{background:var(--navy-700);color:var(--gold-200)}
+.hdr-hamburger{display:none}
+
+/* ══════════════════════════════════════════
+   UNIVERSITY CARD V2 — bento layout
+══════════════════════════════════════════ */
+#uni-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;padding:4px 0 24px}
+.uni-card{
+  background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-xs);overflow:hidden;display:flex;flex-direction:column;
+  transition:box-shadow .18s ease,transform .18s ease;
+}
+.uni-card.hover{box-shadow:var(--shadow-lg);transform:translateY(-3px)}
+.uni-card-band{position:relative;padding:16px 16px 14px;border-bottom:1px solid var(--border-subtle)}
+.uni-loc-pill{
+  position:absolute;top:12px;right:12px;display:inline-flex;align-items:center;gap:4px;
+  background:var(--navy-800);color:var(--gold-200);font-size:9px;font-weight:700;
+  letter-spacing:.03em;border-radius:99px;padding:4px 9px 4px 7px;
+  max-width:124px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.uni-loc-pill svg{flex-shrink:0}
+.uni-card-id{
+  width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;letter-spacing:.03em;margin-bottom:10px;
+}
+.uni-card-title{
+  font-size:13px;font-weight:700;color:var(--text-primary);line-height:1.32;
+  margin-bottom:8px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:34px;
+}
+.uni-card-cats{display:flex;gap:4px;flex-wrap:wrap}
+.uni-bento{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border-subtle)}
+.uni-bento-tile{background:var(--surface-card);padding:10px 12px;display:flex;align-items:flex-start;gap:8px;min-width:0}
+.uni-bento-icon{
+  width:24px;height:24px;border-radius:7px;background:var(--navy-50);color:var(--navy-600);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.uni-bento-label{font-size:8.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.uni-bento-val{font-size:11px;font-weight:700;color:var(--text-primary);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.uni-card-actions{display:flex;gap:8px;padding:12px;margin-top:auto;border-top:1px solid var(--border-subtle)}
+.uni-act-btn{flex:1;justify-content:center}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE — sidebar drawer + stacked layouts
+══════════════════════════════════════════ */
+#sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(3,13,26,.55);z-index:49;backdrop-filter:blur(2px)}
+#sidebar-backdrop.show{display:block}
+
+@media (max-width: 900px){
+  :root{--sidebar-w:248px}
+  #sidebar{transform:translateX(-100%);transition:transform .22s ease;box-shadow:var(--shadow-xl)}
+  #sidebar.mobile-open{transform:translateX(0)}
+  #app-main{margin-left:0}
+  #app-content{padding:14px 14px 24px}
+  .hdr-hamburger{display:flex}
+  .hdr-search{display:none}
+  #app-header{padding:0 12px;gap:8px}
+  .topnav-group{padding-right:4px;margin-right:0}
+
+  .pipeline-row,.detail-layout{grid-template-columns:1fr!important}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .report-stat-grid{grid-template-columns:repeat(2,1fr)}
+  .perf-grid{grid-template-columns:repeat(2,1fr)}
+  .form-row-2,[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+  .page-header{flex-wrap:wrap;gap:10px}
+  .page-header > div:last-child{width:100%;flex-wrap:wrap}
+  .filter-bar{flex-wrap:wrap}
+  .doc-preview-wrap{position:static}
+  #uni-grid{grid-template-columns:1fr}
+}
+
+@media (max-width: 480px){
+  .uni-bento{grid-template-columns:1fr}
+  .uni-card-actions{flex-direction:column}
+  .detail-top{flex-direction:column;align-items:stretch}
+  .detail-actions{flex-wrap:wrap}
+  .kpi-grid{grid-template-columns:1fr}
+  .report-stat-grid{grid-template-columns:1fr}
+}
+
+/* ── ACCESSIBILITY / QUALITY FLOOR ── */
+.topnav-circle-btn:focus-visible,.hdr-hamburger:focus-visible,.uni-act-btn:focus-visible{
+  outline:2px solid var(--gold-400);outline-offset:2px;
+}
+@media (prefers-reduced-motion: reduce){
+  .uni-card,#sidebar,.toast,.login-card{transition:none!important;animation:none!important}
+}
