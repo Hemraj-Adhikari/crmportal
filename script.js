@@ -313,6 +313,7 @@ function bulkStatusUpdate(){
   clearStudentSelection();
 }
 
+function lvlPill(l){if(!l)return'';const k=/UG/i.test(l)?'UG':/PG/i.test(l)?'PG':/PHD/i.test(l)?'PHD':'other';return`<span class="lvl-pill lvl-${k}">${l}</span>`}
 function buildRow(s){
   const sid=s['STUDENT ID']||'',safeId=esc(sid);
   const bg=avatarBg(s['STUDENT NAME']);const ini=initials(s['STUDENT NAME']);
@@ -323,8 +324,8 @@ function buildRow(s){
   return`<tr>
     <td style="text-align:center;width:36px"><input type="checkbox" class="student-row-cb" data-id="${safeId}" onchange="updateBulkBar()" style="cursor:pointer;accent-color:var(--navy-700)"></td>
     <td>${sid}</td>
-    <td><div class="student-cell"><div class="s-avatar" style="background:${bg}">${ini}</div><div><div class="s-name">${s['STUDENT NAME']||'—'} ${lvlBadge(s['LEVEL'])}</div><div class="s-meta">${partner!=='—'?partner:''}</div></div></div></td>
-    <td><span style="font-size:11.5px;color:var(--text-tertiary);max-width:150px;overflow:hidden;text-overflow:ellipsis;display:block;white-space:nowrap" title="${s['COURSE']||''}">${s['COURSE']||'—'}</span></td>
+    <td><div class="student-cell"><div class="s-avatar" style="background:${bg}">${ini}</div><div><div class="s-name">${s['STUDENT NAME']||'—'}</div><div class="s-meta">${partner!=='—'?partner:''}</div></div></div></td>
+    <td><div class="course-cell"><span class="course-name" title="${s['COURSE']||''}">${s['COURSE']||'—'}</span>${lvlPill(s['LEVEL'])}</div></td>
     <td><div class="agent-cell"><span class="a-dot" style="background:${avatarBg(partner)}"></span><span class="a-name">${partner}</span></div></td>
     <td><div class="pl-cell">${dots}<span class="pl-score">${done}/9</span></div></td>
     <td>${visaBadge(s['VISA STATUS'])}</td>
@@ -388,9 +389,15 @@ function openStageDrawer(sid){
 }
 function renderStagePipeline(s){
   const wrap=document.getElementById('stage-pipeline-content');wrap.innerHTML='';
+  // Merge any not-yet-saved edits on top of the stored record so re-renders
+  // (e.g. triggered by pickMockStage) never wipe out values the user already typed/picked.
+  const pending={};
+  Object.values(stageEdits||{}).forEach(e=>{if(e&&e.key)pending[e.key]=e.val});
+  const merged=Object.assign({},s,pending);
   STAGE_DEFS.forEach((sd,i)=>{
-    const isDone=!!sd.done(s);const isPrevDone=!!sd.prevDone(s);
-    const isCurrent=!isDone&&isPrevDone;const isLocked=!isDone&&!isPrevDone;const curVal=s[sd.key]||'';
+    const isDone=!!sd.done(merged);const isPrevDone=!!sd.prevDone(merged);
+    const isCurrent=!isDone&&isPrevDone;const isLocked=!isDone&&!isPrevDone;const curVal=merged[sd.key]||'';
+    const noteKey=sd.key+' NOTES';const noteVal=merged[noteKey]||'';
     const step=document.createElement('div');
     step.className='stage-step'+(isDone?' completed':isCurrent?' current':isLocked?' locked':'');
     let nodeInner='';
@@ -402,7 +409,7 @@ function renderStagePipeline(s){
     if(!isDone&&!isLocked&&curVal)contentHTML+=`<div class="stage-current-val">${curVal}</div>`;
     if(isLocked){contentHTML+=`<div class="stage-locked-msg">Complete "${STAGE_DEFS[i-1]?.label||'previous stage'}" first to unlock this stage.</div>`}
     else{
-      if(sd.type==='date'){contentHTML+=`<div style="margin-top:6px"><input type="date" class="form-control" style="max-width:180px" value="${curVal}" onchange="stageEdits[${i}]={key:'${sd.key}',val:this.value}"></div>`}
+      if(sd.type==='date'){contentHTML+=`<div style="margin-top:6px"><input type="date" class="form-control" style="max-width:180px" value="${esc(curVal)}" data-stage-idx="${i}" data-stage-key="${esc(sd.key)}" oninput="stageEdits[${i}]={key:'${esc(sd.key)}',val:this.value}"></div>`}
       else if(sd.type==='select'){
         contentHTML+=`<div class="stage-options">`;
         sd.options.forEach(opt=>{const isSel=curVal===opt.val;contentHTML+=`<div class="stage-opt${isSel?' selected':''}" onclick="pickStageOpt(this,${i},'${esc(sd.key)}','${esc(opt.val)}')"><span class="stage-opt-icon">${opt.icon}</span>${opt.val}</div>`});
@@ -413,14 +420,15 @@ function renderStagePipeline(s){
         MOCK_STAGES.forEach((ms,mi)=>{const isSel=curVal===ms;const mockUnlocked=mi===0||curLevel>=mi-1;contentHTML+=`<div class="stage-opt${isSel?' selected':''}${!mockUnlocked?' locked-row':''}" onclick="pickMockStage(this,${i},'${esc(ms)}',${mi},${curLevel})" style="${!mockUnlocked?'opacity:.4;pointer-events:none':''}"><span class="stage-opt-icon">${isSel||curLevel>=mi?'✅':'⭕'}</span>Mock ${ms}</div>`});
         contentHTML+=`</div>`;
       }
-      if(sd.type!=='date')contentHTML+=`<div class="stage-notes" style="margin-top:8px"><label>Notes (optional)</label><textarea placeholder="Add notes…" id="stage-note-${i}" style="min-height:40px"></textarea></div>`;
+      contentHTML+=`<div class="stage-notes"><label>Notes (optional)</label><textarea placeholder="Add notes…" id="stage-note-${i}" data-note-key="${esc(noteKey)}" oninput="stageEdits['note_${i}']={key:'${esc(noteKey)}',val:this.value}">${escHtml(noteVal)}</textarea></div>`;
     }
     step.innerHTML=`<div class="stage-node">${nodeInner}</div><div class="stage-content">${contentHTML}</div>`;
     wrap.appendChild(step);
   });
 }
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function pickStageOpt(el,idx,key,val){el.closest('.stage-options').querySelectorAll('.stage-opt').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');stageEdits[idx]={key,val}}
-function pickMockStage(el,idx,val){stageEdits[idx]={key:'MOCK INTERVIEW STATUS',val};const s=students.find(s=>s['STUDENT ID']===activeStudentId);if(s)renderStagePipeline({...s,'MOCK INTERVIEW STATUS':val})}
+function pickMockStage(el,idx,val){stageEdits[idx]={key:'MOCK INTERVIEW STATUS',val};const s=students.find(s=>s['STUDENT ID']===activeStudentId);if(s)renderStagePipeline(s)}
 async function saveStages(){
   if(typeof saveStagesOptimized==='function'){saveStagesOptimized();return}
   if(!Object.keys(stageEdits).length){closeDrawer('drw-stage');return}
@@ -442,12 +450,13 @@ function openDetail(sid){
   document.getElementById('detail-breadcrumb-name').textContent=s['STUDENT NAME']||sid;
   document.getElementById('detail-name').textContent=s['STUDENT NAME']||'Unknown Student';
   document.getElementById('detail-id').textContent=sid;
-  document.getElementById('detail-level').textContent=s['LEVEL']||'';
+  document.getElementById('detail-level').innerHTML=lvlPill(s['LEVEL']);
   document.getElementById('detail-course').textContent=s['COURSE']||'';
   const bg=avatarBg(s['STUDENT NAME']),ini=initials(s['STUDENT NAME']);
   const av=document.getElementById('detail-avatar');av.style.background=bg;av.textContent=ini;
   const ro=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val||'—'};
-  ro('dp-sid',s['STUDENT ID']);ro('dp-level',s['LEVEL']);ro('dp-sname',s['STUDENT NAME']);ro('dp-course',s['COURSE']);ro('dp-dob',s['DOB']);ro('dp-agent',s['AGENT']||s['CHANNEL PARTNER']);ro('dp-mobile-ro',s['MOBILE']);ro('dp-email-ro',s['EMAIL']);
+  ro('dp-sid',s['STUDENT ID']);ro('dp-sname',s['STUDENT NAME']);ro('dp-course',s['COURSE']);ro('dp-dob',s['DOB']);ro('dp-agent',s['AGENT']||s['CHANNEL PARTNER']);ro('dp-mobile-ro',s['MOBILE']);ro('dp-email-ro',s['EMAIL']);
+  document.getElementById('dp-level').innerHTML=lvlPill(s['LEVEL'])||'—';
   const list=stageList(s);const done=list.filter(x=>x.done).length;
   document.getElementById('dp-pipeline-score').textContent=done+'/'+STAGE_DEFS.length;
   document.getElementById('dp-pipeline-list').innerHTML=list.map((st,i)=>{
