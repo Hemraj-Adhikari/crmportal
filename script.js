@@ -938,13 +938,9 @@ function renderUniGrid(){
     const courseCount=u.courses.filter(c=>c.name&&!c.section&&c.level&&!['Level','Course Level','FEE STRUCTURE','SCHOLARSHIP','Intake'].includes(c.level)).length;
     const cats=u.categories.slice(0,2).map(c=>`<span class="badge badge-slate" style="font-size:9px">${c}</span>`).join('');
     const initials=k.slice(0,3);
-    // Fee from criteria — extract UG and PG separately
-    const feeLines=(u.criteria&&u.criteria['FEE STRUCTURE'])||[];
-    const feeText=feeLines.join('\n');
-    const ugMatch=feeText.match(/UG[:\s]+([^\n,]+)/i);
-    const pgMatch=feeText.match(/PG[:\s]+([^\n,]+)/i);
-    const ugFee=ugMatch?ugMatch[1].trim().substring(0,20):(feeLines[0]?feeLines[0].trim().substring(0,20):'—');
-    const pgFee=pgMatch?pgMatch[1].trim().substring(0,20):(feeLines[1]?feeLines[1].trim().substring(0,20):null);
+    // Fee from criteria
+    const fee=(u.criteria&&u.criteria['FEE STRUCTURE']&&u.criteria['FEE STRUCTURE'][0])||'';
+    const feeShort=fee?fee.split('\n')[0].trim().substring(0,28):'—';
     const scholarship=(u.criteria&&u.criteria['SCHOLARSHIP']&&u.criteria['SCHOLARSHIP'].find(v=>v&&v.trim()))||'';
     const scholarshipShort=scholarship?scholarship.split('\n')[0].trim().substring(0,28):'—';
     const firstCourse=u.courses.find(c=>c.name&&!c.section);
@@ -961,10 +957,7 @@ function renderUniGrid(){
       <div class="uni-bento">
         <div class="uni-bento-tile">
           <div class="uni-bento-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
-          <div><div class="uni-bento-label">Fee Structure</div>
-            <div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span class="uni-fee-badge uni-fee-ug">UG</span><span class="uni-bento-val">${esc(ugFee)}</span></div>
-            ${pgFee?`<div style="display:flex;align-items:center;gap:4px;margin-top:3px"><span class="uni-fee-badge uni-fee-pg">PG</span><span class="uni-bento-val">${esc(pgFee)}</span></div>`:''}
-          </div>
+          <div><div class="uni-bento-label">Fee from</div><div class="uni-bento-val">${esc(feeShort)}</div></div>
         </div>
         <div class="uni-bento-tile">
           <div class="uni-bento-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
