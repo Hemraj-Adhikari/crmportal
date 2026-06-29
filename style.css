@@ -543,3 +543,46 @@ textarea.form-control{resize:vertical;min-height:72px;line-height:1.55}
 .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .page-header-left h2{font-size:16px;font-weight:700;color:var(--text-primary);letter-spacing:-.02em;line-height:1.3}
 .page-header-left p{font-size:11.5px;color:var(--text-muted);margin-top:3px}
+/* ============================================================
+   PARTNER UNIVERSITIES — Native CRM styles
+   ============================================================ */
+.detail-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: none;
+}
+
+.dtab {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  background: var(--surface-card);
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.dtab:hover {
+  border-color: var(--navy-300);
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
+.dtab.active {
+  background: var(--navy-700);
+  border-color: var(--navy-700);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(15,28,46,0.2);
+}
+
+#uni-detail-view .detail-top {
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
