@@ -396,9 +396,16 @@
             </div>
           </div>
           <div class="detail-section">
-            <div class="detail-section-head"><div class="detail-section-title">Record</div><span class="badge badge-slate" style="font-size:9.5px">Read-only</span></div>
+            <div class="detail-section-head">
+              <div class="detail-section-title">Record</div>
+              <div style="display:flex;align-items:center;gap:7px">
+                <span class="badge badge-slate" id="dp-record-badge" style="font-size:9.5px">Read-only</span>
+                <button class="btn btn-secondary btn-sm" id="dp-edit-btn" onclick="toggleProfileEdit()" style="font-size:10.5px;padding:3px 10px">Edit</button>
+              </div>
+            </div>
             <div class="detail-section-body" style="padding:0">
-              <div style="padding:12px 16px">
+              <!-- READ-ONLY VIEW -->
+              <div style="padding:12px 16px" id="dp-record-readonly">
                 <div class="detail-field-row"><span class="detail-field-label">Student ID</span><span class="detail-field-val" id="dp-sid"></span></div>
                 <div class="detail-field-row"><span class="detail-field-label">Level</span><span class="detail-field-val" id="dp-level"></span></div>
                 <div class="detail-field-row"><span class="detail-field-label">Full Name</span><span class="detail-field-val" id="dp-sname"></span></div>
@@ -407,6 +414,59 @@
                 <div class="detail-field-row"><span class="detail-field-label">Channel Partner</span><span class="detail-field-val" id="dp-agent"></span></div>
                 <div class="detail-field-row"><span class="detail-field-label">Mobile</span><span class="detail-field-val" id="dp-mobile-ro"></span></div>
                 <div class="detail-field-row"><span class="detail-field-label">Email</span><span class="detail-field-val" id="dp-email-ro"></span></div>
+              </div>
+              <!-- EDIT VIEW -->
+              <div style="padding:12px 16px;display:none" id="dp-record-edit">
+                <div class="form-group" style="margin-bottom:10px">
+                  <label class="form-label">Student ID</label>
+                  <input class="form-control" id="dp-edit-sid" type="text" disabled style="background:var(--surface-inset);color:var(--text-muted);cursor:not-allowed">
+                </div>
+                <div class="form-group" style="margin-bottom:10px">
+                  <label class="form-label">Level</label>
+                  <select class="form-control" id="dp-edit-level">
+                    <option value="">— Select —</option>
+                    <option>Undergraduate</option>
+                    <option>Postgraduate</option>
+                    <option>Foundation</option>
+                    <option>Pre-sessional</option>
+                    <option>PhD</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom:10px">
+                  <label class="form-label">Full Name</label>
+                  <input class="form-control" id="dp-edit-name" type="text" placeholder="Student full name">
+                </div>
+                <div class="form-group" style="margin-bottom:10px">
+                  <label class="form-label">Course</label>
+                  <input class="form-control" id="dp-edit-course" type="text" placeholder="Course name">
+                </div>
+                <div class="form-group" style="margin-bottom:10px">
+                  <label class="form-label">Date of Birth</label>
+                  <input class="form-control" id="dp-edit-dob" type="date">
+                </div>
+                <div class="form-group" style="margin-bottom:10px">
+                  <label class="form-label">Channel Partner / Agent</label>
+                  <input class="form-control" id="dp-edit-agent" type="text" placeholder="Agent or agency name">
+                </div>
+                <div class="form-group" style="margin-bottom:10px">
+                  <label class="form-label">Mobile</label>
+                  <input class="form-control" id="dp-edit-mobile" type="tel" placeholder="+977-XXXXXXXXXX">
+                </div>
+                <div class="form-group" style="margin-bottom:10px">
+                  <label class="form-label">Email</label>
+                  <input class="form-control" id="dp-edit-email" type="email" placeholder="student@email.com">
+                </div>
+                <div class="form-group" style="margin-bottom:0">
+                  <label class="form-label">Nationality</label>
+                  <input class="form-control" id="dp-edit-nationality" type="text" placeholder="e.g. Nepali">
+                </div>
+                <div style="display:flex;gap:8px;margin-top:14px">
+                  <button class="btn btn-ghost btn-sm" onclick="cancelProfileEdit()" style="flex:1">Cancel</button>
+                  <button class="btn btn-primary btn-sm" id="dp-save-btn" onclick="saveProfileEdit()" style="flex:1">
+                    <span id="dp-save-lbl">Save changes</span>
+                    <span class="spinner-sm" id="dp-save-spin" style="display:none;margin-left:5px"></span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
