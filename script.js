@@ -611,18 +611,9 @@ async function submitAddStudent() {
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(payload)
     });
-    let data;
-    try { data = await res.json(); }
-    catch { throw new Error('GAS returned invalid response. The Apps Script may need to be re-deployed with a new version (Extensions → Apps Script → Deploy → New deployment).'); }
+    const data = await res.json();
 
-    if (!data.success) {
-      const msg = data.error || 'Server error';
-      // Give a helpful hint for the "Unknown POST action" error
-      if (msg.includes('Unknown POST action')) {
-        throw new Error('addStudent action not recognised by server. Please re-deploy the Google Apps Script as a NEW version (not "Update existing").');
-      }
-      throw new Error(msg);
-    }
+    if (!data.success) throw new Error(data.error || 'Server error');
 
     // 3. Update local students array
     const newStudent = {
@@ -827,19 +818,10 @@ window.saveStagesOptimized = function() {
   stageEdits = {};
 };
 function nextFrame(){return new Promise(r=>requestAnimationFrame(()=>r()))}
-window.loadDashboardLazy=async function(){
-  // If students already loaded by bootSession->loadStudents(), just update UI
-  if(window.students&&window.students.length>0){
-    await nextFrame();if(typeof filterTableStudents==='function')filterTableStudents();
-    await nextFrame();if(typeof updateStats==='function')updateStats();if(typeof updateFunnel==='function')updateFunnel();
-    if(typeof renderDashboardPartners==='function')renderDashboardPartners();
-    return;
-  }
-  const cached=getCached('getStudents',{page:1,limit:100});
-  if(cached){window.students=cached.students||[];window.totalRecords=cached.totalRecords??window.students.length;if(typeof updateStats==='function')updateStats();if(typeof updateFunnel==='function')updateFunnel()}else{loading('Fetching students…')}
-  await nextFrame();if(typeof filterTableStudents==='function')filterTableStudents();
-  await nextFrame();if(typeof renderDashboardPartners==='function')renderDashboardPartners();
-  try{const data=await window.apiGetCached('getStudents',{page:1,limit:100});if(data&&data.success){window.students=data.students||[];window.totalRecords=data.totalRecords??window.students.length;window.currentPage=data.page??1}else if(!cached){window.students=getMock();window.totalRecords=window.students.length}}catch(e){if(!cached){window.students=getMock();window.totalRecords=window.students.length}}finally{if(typeof filterTableStudents==='function')filterTableStudents();if(typeof updateStats==='function')updateStats();if(typeof updateFunnel==='function')updateFunnel();if(typeof renderDashboardPartners==='function')renderDashboardPartners();hideLoading()}};
+window.loadDashboardLazy=async function(){const cached=getCached('getStudents',{page:1,limit:100});if(cached){window.students=cached.students||[];window.totalRecords=cached.totalRecords??window.students.length;if(typeof updateStats==='function')updateStats();if(typeof updateFunnel==='function')updateFunnel()}else{loading('Fetching students…')}
+await nextFrame();if(typeof filterTableStudents==='function')filterTableStudents();
+await nextFrame();if(typeof renderDashboardPartners==='function')renderDashboardPartners();
+try{const data=await window.apiGetCached('getStudents',{page:1,limit:100});if(data&&data.success){window.students=data.students||[];window.totalRecords=data.totalRecords??window.students.length;window.currentPage=data.page??1}else if(!cached){window.students=getMock();window.totalRecords=window.students.length}}catch(e){if(!cached){window.students=getMock();window.totalRecords=window.students.length}}finally{if(typeof filterTableStudents==='function')filterTableStudents();if(typeof updateStats==='function')updateStats();if(typeof updateFunnel==='function')updateFunnel();if(typeof renderDashboardPartners==='function')renderDashboardPartners();hideLoading()}};
 window.searchStudentsLocal=function(query){const q=(query||'').toLowerCase();if(!q)return window.students||[];return(window.students||[]).filter(s=>['STUDENT NAME','STUDENT ID','COURSE','AGENT'].some(f=>(s[f]||'').toLowerCase().includes(q)))};
 console.log('[R2U perf patch v2] loaded');
 })();
@@ -871,8 +853,19 @@ function loadUniData(){
   if(Object.keys(UNI_DATA).length)return;
   try{
     const el=document.getElementById('uni-rawdata');
-    if(el)UNI_DATA=JSON.parse(el.textContent);
-    uniKeys=Object.keys(UNI_DATA);
+    if(el&&el.textContent.trim().length>2){
+      UNI_DATA=JSON.parse(el.textContent);
+      uniKeys=Object.keys(UNI_DATA);
+    } else {
+      // Data not yet loaded (async fetch) - listen for ready event
+      document.addEventListener('uni-data-ready',function(){
+        try{
+          const el2=document.getElementById('uni-rawdata');
+          if(el2){UNI_DATA=JSON.parse(el2.textContent);uniKeys=Object.keys(UNI_DATA);}
+          if(document.getElementById('uni-grid'))renderUniGrid();
+        }catch(e){console.error('Uni data load error',e);}
+      },{once:true});
+    }
   }catch(e){console.error('Uni data load error',e);}
 }
 
