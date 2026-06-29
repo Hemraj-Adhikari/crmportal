@@ -425,6 +425,12 @@ function openDetail(sid){
     </div>`;
   }).join('');
   switchView('student-detail',null);
+  // Load student documents from Drive
+  const docsEl = document.getElementById('dp-docs-section');
+  if (docsEl) {
+    docsEl.innerHTML = '<div style="font-size:11.5px;color:var(--text-muted);padding:8px 0">Loading documents…</div>';
+    loadStudentDocuments(sid);
+  }
 }
 function backToDashboard(){switchView('students',document.querySelector('.sb-link[data-view="students"]'))}
 function openNotifyFromDetail(){openNotify(detailStudentId)}
@@ -451,7 +457,236 @@ function renderPartnerCard(p){
 function renderDashboardPartners(){const partners=buildPartnerData().slice(0,6);const grid=document.getElementById('dashboard-cp-grid');if(!grid)return;grid.innerHTML=partners.length?partners.map(renderPartnerCard).join(''):'<div class="empty-state" style="grid-column:1/-1">No partner data yet</div>'}
 function renderPartners(){const partners=buildPartnerData();const grid=document.getElementById('full-cp-grid');if(!grid)return;grid.innerHTML=partners.length?partners.map(renderPartnerCard).join(''):'<div class="empty-state" style="grid-column:1/-1">No partners found</div>'}
 function openAddPartner(){toast('Add partner form coming soon','info')}
-function openAddStudent(){toast('Add student form coming soon','info')}
+/* ═══════════ ADD STUDENT ═══════════ */
+let asSelectedFiles = [];
+
+function openAddStudent() {
+  // Reset form
+  ['as-name','as-id','as-dob','as-nationality','as-mobile','as-email',
+   'as-course','as-university','as-agent','as-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('as-level').value = '';
+  document.getElementById('as-submitted-by').value = staff.name || '';
+  asSelectedFiles = [];
+  asRenderFileList();
+  document.getElementById('as-error').style.display = 'none';
+  document.getElementById('as-success').style.display = 'none';
+  document.getElementById('as-submit-btn').disabled = false;
+  document.getElementById('as-submit-lbl').textContent = 'Add Student';
+  document.getElementById('as-submit-spin').style.display = 'none';
+  document.getElementById('as-drop-zone').style.borderColor = '';
+  document.getElementById('as-drop-zone').style.background = '';
+  const overlay = document.getElementById('add-student-overlay');
+  overlay.style.display = 'block';
+  overlay.onclick = e => { if (e.target === overlay) closeAddStudent(); };
+  setTimeout(() => document.getElementById('as-name').focus(), 80);
+}
+
+function closeAddStudent() {
+  document.getElementById('add-student-overlay').style.display = 'none';
+}
+
+function asHandleDrop(e) {
+  e.preventDefault();
+  document.getElementById('as-drop-zone').style.borderColor = '';
+  document.getElementById('as-drop-zone').style.background = '';
+  const files = Array.from(e.dataTransfer.files);
+  files.forEach(f => {
+    if (!asSelectedFiles.find(x => x.name === f.name)) asSelectedFiles.push(f);
+  });
+  asRenderFileList();
+}
+
+function asHandleFiles(fileList) {
+  Array.from(fileList).forEach(f => {
+    if (!asSelectedFiles.find(x => x.name === f.name)) asSelectedFiles.push(f);
+  });
+  document.getElementById('as-files').value = '';
+  asRenderFileList();
+}
+
+function asRemoveFile(idx) {
+  asSelectedFiles.splice(idx, 1);
+  asRenderFileList();
+}
+
+function asRenderFileList() {
+  const wrap = document.getElementById('as-file-list');
+  const items = document.getElementById('as-file-items');
+  if (!asSelectedFiles.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  items.innerHTML = asSelectedFiles.map((f, i) => {
+    const kb = (f.size / 1024).toFixed(0);
+    const ext = f.name.split('.').pop().toUpperCase();
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface-inset);border-radius:var(--r-md);margin-bottom:5px;border:1px solid var(--border-subtle)">
+      <div style="width:30px;height:30px;background:var(--navy-100);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:var(--navy-700);flex-shrink:0">${ext}</div>
+      <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</div><div style="font-size:10px;color:var(--text-muted)">${kb} KB</div></div>
+      <button onclick="asRemoveFile(${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:2px 5px;border-radius:var(--r-sm)" title="Remove">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// Convert File to base64
+function asFileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res({ name: file.name, type: file.type, data: r.result.split(',')[1], size: file.size });
+    r.onerror = () => rej(new Error('Read failed: ' + file.name));
+    r.readAsDataURL(file);
+  });
+}
+
+async function submitAddStudent() {
+  const btn = document.getElementById('as-submit-btn');
+  const lbl = document.getElementById('as-submit-lbl');
+  const spin = document.getElementById('as-submit-spin');
+  const errEl = document.getElementById('as-error');
+  const successEl = document.getElementById('as-success');
+
+  errEl.style.display = 'none';
+  successEl.style.display = 'none';
+
+  // Collect values
+  const name = document.getElementById('as-name').value.trim();
+  const sid = document.getElementById('as-id').value.trim();
+  const dob = document.getElementById('as-dob').value;
+  const level = document.getElementById('as-level').value;
+  const course = document.getElementById('as-course').value.trim();
+  const nationality = document.getElementById('as-nationality').value.trim();
+  const mobile = document.getElementById('as-mobile').value.trim();
+  const email = document.getElementById('as-email').value.trim();
+  const university = document.getElementById('as-university').value.trim();
+  const agent = document.getElementById('as-agent').value.trim();
+  const submittedBy = document.getElementById('as-submitted-by').value.trim() || staff.name;
+  const notes = document.getElementById('as-notes').value.trim();
+
+  // Validate required
+  if (!name || !sid || !level || !course) {
+    errEl.textContent = 'Please fill in: Full Name, Student ID, Level, and Course.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  lbl.textContent = 'Saving…';
+  spin.style.display = '';
+
+  try {
+    // 1. Convert files to base64 (if any)
+    let filesPayload = [];
+    if (asSelectedFiles.length) {
+      lbl.textContent = 'Preparing files…';
+      filesPayload = await Promise.all(asSelectedFiles.map(asFileToBase64));
+    }
+
+    // 2. Send to Google Apps Script
+    lbl.textContent = 'Adding to Sheet…';
+    const payload = {
+      action: 'addStudent',
+      studentData: {
+        'STUDENT NAME': name,
+        'STUDENT ID': sid,
+        'DOB': dob,
+        'LEVEL': level,
+        'COURSE': course,
+        'NATIONALITY': nationality,
+        'MOBILE': mobile,
+        'EMAIL': email,
+        'UNIVERSITY': university,
+        'AGENT': agent,
+        'SUBMITTED BY': submittedBy,
+        'NOTES': notes,
+        'ADDED DATE': today(),
+        'ADDED BY': staff.name || 'CRM'
+      },
+      files: filesPayload
+    };
+
+    const res = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (!data.success) throw new Error(data.error || 'Server error');
+
+    // 3. Update local students array
+    const newStudent = {
+      'STUDENT ID': sid,
+      'STUDENT NAME': name,
+      'DOB': dob,
+      'LEVEL': level,
+      'COURSE': course,
+      'NATIONALITY': nationality,
+      'MOBILE': mobile,
+      'EMAIL': email,
+      'UNIVERSITY': university,
+      'AGENT': agent,
+      'SUBMITTED BY': submittedBy,
+      'NOTES': notes
+    };
+    students.unshift(newStudent);
+    filterTableStudents();
+    updateStats();
+    updateFunnel();
+
+    // 4. Show success
+    const fileCount = filesPayload.length;
+    document.getElementById('as-success-detail').textContent =
+      `${name} (${sid}) added to Google Sheet.` +
+      (fileCount ? ` ${fileCount} file${fileCount > 1 ? 's' : ''} uploaded to Drive.` : '');
+
+    if (data.driveFolderUrl) {
+      document.getElementById('as-drive-link').href = data.driveFolderUrl;
+      document.getElementById('as-drive-link-wrap').style.display = 'block';
+    } else {
+      document.getElementById('as-drive-link-wrap').style.display = 'none';
+    }
+
+    successEl.style.display = 'block';
+    lbl.textContent = '✓ Added';
+    toast(`${name} added to CRM`, 'success');
+
+    // Auto-close after 2.5s
+    setTimeout(() => closeAddStudent(), 2500);
+
+  } catch (e) {
+    errEl.textContent = 'Error: ' + e.message;
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    lbl.textContent = 'Add Student';
+    spin.style.display = 'none';
+  }
+}
+
+/* ═══════════ STUDENT DOCUMENTS (download from CRM) ═══════════ */
+// Called from student detail page to show linked documents
+async function loadStudentDocuments(studentId) {
+  const wrap = document.getElementById('dp-docs-section');
+  if (!wrap) return;
+  wrap.innerHTML = '<div style="font-size:11.5px;color:var(--text-muted);padding:8px 0">Loading documents…</div>';
+  try {
+    const data = await apiGet('getStudentFiles', { studentId });
+    if (!data.success || !data.files || !data.files.length) {
+      wrap.innerHTML = '<div style="font-size:11.5px;color:var(--text-muted);padding:8px 0">No documents on file.</div>';
+      return;
+    }
+    wrap.innerHTML = data.files.map(f => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface-inset);border-radius:var(--r-md);margin-bottom:5px;border:1px solid var(--border-subtle)">
+        <div style="width:28px;height:28px;background:var(--navy-100);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:var(--navy-700);flex-shrink:0">${(f.name.split('.').pop()||'DOC').toUpperCase().slice(0,4)}</div>
+        <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</div><div style="font-size:10px;color:var(--text-muted)">${f.size ? Math.round(f.size/1024)+' KB' : ''}</div></div>
+        <a href="${f.url}" target="_blank" style="background:var(--navy-600);color:#fff;border:none;border-radius:var(--r-md);padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </a>
+      </div>`).join('');
+  } catch (e) {
+    wrap.innerHTML = `<div style="font-size:11.5px;color:var(--text-muted);padding:8px 0">Could not load documents: ${e.message}</div>`;
+  }
+}
 
 /* ═══════════ DRAWERS ═══════════ */
 function openDrawer(id){document.getElementById(id).classList.add('open');document.getElementById('drawer-overlay').classList.add('show')}
