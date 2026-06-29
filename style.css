@@ -1346,3 +1346,31 @@ table td.empty-state {
   transition: all .15s;
 }
 .hdr-icon-btn:active { transform: scale(.94); }
+
+
+/* ── STAGE DRAWER FIXES ── */
+.drawer.wide {
+  width: min(560px, 96vw) !important;
+}
+.drawer {
+  max-height: 100vh;
+}
+#drw-stage .drw-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+  min-height: 200px;
+}
+#stage-pipeline-content {
+  min-height: 100px;
+}
+.stage-locked-msg {
+  font-size: 10.5px;
+  color: var(--amber-700);
+  background: var(--amber-50);
+  border: 1px solid var(--amber-100);
+  border-radius: var(--r-sm);
+  padding: 5px 9px;
+  margin: 5px 0 6px;
+}
