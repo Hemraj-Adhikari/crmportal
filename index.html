@@ -253,35 +253,19 @@
 
   <div id="app-content">
 
-    <!-- STUDENTS -->
+    <!-- STUDENTS / DASHBOARD -->
     <div class="view active" id="view-students">
       <div class="page-header">
         <div class="page-header-left">
           <h2>Students</h2>
-          <p>All enrolled students across the pipeline</p>
+          <p>Real-time overview of your student pipeline</p>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
-          <div style="display:flex;gap:6px;margin-right:8px">
-            <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:var(--r-md);padding:5px 10px;box-shadow:var(--shadow-xs);display:flex;align-items:center;gap:6px">
-              <span style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em">Total</span>
-              <span style="font-size:14px;font-weight:700;color:var(--text-primary)" id="stat-total">—</span>
-            </div>
-            <div style="background:var(--emerald-50);border:1px solid var(--emerald-100);border-radius:var(--r-md);padding:5px 10px;display:flex;align-items:center;gap:6px">
-              <span style="font-size:10px;font-weight:600;color:var(--emerald-700);text-transform:uppercase;letter-spacing:.06em">Visa ✓</span>
-              <span style="font-size:14px;font-weight:700;color:var(--emerald-700)" id="stat-visa">—</span>
-            </div>
-            <div style="background:var(--amber-50);border:1px solid var(--amber-100);border-radius:var(--r-md);padding:5px 10px;display:flex;align-items:center;gap:6px">
-              <span style="font-size:10px;font-weight:600;color:var(--amber-700);text-transform:uppercase;letter-spacing:.06em">CAS</span>
-              <span style="font-size:14px;font-weight:700;color:var(--amber-700)" id="stat-cas">—</span>
-            </div>
-            <div style="background:var(--crimson-50);border:1px solid var(--crimson-100);border-radius:var(--r-md);padding:5px 10px;display:flex;align-items:center;gap:6px">
-              <span style="font-size:10px;font-weight:600;color:var(--crimson-700);text-transform:uppercase;letter-spacing:.06em">Refused</span>
-              <span style="font-size:14px;font-weight:700;color:var(--crimson-700)" id="stat-refused">—</span>
-            </div>
-          </div>
+          <span class="rpt-live"><span class="rpt-live-dot"></span>Live</span>
+          <span class="rpt-timestamp" id="students-timestamp">—</span>
           <button class="btn btn-secondary btn-sm" onclick="exportStudentsCSV()">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export
+            Export CSV
           </button>
           <button class="btn btn-primary btn-sm" onclick="openAddStudent()">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -290,35 +274,86 @@
         </div>
       </div>
 
-      <div class="pipeline-row" style="margin-bottom:20px">
-        <div class="card">
-          <div class="card-header"><div><div class="card-title">Pipeline Funnel</div><div class="card-subtitle" id="pipeline-total-label">— students</div></div></div>
-          <div class="funnel-stages" id="pipeline-funnel"></div>
+      <!-- hidden legacy counters kept for JS compatibility -->
+      <span id="stat-total" style="display:none"></span>
+      <span id="stat-visa" style="display:none"></span>
+      <span id="stat-cas" style="display:none"></span>
+      <span id="stat-refused" style="display:none"></span>
+
+      <!-- KPI CARDS -->
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-blue">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+          <div class="kpi-body">
+            <div class="kpi-label">Total Students</div>
+            <div class="kpi-val-row"><span class="kpi-val" id="kpi-total">—</span></div>
+            <div class="kpi-sub">All enrolled students</div>
+          </div>
         </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title">Distribution</div></div>
-          <div style="padding:16px">
-            <div style="display:flex;align-items:center;gap:16px">
-              <div style="position:relative;width:88px;height:88px;flex-shrink:0">
-                <svg width="88" height="88" viewBox="0 0 88 88">
-                  <circle cx="44" cy="44" r="34" fill="none" stroke="var(--surface-inset)" stroke-width="9"/>
-                  <circle id="d-applied" cx="44" cy="44" r="34" fill="none" stroke="var(--navy-600)" stroke-width="9" stroke-dasharray="0 214" stroke-dashoffset="53" transform="rotate(-90 44 44)" style="transition:stroke-dasharray .8s ease"/>
-                  <circle id="d-cond" cx="44" cy="44" r="34" fill="none" stroke="var(--gold-500)" stroke-width="9" stroke-dasharray="0 214" stroke-dashoffset="53" transform="rotate(-90 44 44)" style="transition:stroke-dasharray .8s ease"/>
-                  <circle id="d-mock" cx="44" cy="44" r="34" fill="none" stroke="var(--violet-500)" stroke-width="9" stroke-dasharray="0 214" stroke-dashoffset="53" transform="rotate(-90 44 44)" style="transition:stroke-dasharray .8s ease"/>
-                  <circle id="d-cas" cx="44" cy="44" r="34" fill="none" stroke="#0EA5E9" stroke-width="9" stroke-dasharray="0 214" stroke-dashoffset="53" transform="rotate(-90 44 44)" style="transition:stroke-dasharray .8s ease"/>
-                  <circle id="d-visa" cx="44" cy="44" r="34" fill="none" stroke="var(--emerald-500)" stroke-width="9" stroke-dasharray="0 214" stroke-dashoffset="53" transform="rotate(-90 44 44)" style="transition:stroke-dasharray .8s ease"/>
-                  <text x="44" y="40" text-anchor="middle" font-family="Inter,sans-serif" font-weight="700" font-size="16" fill="var(--text-primary)" id="d-center">0</text>
-                  <text x="44" y="52" text-anchor="middle" font-family="Inter,sans-serif" font-size="7" fill="var(--text-muted)">students</text>
-                </svg>
+        <div class="kpi-card kpi-green">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div class="kpi-body">
+            <div class="kpi-label">Visa Success Rate</div>
+            <div class="kpi-val-row"><span class="kpi-val" id="kpi-visa-rate">—</span><span class="kpi-trend" id="kpi-visa-trend">↑ 14%</span></div>
+            <div class="kpi-sub">Visa approved</div>
+          </div>
+        </div>
+        <div class="kpi-card kpi-amber">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88"/><path d="M14.47 14.48L20 20"/><path d="M8.12 8.12L12 12"/></svg></div>
+          <div class="kpi-body">
+            <div class="kpi-label">Avg Pipeline Stage</div>
+            <div class="kpi-val-row"><span class="kpi-val" id="kpi-avg-stage">—</span></div>
+            <div class="kpi-sub">Current avg. stage</div>
+          </div>
+        </div>
+        <div class="kpi-card kpi-violet">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+          <div class="kpi-body">
+            <div class="kpi-label">Channel Partners</div>
+            <div class="kpi-val-row"><span class="kpi-val" id="kpi-partners">—</span></div>
+            <div class="kpi-sub">Active partners</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PIPELINE FUNNEL / DISTRIBUTION / STAGE OVERVIEW -->
+      <div class="reports-row">
+        <div class="rpt-panel">
+          <div class="rpt-panel-head">
+            <div class="rpt-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></div>
+            <div><div class="rpt-panel-title">Pipeline Funnel</div><div class="rpt-panel-sub" id="pipeline-total-label">— students total</div></div>
+          </div>
+          <div class="rpt-panel-body">
+            <div class="funnel-stages" id="pipeline-funnel"></div>
+          </div>
+        </div>
+
+        <div class="rpt-panel">
+          <div class="rpt-panel-head">
+            <div class="rpt-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 010 20"/></svg></div>
+            <div><div class="rpt-panel-title">Pipeline Distribution</div></div>
+          </div>
+          <div class="rpt-panel-body">
+            <div class="donut-wrap">
+              <div class="donut-chart" id="dash-donut-chart">
+                <div class="donut-center">
+                  <div class="donut-center-val" id="dash-donut-total">0</div>
+                  <div class="donut-center-lbl">Students</div>
+                </div>
               </div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:5px">
-                <div style="display:flex;align-items:center;gap:7px"><span class="legend-dot" style="background:var(--navy-600)"></span><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:500">Applied &amp; called</span><span style="font-size:11.5px;font-weight:700;color:var(--text-primary)" id="l-applied">0</span></div>
-                <div style="display:flex;align-items:center;gap:7px"><span class="legend-dot" style="background:var(--gold-500)"></span><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:500">Conditional offer</span><span style="font-size:11.5px;font-weight:700;color:var(--text-primary)" id="l-cond">0</span></div>
-                <div style="display:flex;align-items:center;gap:7px"><span class="legend-dot" style="background:var(--violet-500)"></span><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:500">Mock / Pre-CAS</span><span style="font-size:11.5px;font-weight:700;color:var(--text-primary)" id="l-mock">0</span></div>
-                <div style="display:flex;align-items:center;gap:7px"><span class="legend-dot" style="background:#0EA5E9"></span><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:500">CAS in progress</span><span style="font-size:11.5px;font-weight:700;color:var(--text-primary)" id="l-cas">0</span></div>
-                <div style="display:flex;align-items:center;gap:7px"><span class="legend-dot" style="background:var(--emerald-500)"></span><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:500">Visa received</span><span style="font-size:11.5px;font-weight:700;color:var(--text-primary)" id="l-visa">0</span></div>
-              </div>
+              <div class="donut-legend" id="dash-donut-legend"></div>
             </div>
+          </div>
+        </div>
+
+        <div class="rpt-panel">
+          <div class="rpt-panel-head">
+            <div class="rpt-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+            <div><div class="rpt-panel-title">Pipeline Stage Overview</div></div>
+            <select class="rpt-panel-select"><option>By stage</option></select>
+          </div>
+          <div class="rpt-panel-body">
+            <div class="linechart-wrap" id="dash-linechart-wrap"></div>
           </div>
         </div>
       </div>
@@ -337,28 +372,31 @@
           <input id="students-search-input" type="text" oninput="filterTableStudents()" placeholder="Filter students…">
         </div>
       </div>
-      <div class="tbl-card">
-        <div class="tbl-header">
-          <div><span class="tbl-title">Student Records</span><span class="tbl-count" id="students-tbl-count"></span></div>
-          <button class="btn btn-secondary btn-sm" onclick="exportStudentsCSV()">Export CSV</button>
-        </div>
-        <div class="tbl-scroll" style="max-height:55vh">
-          <table class="dt" id="students-page-table">
-            <thead><tr><th style="width:36px;text-align:center"><input type="checkbox" id="select-all-students" title="Select all" onchange="toggleSelectAllStudents(this.checked)" style="cursor:pointer;accent-color:var(--navy-700)"></th><th style="width:100px">Student ID</th><th style="min-width:180px">Name</th><th style="min-width:160px">Course</th><th style="min-width:130px">Channel Partner</th><th style="min-width:180px">Pipeline</th><th style="min-width:110px">Visa Status</th><th style="min-width:80px;text-align:right">Actions</th></tr></thead>
-            <tbody id="students-page-table-body"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
-          </table>
-        </div>
-      </div>
 
-      <div class="page-header" style="margin-top:32px;margin-bottom:4px">
-        <div class="page-header-left">
-          <h2>Channel Partners</h2>
-          <p>Referral agents and partner agencies</p>
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start">
+        <div class="tbl-card">
+          <div class="tbl-header">
+            <div><span class="tbl-title">Student Records</span><span class="tbl-count" id="students-tbl-count"></span></div>
+            <button class="btn btn-secondary btn-sm" onclick="exportStudentsCSV()">Export CSV</button>
+          </div>
+          <div class="tbl-scroll" style="max-height:55vh">
+            <table class="dt" id="students-page-table">
+              <thead><tr><th style="width:36px;text-align:center"><input type="checkbox" id="select-all-students" title="Select all" onchange="toggleSelectAllStudents(this.checked)" style="cursor:pointer;accent-color:var(--navy-700)"></th><th style="width:100px">Student ID</th><th style="min-width:180px">Name</th><th style="min-width:160px">Course</th><th style="min-width:130px">Channel Partner</th><th style="min-width:180px">Pipeline</th><th style="min-width:110px">Visa Status</th><th style="min-width:80px;text-align:right">Actions</th></tr></thead>
+              <tbody id="students-page-table-body"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
+            </table>
+          </div>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="switchView('partners',document.querySelector('.sb-link[data-view=partners]'))">View all</button>
-      </div>
-      <div class="cp-grid" id="dashboard-cp-grid">
-        <div class="empty-state" style="grid-column:1/-1;padding:20px">Loading partners…</div>
+
+        <div class="cp-side-card">
+          <div class="cp-side-head">
+            <div><div class="cp-side-title">Channel Partners</div><div class="cp-side-sub">Referral agents and their pipeline</div></div>
+            <button class="btn btn-secondary btn-sm" onclick="switchView('partners',document.querySelector('.sb-link[data-view=partners]'))">View all</button>
+          </div>
+          <div class="cp-side-list" id="dashboard-cp-grid">
+            <div class="empty-state" style="padding:20px">Loading partners…</div>
+          </div>
+          <div class="cp-side-foot"><a onclick="switchView('partners',document.querySelector('.sb-link[data-view=partners]'))">View all partners →</a></div>
+        </div>
       </div>
     </div>
 
@@ -525,16 +563,84 @@
     <!-- REPORTS -->
     <div class="view" id="view-reports">
       <div class="page-header">
-        <div class="page-header-left"><h2>Reports</h2><p>Pipeline breakdowns and conversion insights</p></div>
-        <button class="btn btn-secondary btn-sm" onclick="exportStudentsCSV()">Export CSV</button>
+        <div class="page-header-left"><h2>Reports</h2><p>Pipeline breakdowns and insights</p></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span class="rpt-live"><span class="rpt-live-dot"></span>Live</span>
+          <span class="rpt-timestamp" id="reports-timestamp">—</span>
+          <button class="btn btn-primary btn-sm" onclick="exportStudentsCSV()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export CSV
+          </button>
+        </div>
       </div>
-      <div class="report-stat-grid">
-        <div class="rpt-stat"><div class="rpt-stat-val" id="rpt-total">—</div><div class="rpt-stat-label">Total students</div></div>
-        <div class="rpt-stat"><div class="rpt-stat-val" style="color:var(--emerald-700)" id="rpt-visa-rate">—</div><div class="rpt-stat-label">Visa success rate</div></div>
-        <div class="rpt-stat"><div class="rpt-stat-val" style="color:var(--gold-700)" id="rpt-avg-stage">—</div><div class="rpt-stat-label">Avg pipeline stage</div></div>
-        <div class="rpt-stat"><div class="rpt-stat-val" style="color:var(--violet-700)" id="rpt-partners">—</div><div class="rpt-stat-label">Channel partners</div></div>
+
+      <!-- KPI CARDS -->
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-blue">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+          <div class="kpi-body">
+            <div class="kpi-label">Total Students</div>
+            <div class="kpi-val-row"><span class="kpi-val" id="rpt-total">—</span></div>
+          </div>
+        </div>
+        <div class="kpi-card kpi-green">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div class="kpi-body">
+            <div class="kpi-label">Visa Success Rate</div>
+            <div class="kpi-val-row"><span class="kpi-val" id="rpt-visa-rate">—</span><span class="kpi-trend" id="rpt-visa-trend">↑ 100%</span></div>
+          </div>
+        </div>
+        <div class="kpi-card kpi-amber">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.12 15.88"/><path d="M14.47 14.48L20 20"/><path d="M8.12 8.12L12 12"/></svg></div>
+          <div class="kpi-body">
+            <div class="kpi-label">Avg Pipeline Stage</div>
+            <div class="kpi-val-row"><span class="kpi-val" id="rpt-avg-stage">—</span></div>
+          </div>
+        </div>
+        <div class="kpi-card kpi-violet">
+          <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+          <div class="kpi-body">
+            <div class="kpi-label">Channel Partners</div>
+            <div class="kpi-val-row"><span class="kpi-val" id="rpt-partners">—</span></div>
+          </div>
+        </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="report-grid"><div class="empty-state">Loading…</div></div>
+
+      <!-- PIPELINE FUNNEL + DISTRIBUTION -->
+      <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:14px;margin-bottom:18px">
+        <div class="rpt-panel">
+          <div class="rpt-panel-head">
+            <div class="rpt-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></div>
+            <div><div class="rpt-panel-title">Pipeline Funnel</div><div class="rpt-panel-sub" id="reports-pipeline-total-label">— students total</div></div>
+          </div>
+          <div class="rpt-panel-body">
+            <div class="funnel-stages" id="reports-pipeline-funnel"></div>
+          </div>
+        </div>
+
+        <div class="rpt-panel">
+          <div class="rpt-panel-head">
+            <div class="rpt-panel-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 010 20"/></svg></div>
+            <div><div class="rpt-panel-title">Pipeline Distribution</div></div>
+          </div>
+          <div class="rpt-panel-body">
+            <div class="donut-wrap">
+              <div class="donut-chart" id="rpt-donut-chart">
+                <div class="donut-center">
+                  <div class="donut-center-val" id="rpt-donut-total">0</div>
+                  <div class="donut-center-lbl">Students</div>
+                </div>
+              </div>
+              <div class="donut-legend" id="rpt-donut-legend"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECONDARY STATUS PANELS -->
+      <div class="rpt-status-grid" id="report-grid">
+        <div class="empty-state">Loading…</div>
+      </div>
     </div>
 
     <!-- UPLOAD (Admin only) -->
