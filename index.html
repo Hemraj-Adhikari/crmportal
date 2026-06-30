@@ -855,6 +855,27 @@
     font-size:16px;transition:color .13s
   " onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.45)'">✕</button>
 </div>
-
+<script>
+// Load university data from external JSON file
+(async function() {
+  try {
+    const res = await fetch('universities.json');
+    if (!res.ok) throw new Error("HTTP Status " + res.status);
+    const data = await res.json();
+    
+    const el = document.createElement('script');
+    el.id = 'uni-rawdata';
+    el.type = 'application/json';
+    el.textContent = JSON.stringify(data);
+    document.head.appendChild(el);
+    
+    // Fire event so uni module knows data is ready
+    document.dispatchEvent(new Event('uni-data-ready'));
+  } catch(e) { 
+    console.warn('Could not load universities.json:', e); 
+    toast('University data load failed. Check universities.json', 'error');
+  }
+})();
+</script>
 </body>
 </html>
