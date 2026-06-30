@@ -123,7 +123,7 @@ window.flushSaveQueueNow = function () {
 };
 
 /* ═══════════════════════════════════════════════════════
-   3. ADD NEW STUDENT
+   3. ADD NEW STUDENT  (Cloudinary file upload integrated)
 ═══════════════════════════════════════════════════════ */
 async function submitAddStudent() {
   const btnEl    = document.getElementById('as-submit-btn');
@@ -174,9 +174,28 @@ async function submitAddStudent() {
     if (existing.exists) {
       errEl.textContent   = `Student ID "${sid}" already exists. Use a different ID.`;
       errEl.style.display = 'block';
+      btnEl.disabled       = false;
+      lblEl.textContent    = 'Add Student';
+      spinEl.style.display = 'none';
       return;
     }
 
+    /* ── STEP 1: Upload files to Cloudinary (yedi files select gareko cha) ── */
+    let uploadedDocs = [];
+    if (typeof asSelectedFiles !== 'undefined' && asSelectedFiles.length > 0) {
+      lblEl.textContent = 'Uploading files…';
+      try {
+        uploadedDocs = await uploadAllAsFiles();
+      } catch (uploadErr) {
+        console.error('[submitAddStudent] File upload error:', uploadErr);
+        errEl.textContent   = 'File upload failed: ' + uploadErr.message + ' (Student saved without files — try uploading again from detail page)';
+        errEl.style.display = 'block';
+        // File upload fail bhayepani student record save garne — block nagarne
+      }
+      lblEl.textContent = 'Saving…';
+    }
+
+    /* ── STEP 2: Build student object with documents array ── */
     const newStudent = {
       'STUDENT ID'   : sid,
       'STUDENT NAME' : name,
@@ -192,10 +211,12 @@ async function submitAddStudent() {
       'NOTES'        : notes,
       'ADDED DATE'   : new Date().toISOString().slice(0, 10),
       'ADDED BY'     : window.staff?.name || 'CRM',
+      documents      : uploadedDocs,   // [{name, url, type, uploadedAt}]
       createdAt      : firebase.firestore.FieldValue.serverTimestamp(),
       createdBy      : window.staff?.name || 'CRM'
     };
 
+    /* ── STEP 3: Save to Firestore ── */
     await db.collection('students').doc(sid).set(newStudent);
 
     // Local cache prepend
@@ -208,12 +229,19 @@ async function submitAddStudent() {
     if (typeof renderDashboardPartners === 'function') renderDashboardPartners();
 
     // Success display
+    const docCountMsg = uploadedDocs.length
+      ? ` · ${uploadedDocs.length} document(s) uploaded`
+      : '';
     document.getElementById('as-success-detail').textContent =
-      `${name} (${sid}) added successfully.`;
+      `${name} (${sid}) added successfully.${docCountMsg}`;
     document.getElementById('as-drive-link-wrap').style.display = 'none';
     successEl.style.display = 'block';
     lblEl.textContent       = '✓ Added';
     toast(`${name} added ✅`, 'success');
+
+    // Reset selected files for next entry
+    if (typeof asSelectedFiles !== 'undefined') asSelectedFiles = [];
+    if (typeof renderAsFileList === 'function') renderAsFileList();
 
     // Auto close
     setTimeout(() => closeAddStudent(), 2500);
@@ -224,7 +252,7 @@ async function submitAddStudent() {
     errEl.style.display = 'block';
   } finally {
     btnEl.disabled       = false;
-    if (lblEl.textContent === 'Saving…') lblEl.textContent = 'Add Student';
+    if (lblEl.textContent === 'Saving…' || lblEl.textContent === 'Uploading files…') lblEl.textContent = 'Add Student';
     spinEl.style.display = 'none';
   }
 }
