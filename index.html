@@ -31,6 +31,7 @@
     </div>
     <div id="cmd-results">
       <div class="cmd-section">Quick actions</div>
+      <div class="cmd-item" onclick="cmdNav('dashboard')"><div class="cmd-item-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div><div><div class="cmd-item-name">Dashboard</div><div class="cmd-item-meta">Live overview &amp; KPIs</div></div></div>
       <div class="cmd-item" onclick="cmdNav('students')"><div class="cmd-item-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div><div class="cmd-item-name">Students</div><div class="cmd-item-meta">View all enrolled students</div></div></div>
       <div class="cmd-item" onclick="cmdNav('partners')"><div class="cmd-item-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div><div><div class="cmd-item-name">Channel Partners</div><div class="cmd-item-meta">Agents and referral network</div></div></div>
       <div class="cmd-item" onclick="cmdNav('followup')"><div class="cmd-item-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.3 1.5a11.5 11.5 0 005.3 5.3L15.5 13l5 2v4a2 2 0 01-2.2 2A16.5 16.5 0 013 6.2 2 2 0 015 4z"/></svg></div><div><div class="cmd-item-name">Daily follow-up</div><div class="cmd-item-meta">Pending calls and tasks</div></div></div>
@@ -93,8 +94,12 @@
         <span class="sb-group-label">CRM</span>
         <svg class="sb-group-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
-      <div class="sb-group-body" style="max-height:300px">
-        <div class="sb-link active" data-view="students" onclick="switchView('students',this)">
+      <div class="sb-group-body" style="max-height:340px">
+        <div class="sb-link active" data-view="dashboard" onclick="switchView('dashboard',this)">
+          <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Dashboard</span>
+        </div>
+        <div class="sb-link" data-view="students" onclick="switchView('students',this)">
           <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><circle cx="17" cy="7" r="3"/></svg>
           <span>Students</span>
         </div>
@@ -247,103 +252,77 @@
 
   <div id="app-content">
 
-    <!-- STUDENTS -->
- <div class="view active" id="view-students">
+    <!-- DASHBOARD (real-time reactive overview) -->
+    <div class="view active" id="view-dashboard">
 
-  <!-- Quick Stats gradient header -->
-  <div class="dash-header">
-    <div class="dash-header-left">
-      <div class="dash-header-eyebrow">Route2Uni · Live Overview</div>
-      <div class="dash-header-title">Student Pipeline Dashboard</div>
-      <div class="dash-header-sub">Real-time snapshot of every application stage</div>
-    </div>
-    <div class="dash-header-right">
-      <div class="dash-header-pill">
-        <span class="dash-header-pill-dot" style="background:var(--gold-300)"></span>
-        <span class="dash-header-pill-label">Total</span>
-        <span class="dash-header-pill-val" id="stat-total">—</span>
+      <!-- Quick Stats gradient header -->
+      <div class="dash-header">
+        <div class="dash-header-left">
+          <div class="dash-header-eyebrow">Route2Uni · Live Overview</div>
+          <div class="dash-header-title">Route2Uni Complete Live Overview</div>
+          <div class="dash-header-sub">Real-time snapshot of every application stage</div>
+        </div>
+        <div class="dash-header-right">
+          <div class="dash-header-pill">
+            <span class="dash-header-pill-dot" style="background:var(--gold-300)"></span>
+            <span class="dash-header-pill-label">Total</span>
+            <span class="dash-header-pill-val" id="stat-total">—</span>
+          </div>
+          <div class="dash-header-pill">
+            <span class="dash-header-pill-dot" style="background:var(--emerald-500)"></span>
+            <span class="dash-header-pill-label">Visa ✓</span>
+            <span class="dash-header-pill-val" id="stat-visa">—</span>
+          </div>
+          <div class="dash-header-pill">
+            <span class="dash-header-pill-dot" style="background:var(--amber-500)"></span>
+            <span class="dash-header-pill-label">CAS</span>
+            <span class="dash-header-pill-val" id="stat-cas">—</span>
+          </div>
+          <div class="dash-header-pill">
+            <span class="dash-header-pill-dot" style="background:var(--crimson-500)"></span>
+            <span class="dash-header-pill-label">Refused</span>
+            <span class="dash-header-pill-val" id="stat-refused">—</span>
+          </div>
+        </div>
       </div>
-      <div class="dash-header-pill">
-        <span class="dash-header-pill-dot" style="background:var(--emerald-500)"></span>
-        <span class="dash-header-pill-label">Visa ✓</span>
-        <span class="dash-header-pill-val" id="stat-visa">—</span>
-      </div>
-      <div class="dash-header-pill">
-        <span class="dash-header-pill-dot" style="background:var(--amber-500)"></span>
-        <span class="dash-header-pill-label">CAS</span>
-        <span class="dash-header-pill-val" id="stat-cas">—</span>
-      </div>
-      <div class="dash-header-pill">
-        <span class="dash-header-pill-dot" style="background:var(--crimson-500)"></span>
-        <span class="dash-header-pill-label">Refused</span>
-        <span class="dash-header-pill-val" id="stat-refused">—</span>
-      </div>
-    </div>
-  </div>
 
-  <!-- KPI cards -->
-  <div class="kpi-grid">
-    <div class="kpi-card kpi-navy">
-      <div class="kpi-label">Total Students</div>
-      <div class="kpi-val" id="kpi-total">—</div>
-      <div class="kpi-sub">All pipeline stages</div>
-    </div>
-    <div class="kpi-card kpi-green">
-      <div class="kpi-label">Visa Approved</div>
-      <div class="kpi-val" id="kpi-visa">—</div>
-      <div class="kpi-sub">Successful outcomes</div>
-    </div>
-    <div class="kpi-card kpi-gold">
-      <div class="kpi-label">CAS In Progress</div>
-      <div class="kpi-val" id="kpi-cas">—</div>
-      <div class="kpi-sub">Active applications</div>
-    </div>
-    <div class="kpi-card kpi-red">
-      <div class="kpi-label">Visa Refused</div>
-      <div class="kpi-val" id="kpi-refused">—</div>
-      <div class="kpi-sub">Needs review</div>
-    </div>
-    <div class="kpi-card kpi-blue">
-      <div class="kpi-label">Offers Received</div>
-      <div class="kpi-val" id="kpi-offers">—</div>
-      <div class="kpi-sub">Conditional + unconditional</div>
-    </div>
-    <div class="kpi-card kpi-violet">
-      <div class="kpi-label">Channel Partners</div>
-      <div class="kpi-val" id="kpi-partners">—</div>
-      <div class="kpi-sub">Active agencies</div>
-    </div>
-  </div>
+      <!-- KPI cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-navy">
+          <div class="kpi-label">Total Students</div>
+          <div class="kpi-val" id="kpi-total">—</div>
+          <div class="kpi-sub">All pipeline stages</div>
+        </div>
+        <div class="kpi-card kpi-green">
+          <div class="kpi-label">Visa Approved</div>
+          <div class="kpi-val" id="kpi-visa">—</div>
+          <div class="kpi-sub">Successful outcomes</div>
+        </div>
+        <div class="kpi-card kpi-gold">
+          <div class="kpi-label">CAS In Progress</div>
+          <div class="kpi-val" id="kpi-cas">—</div>
+          <div class="kpi-sub">Active applications</div>
+        </div>
+        <div class="kpi-card kpi-red">
+          <div class="kpi-label">Visa Refused</div>
+          <div class="kpi-val" id="kpi-refused">—</div>
+          <div class="kpi-sub">Needs review</div>
+        </div>
+        <div class="kpi-card kpi-blue">
+          <div class="kpi-label">Offers Received</div>
+          <div class="kpi-val" id="kpi-offers">—</div>
+          <div class="kpi-sub">Conditional + unconditional</div>
+        </div>
+        <div class="kpi-card kpi-violet">
+          <div class="kpi-label">Total Channel Partners</div>
+          <div class="kpi-val" id="kpi-partners">—</div>
+          <div class="kpi-sub">Active agencies · live</div>
+        </div>
+      </div>
 
-  <div class="page-header">
-    <div class="page-header-left">
-      <h2>Students</h2>
-      <p>All enrolled students across the pipeline</p>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn btn-secondary btn-sm" id="cp-download-template-btn" style="display:none" onclick="downloadStudentTemplate()">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Download Template
-      </button>
-      <button class="btn btn-primary btn-sm" id="cp-upload-btn" style="display:none" onclick="document.getElementById('cp-upload-file').click()">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16a4.5 4.5 0 010-9 5.5 5.5 0 0110.4-1.7A5 5 0 0117 16"/><path d="M12 11v8"/><path d="M9 14l3-3 3 3"/></svg>
-        Upload Students
-      </button>
-      <input type="file" id="cp-upload-file" accept=".csv" style="display:none" onchange="handleChannelPartnerUpload(event)">
-      <button class="btn btn-secondary btn-sm" onclick="exportStudentsCSV()">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Export
-      </button>
-      <button class="btn btn-primary btn-sm" onclick="openAddStudent()">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add student
-      </button>
-    </div>
-  </div>
-  <!-- pipeline-row (Pipeline Funnel + Distribution), table, channel partners section — sabai purano jasari nai tala continue garnu, change garnu pardaina -->
       <div class="pipeline-row" style="margin-bottom:20px">
         <div class="card">
-          <div class="card-header"><div><div class="card-title">Pipeline Funnel</div><div class="card-subtitle" id="pipeline-total-label">— students</div></div></div>
+          <div class="card-header"><div><div class="card-title">Student Pipeline Funnel</div><div class="card-subtitle" id="pipeline-total-label">— students</div></div></div>
           <div class="funnel-stages" id="pipeline-funnel"></div>
         </div>
         <div class="card">
@@ -374,6 +353,47 @@
         </div>
       </div>
 
+      <div class="pipeline-row" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Student Enrollment Trends</div></div>
+          <div style="padding:16px"><div id="dash-enrollment-chart"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Top Channel Partners</div></div>
+          <div class="cp-grid" id="dashboard-cp-grid" style="padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STUDENTS -->
+ <div class="view" id="view-students">
+
+  <div class="page-header">
+    <div class="page-header-left">
+      <h2>Students</h2>
+      <p>All enrolled students across the pipeline</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-secondary btn-sm" id="cp-download-template-btn" style="display:none" onclick="downloadStudentTemplate()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Template
+      </button>
+      <button class="btn btn-primary btn-sm" id="cp-upload-btn" style="display:none" onclick="document.getElementById('cp-upload-file').click()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16a4.5 4.5 0 010-9 5.5 5.5 0 0110.4-1.7A5 5 0 0117 16"/><path d="M12 11v8"/><path d="M9 14l3-3 3 3"/></svg>
+        Upload Students
+      </button>
+      <input type="file" id="cp-upload-file" accept=".csv" style="display:none" onchange="handleChannelPartnerUpload(event)">
+      <button class="btn btn-secondary btn-sm" onclick="exportStudentsCSV()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="openAddStudent()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add student
+      </button>
+    </div>
+  </div>
+
       <div class="filter-bar">
         <div class="seg-tabs">
           <button class="seg-btn active" onclick="setPillFilterStudents('','',this)">All</button>
@@ -395,21 +415,11 @@
         </div>
         <div class="tbl-scroll" style="max-height:55vh">
           <table class="dt" id="students-page-table">
-            <thead><tr><th style="width:36px;text-align:center"><input type="checkbox" id="select-all-students" title="Select all" onchange="toggleSelectAllStudents(this.checked)" style="cursor:pointer;accent-color:var(--navy-700)"></th><th style="width:100px">Student ID</th><th style="min-width:180px">Name</th><th style="min-width:160px">Course</th><th style="min-width:130px">Channel Partner</th><th style="min-width:180px">Pipeline</th><th style="min-width:110px">Visa Status</th><th style="min-width:80px;text-align:right">Actions</th></tr></thead>
+            <thead><tr><th style="width:36px;text-align:center"><input type="checkbox" id="select-all-students" title="Select all" onchange="toggleSelectAllStudents(this.checked)" style="cursor:pointer;accent-color:var(--navy-700)"></th><th style="width:50px;text-align:center">Edit</th><th style="width:100px">Student ID</th><th style="min-width:180px">Name</th><th style="min-width:160px">Course</th><th style="min-width:130px">Channel Partner</th><th style="min-width:180px">Pipeline</th><th style="min-width:110px">Visa Status</th></tr></thead>
             <tbody id="students-page-table-body"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
           </table>
         </div>
-      </div>
-
-      <div class="page-header" style="margin-top:32px;margin-bottom:4px">
-        <div class="page-header-left">
-          <h2>Channel Partners</h2>
-          <p>Referral agents and partner agencies</p>
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="switchView('partners',document.querySelector('.sb-link[data-view=partners]'))">View all</button>
-      </div>
-      <div class="cp-grid" id="dashboard-cp-grid">
-        <div class="empty-state" style="grid-column:1/-1;padding:20px">Loading partners…</div>
+        <div id="bulk-action-bar-students-anchor"></div>
       </div>
     </div>
 
@@ -498,6 +508,20 @@
     <div class="view" id="view-followup">
       <div class="page-header">
         <div class="page-header-left"><h2>Daily Follow-Up</h2><p>Students requiring calls and actions today</p></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-secondary btn-sm" onclick="bulkEmail()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Bulk Email
+          </button>
+          <button class="btn btn-sm" onclick="bulkWhatsApp()" style="background:#25D366;color:#fff;border:none">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+            Bulk WhatsApp
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="bulkStatusUpdate()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            Bulk Update
+          </button>
+        </div>
       </div>
       <div id="followup-content"><div class="empty-state">Loading…</div></div>
     </div>
