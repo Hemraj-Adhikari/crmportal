@@ -2449,6 +2449,11 @@ async function submitUserForm() {
         lastLogin: null
       });
       if (typeof logActivity === 'function') logActivity('Add', 'User', newUserRef.id);
+      if (typeof createSystemNotification === 'function') {
+        createSystemNotification('user_added', {
+          message: `${name} (${email}) was added as ${role} by ${window.staff?.name || 'CRM'}.`
+        });
+      }
       toast('User created ✅', 'success');
     }
     // No manual re-render needed — the users onSnapshot listener in
@@ -2483,6 +2488,11 @@ async function deleteUser(userId) {
   try {
     await db.collection('users').doc(userId).delete();
     if (typeof logActivity === 'function') logActivity('Delete', 'User', userId);
+    if (typeof createSystemNotification === 'function') {
+      createSystemNotification('user_deleted', {
+        message: `${u?.name || u?.email || userId} was deleted by ${window.staff?.name || 'Staff'}.`
+      });
+    }
     toast('User deleted', 'success');
   } catch (err) {
     console.error('deleteUser error:', err);
