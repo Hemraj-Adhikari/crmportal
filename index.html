@@ -77,6 +77,17 @@
 </div>
 
 <!-- SIDEBAR -->
+<style>
+  #sidebar .sb-brand-name{font-size:17px;font-weight:800;letter-spacing:-.01em}
+  #sidebar .sb-brand-sub{font-size:11.5px;font-weight:600;letter-spacing:.02em;opacity:.65}
+  #sidebar .sb-group-label{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.55}
+  #sidebar .sb-link{font-size:14px;font-weight:600;letter-spacing:.01em;padding-top:10px;padding-bottom:10px;border-radius:9px}
+  #sidebar .sb-link span:first-of-type{font-size:14px}
+  #sidebar .sb-link-icon{width:18px;height:18px}
+  #sidebar .sb-link:hover{background:rgba(255,255,255,.06)}
+  #sidebar .sb-link.active{font-weight:700}
+  #sidebar .sb-badge-soon{font-size:9.5px;font-weight:700;letter-spacing:.03em}
+</style>
 <aside id="sidebar">
   <a class="sb-logo-row" onclick="goHome()" href="javascript:void(0)">
     <div class="sb-logo-mark">R2</div>
@@ -156,11 +167,6 @@
           <span>AI Assistant</span>
           <span class="sb-badge sb-badge-soon">Soon</span>
         </div>
-        <div class="sb-link" onclick="toast('Activity history coming soon','info')">
-          <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
-          <span>Activity History</span>
-          <span class="sb-badge sb-badge-soon">Soon</span>
-        </div>
       </div>
     </div>
 
@@ -177,11 +183,6 @@
           <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="4" y2="11"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="20" y1="20" x2="20" y2="15"/></svg>
           <span>Reports</span>
         </div>
-        <div class="sb-link" onclick="toast('Performance dashboards coming soon','info')">
-          <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          <span>Performance</span>
-          <span class="sb-badge sb-badge-soon">Soon</span>
-        </div>
       </div>
     </div>
 
@@ -197,15 +198,6 @@
         <div class="sb-link admin-only" data-view="users" onclick="switchView('users',this)" style="display:none">
           <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
           <span>User Management</span>
-        </div>
-        <div class="sb-link admin-only" data-view="upload" onclick="switchView('upload',this)" style="display:none">
-          <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16a4.5 4.5 0 010-9 5.5 5.5 0 0110.4-1.7A5 5 0 0117 16"/><path d="M12 11v8"/><path d="M9 14l3-3 3 3"/></svg>
-          <span>Import CSV</span>
-        </div>
-        <div class="sb-link" onclick="toast('Settings coming soon','info')">
-          <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
-          <span>Settings</span>
-          <span class="sb-badge sb-badge-soon">Soon</span>
         </div>
       </div>
     </div>
@@ -631,8 +623,8 @@
     <!-- UPLOAD (Admin only) -->
     <!-- USER MANAGEMENT -->
     <style>
-      #view-users .um-kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
-      @media (max-width:1200px){#view-users .um-kpi-grid{grid-template-columns:repeat(3,1fr)}}
+      #view-users .um-kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:20px}
+      @media (max-width:1300px){#view-users .um-kpi-grid{grid-template-columns:repeat(3,1fr)}}
       @media (max-width:760px){#view-users .um-kpi-grid{grid-template-columns:repeat(2,1fr)}}
       #view-users .um-kpi{border-radius:14px;padding:16px 18px;position:relative;overflow:hidden;border:1px solid rgba(0,0,0,.04)}
       #view-users .um-kpi-top{display:flex;align-items:flex-start;justify-content:space-between}
@@ -655,6 +647,9 @@
       #view-users .um-kpi-partner{background:linear-gradient(135deg,#DBEAFE,#EFF6FF)}
       #view-users .um-kpi-partner .um-kpi-icon{background:#6366F1;color:#fff}
       #view-users .um-kpi-partner .um-kpi-sub{color:#4F46E5}
+      #view-users .um-kpi-branch{background:linear-gradient(135deg,#FFEDD5,#FFF7ED)}
+      #view-users .um-kpi-branch .um-kpi-icon{background:#F97316;color:#fff}
+      #view-users .um-kpi-branch .um-kpi-sub{color:#EA580C}
 
       #view-users .um-actionbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
       #view-users .um-search-wrap{position:relative;flex:1;min-width:220px;max-width:340px}
@@ -715,7 +710,7 @@
         </div>
         <div class="um-kpi um-kpi-internal">
           <div class="um-kpi-top">
-            <span class="um-kpi-label">Internal User</span>
+            <span class="um-kpi-label">Documentation Officer</span>
             <span class="um-kpi-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
           </div>
           <div class="um-kpi-val" id="um-count-internal">0</div>
@@ -737,6 +732,14 @@
           <div class="um-kpi-val" id="um-count-partner">0</div>
           <div class="um-kpi-sub">Manage own students</div>
         </div>
+        <div class="um-kpi um-kpi-branch">
+          <div class="um-kpi-top">
+            <span class="um-kpi-label">Branch Manager</span>
+            <span class="um-kpi-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4 8 4v14"/><path d="M9 21v-6h6v6"/><path d="M9 11h.01M15 11h.01M9 7h.01M15 7h.01"/></svg></span>
+          </div>
+          <div class="um-kpi-val" id="um-count-branch">0</div>
+          <div class="um-kpi-sub">Manage branch operations</div>
+        </div>
       </div>
 
       <div class="um-actionbar">
@@ -748,9 +751,10 @@
           <option value="">All Roles</option>
           <option value="Super Admin">Super Admin</option>
           <option value="Admin">Admin</option>
-          <option value="Internal User">Internal User</option>
+          <option value="Documentation Officer">Documentation Officer</option>
           <option value="Application User">Application User</option>
           <option value="Channel Partner">Channel Partner</option>
+          <option value="Branch Manager">Branch Manager</option>
         </select>
         <button class="um-add-btn" onclick="openAddUserModal()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
