@@ -361,3 +361,33 @@ function today() {
 }
 
 console.log('[firebase-updates.js] loaded ✅');
+// Add this to the bottom of firebase-updates.js
+window.loadStudentsFromFirebase = async function() {
+  if (typeof loading === 'function') loading('Fetching students from Firebase…');
+  try {
+    const snapshot = await db.collection('students').orderBy('createdAt', 'desc').get();
+    const fetched = [];
+    snapshot.forEach(doc => {
+      fetched.push({ id: doc.id, ...doc.data() });
+    });
+    
+    window.students = fetched;
+    window.totalRecords = fetched.length;
+    
+    // Update the UI
+    if (typeof filterTableStudents === 'function') filterTableStudents();
+    if (typeof updateStats === 'function') updateStats();
+    if (typeof updateFunnel === 'function') updateFunnel();
+    if (typeof renderDashboardPartners === 'function') renderDashboardPartners();
+    
+    if (typeof toast === 'function') toast('Loaded ' + fetched.length + ' students', 'success');
+  } catch (e) {
+    console.error("Firebase read error:", e);
+    if (typeof toast === 'function') toast('Failed to load students: ' + e.message, 'error');
+  } finally {
+    if (typeof hideLoading === 'function') hideLoading();
+  }
+};
+
+// Override the default loadStudents to use Firebase
+window.loadStudents = window.loadStudentsFromFirebase;
