@@ -4,74 +4,11 @@
    (firebase-auth.js, firebase-import.js, firebase-updates.js
    must be loaded BEFORE this file, same as before)
 
-   THIS VERSION ADDS (previously missing):
-   1) Cloudinary upload config + functions (uploadAllAsFiles,
-      uploadFileToCloudinary) — required by firebase-updates.js
-      submitAddStudent(), which calls them but they didn't exist.
-   2) Partner Universities JSON loader — fetches universities.json
-      instead of relying on the inline <script id="uni-rawdata">
-      block in index.html (which has now been removed from the HTML).
+   NOTE: Cloudinary config, asSelectedFiles, upload functions,
+   file drop/list handlers, and openAddStudent()/closeAddStudent()
+   have been moved to firebase-updates.js — they are NOT here
+   anymore to avoid duplicate declarations.
 ═══════════════════════════════════════════════════════ */
-
-/* ═══════════════════════════════════════════════════════
-   1. CLOUDINARY CONFIG  (NEW — was missing before)
-═══════════════════════════════════════════════════════ */
-const CLOUDINARY_CLOUD_NAME = 'dv9emyzlg';
-const CLOUDINARY_UPLOAD_PRESET = 'fdtrmpus';
-
-let asSelectedFiles = []; // Add Student modal ma select bhayeko files
-
-async function uploadFileToCloudinary(file) {
-  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`;
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-  formData.append('folder', 'r2u-students');
-
-  const res = await fetch(url, { method: 'POST', body: formData });
-  if (!res.ok) throw new Error('Upload failed for ' + file.name);
-  const data = await res.json();
-  return { name: file.name, url: data.secure_url, type: file.type, uploadedAt: new Date().toISOString() };
-}
-
-async function uploadAllAsFiles() {
-  const uploaded = [];
-  for (const file of asSelectedFiles) {
-    const result = await uploadFileToCloudinary(file);
-    uploaded.push(result);
-  }
-  return uploaded;
-}
-
-function asHandleDrop(event) {
-  event.preventDefault();
-  event.currentTarget.style.borderColor = '';
-  event.currentTarget.style.background = '';
-  asHandleFiles(event.dataTransfer.files);
-}
-
-function asHandleFiles(fileList) {
-  asSelectedFiles = asSelectedFiles.concat(Array.from(fileList));
-  renderAsFileList();
-}
-
-function asRemoveFile(idx) {
-  asSelectedFiles.splice(idx, 1);
-  renderAsFileList();
-}
-
-function renderAsFileList() {
-  const wrap = document.getElementById('as-file-list');
-  const itemsEl = document.getElementById('as-file-items');
-  if (!wrap || !itemsEl) return;
-  if (!asSelectedFiles.length) { wrap.style.display = 'none'; return; }
-  wrap.style.display = 'block';
-  itemsEl.innerHTML = asSelectedFiles.map((f, i) => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--surface-inset);border-radius:var(--r-sm);margin-bottom:5px;font-size:12px">
-      <span>${escapeHtml(f.name)} <span style="color:var(--text-muted)">(${Math.round(f.size/1024)} KB)</span></span>
-      <button onclick="asRemoveFile(${i})" style="background:none;border:none;color:var(--crimson-500);cursor:pointer;font-size:14px">✕</button>
-    </div>`).join('');
-}
 
 /* ═══════════════════════════════════════════════════════
    NAVIGATION / VIEW SWITCHING
@@ -376,26 +313,6 @@ function exportStudentsCSV() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   ADD STUDENT MODAL — open/close + file handling
-═══════════════════════════════════════════════════════ */
-function openAddStudent() {
-  asSelectedFiles = [];
-  renderAsFileList();
-  document.getElementById('as-error').style.display = 'none';
-  document.getElementById('as-success').style.display = 'none';
-  document.getElementById('add-student-overlay').style.display = 'block';
-}
-
-function closeAddStudent() {
-  document.getElementById('add-student-overlay').style.display = 'none';
-  ['as-name','as-id','as-dob','as-nationality','as-mobile','as-email',
-   'as-level','as-course','as-university','as-agent','as-submitted-by','as-notes']
-   .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  asSelectedFiles = [];
-  renderAsFileList();
-}
-
-/* ═══════════════════════════════════════════════════════
    STUDENT DETAIL VIEW (basic)
 ═══════════════════════════════════════════════════════ */
 let detailStudentId = null;
@@ -467,7 +384,7 @@ function openStageDrawer(studentId) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   2. PARTNER UNIVERSITIES — JSON LOADER  (NEW — was missing)
+   PARTNER UNIVERSITIES — JSON LOADER
    Fetches universities.json instead of relying on the inline
    <script id="uni-rawdata"> block (now removed from index.html).
    Falls back to the inline block ONLY if present, for safety.
@@ -518,10 +435,10 @@ if (typeof toast !== 'function') {
   };
 }
 
-console.log('[script-additions.js] loaded ✅ (Cloudinary + Universities loader included)');
+console.log('[script-additions.js] loaded ✅ (Universities loader included)');
+
 /* ═══════════════════════════════════════════════════════
-   MISSING LOGIC: PIPELINE STAGES & UNIVERSITIES
-   Paste this at the very bottom of your script.js
+   PIPELINE STAGES & UNIVERSITIES — detail render logic
 ═══════════════════════════════════════════════════════ */
 
 /* ── 1. PIPELINE STAGES LOGIC ── */
@@ -607,7 +524,7 @@ function pickStageOpt(el, idx, key, val) {
   stageEdits[idx] = {key, val};
 }
 
-function pickMockStage(el, idx, val) {
+function pickMockStage(el, idx, val, mi, curLevel) {
   stageEdits[idx] = {key: 'MOCK INTERVIEW STATUS', val};
   const s = window.students.find(s => (s['STUDENT ID'] || s.id) === activeStudentId);
   if(s) renderStagePipeline(s);
