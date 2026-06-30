@@ -156,7 +156,9 @@ const VIEW_PERMISSIONS = {
   chat         : ['Super Admin', 'Admin', 'Document Officer', 'Application User']
 };
 
-function switchView(viewName, linkEl) {
+window.viewHistory = [];
+
+function switchView(viewName, linkEl, _skipHistory) {
   // Channel Partner — hard lock to students/universities only, regardless of how navigation was triggered
   if (window.staff?.role === 'Channel Partner' && !['dashboard', 'students', 'universities', 'student-detail'].includes(viewName)) {
     toast('Tapaisanga yo page herne permission chaina', 'error');
@@ -167,6 +169,14 @@ function switchView(viewName, linkEl) {
     return;
   }
 
+  // Push the current view onto history before navigating away from it
+  if (!_skipHistory && currentView && currentView !== viewName) {
+    window.viewHistory.push({
+      view: currentView,
+      linkEl: document.querySelector('.sb-link.active')
+    });
+  }
+
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   const target = document.getElementById('view-' + viewName);
   if (target) target.classList.add('active');
@@ -175,6 +185,7 @@ function switchView(viewName, linkEl) {
   if (linkEl) linkEl.classList.add('active');
 
   currentView = viewName;
+  updateBackButton();
 
   const titles = {
     dashboard: ['Dashboard', 'Route2Uni complete live overview'],
@@ -225,6 +236,17 @@ function switchView(viewName, linkEl) {
       renderUniGrid();
     }
   }
+}
+
+function goBack() {
+  const prev = window.viewHistory.pop();
+  if (!prev) { updateBackButton(); return; }
+  switchView(prev.view, prev.linkEl, true); // true = don't re-push this hop into history
+}
+
+function updateBackButton() {
+  const btn = document.getElementById('hdr-back-btn');
+  if (btn) btn.style.display = window.viewHistory.length ? 'flex' : 'none';
 }
 
 function goHome() {
@@ -325,13 +347,13 @@ function filterTableStudents() {
       const visa = s['VISA STATUS'] || '—';
       const visaClass = visa.toLowerCase() === 'approved' ? 'badge-green'
         : visa.toLowerCase() === 'refused' ? 'badge-red' : 'badge-amber';
-      return `<tr>
-        <td style="text-align:center"><input type="checkbox" ${checked} onchange="toggleSelectStudent('${id}', this.checked)"></td>
+      return `<tr data-student-id="${escapeHtml(id)}">
+        <td style="text-align:center"><input type="checkbox" ${checked} data-action="toggle-select"></td>
         <td style="text-align:center">
-          <button class="btn btn-ghost btn-sm" onclick="openStageDrawer('${id}')" title="Edit" style="padding:3px 7px">✏️</button>
+          <button class="btn btn-ghost btn-sm" data-action="open-stage" title="Edit" style="padding:3px 7px">✏️</button>
         </td>
         <td style="font-family:'JetBrains Mono',monospace;font-size:11.5px">${escapeHtml(id)}</td>
-        <td><a onclick="openDetail('${id}')" style="cursor:pointer;font-weight:600;color:var(--text-primary)">${escapeHtml(s['STUDENT NAME'] || '—')}</a></td>
+        <td><a data-action="open-detail" style="cursor:pointer;font-weight:600;color:var(--text-primary)">${escapeHtml(s['STUDENT NAME'] || '—')}</a></td>
         <td>${escapeHtml(s['COURSE'] || '—')}</td>
         <td>${escapeHtml(s['AGENT'] || '—')}</td>
         <td>${escapeHtml(s['OFFER STATUS'] || s['PRE-SCREENING CALL STATUS'] || '—')}</td>
@@ -342,6 +364,42 @@ function filterTableStudents() {
 
   updateBulkBar();
 }
+
+/* ═══════════════════════════════════════════════════════
+   EVENT DELEGATION — addEventListener for the students table
+   Replaces inline onclick/onchange in the row markup above.
+   Attached once via DOMContentLoaded; works for every re-render
+   since clicks/changes bubble up to the tbody regardless of
+   how often filterTableStudents() rewrites its innerHTML.
+═══════════════════════════════════════════════════════ */
+function initStudentsTableEvents() {
+  const tbody = document.getElementById('students-page-table-body');
+  if (!tbody || tbody.dataset.eventsBound) return;
+  tbody.dataset.eventsBound = 'true';
+
+  tbody.addEventListener('click', (e) => {
+    const actionEl = e.target.closest('[data-action]');
+    if (!actionEl) return;
+    const row = actionEl.closest('tr[data-student-id]');
+    const id = row?.dataset.studentId;
+    if (!id) return;
+
+    switch (actionEl.dataset.action) {
+      case 'open-detail': openDetail(id); break;
+      case 'open-stage':  openStageDrawer(id); break;
+    }
+  });
+
+  tbody.addEventListener('change', (e) => {
+    const actionEl = e.target.closest('[data-action="toggle-select"]');
+    if (!actionEl) return;
+    const row = actionEl.closest('tr[data-student-id]');
+    const id = row?.dataset.studentId;
+    if (!id) return;
+    toggleSelectStudent(id, actionEl.checked);
+  });
+}
+document.addEventListener('DOMContentLoaded', initStudentsTableEvents);
 
 function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, c => ({
@@ -2305,17 +2363,106 @@ document.addEventListener('click', () => {
 });
 
 /* ───────────────────────────────────────────────────────
-   STUBS — wire these up to your actual modal / write logic
+   ADD / EDIT USER — real modal + Firestore writes
 ─────────────────────────────────────────────────────── */
+let __editingUserId = null;
+
 function openAddUserModal(userId) {
   if (!checkAccess(['Super Admin', 'Admin'])) return;
+  __editingUserId = userId || null;
   const existing = userId ? (window.__allUsers || []).find(u => u.id === userId) : null;
-  toast(existing ? `Edit user: ${existing.name || existing.email}` : 'Add User modal — wire up your form here', 'info');
-  // TODO: open real modal, then on submit:
-  // db.collection('users').doc(userId || undefined).set({
-  //   name, email, role, status: 'Active',
-  //   createdAt: existing ? existing.createdAt : firebase.firestore.FieldValue.serverTimestamp()
-  // }, { merge: true });
+
+  document.getElementById('user-modal-title').textContent = existing ? 'Edit User' : 'Add User';
+  document.getElementById('user-modal-error').style.display = 'none';
+  document.getElementById('um-name').value = existing?.name || '';
+  document.getElementById('um-email').value = existing?.email || '';
+  document.getElementById('um-email').disabled = !!existing; // email immutable once created
+  document.getElementById('um-role').value = existing?.role || 'Application User';
+  document.getElementById('um-status').value = existing?.status || 'Active';
+  document.getElementById('um-partner-id').value = existing?.partnerId || '';
+  toggleUmPartnerRow();
+
+  document.getElementById('user-modal-overlay').style.display = 'flex';
+
+  // Close any open row-action menu so it doesn't linger behind the modal
+  document.querySelectorAll('#view-users .um-actions-menu.open').forEach(m => m.classList.remove('open'));
+}
+
+function closeUserModal() {
+  document.getElementById('user-modal-overlay').style.display = 'none';
+  document.getElementById('um-email').disabled = false;
+  __editingUserId = null;
+}
+
+function toggleUmPartnerRow() {
+  const role = document.getElementById('um-role')?.value;
+  const row = document.getElementById('um-partner-row');
+  if (row) row.style.display = role === 'Channel Partner' ? 'block' : 'none';
+}
+
+async function submitUserForm() {
+  const errEl  = document.getElementById('user-modal-error');
+  const btn    = document.getElementById('um-submit-btn');
+  const lbl    = document.getElementById('um-submit-lbl');
+  const spin   = document.getElementById('um-submit-spin');
+  errEl.style.display = 'none';
+
+  const name   = document.getElementById('um-name').value.trim();
+  const email  = document.getElementById('um-email').value.trim();
+  const role   = document.getElementById('um-role').value;
+  const status = document.getElementById('um-status').value;
+  const partnerId = document.getElementById('um-partner-id').value.trim();
+
+  if (!name || !email) {
+    errEl.textContent = 'Name and email are required.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (role === 'Channel Partner' && !partnerId) {
+    errEl.textContent = 'Partner ID is required for the Channel Partner role.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  lbl.textContent = 'Saving…';
+  spin.style.display = 'inline-block';
+
+  try {
+    const payload = { name, email, role, status };
+    if (role === 'Channel Partner') payload.partnerId = partnerId;
+
+    if (__editingUserId) {
+      await db.collection('users').doc(__editingUserId).set(payload, { merge: true });
+      toast('User updated ✅', 'success');
+    } else {
+      // Duplicate-email guard
+      const dup = await db.collection('users').where('email', '==', email).limit(1).get();
+      if (!dup.empty) {
+        errEl.textContent = 'A user with this email already exists.';
+        errEl.style.display = 'block';
+        return;
+      }
+      await db.collection('users').add({
+        ...payload,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdBy: window.staff?.name || 'CRM',
+        lastLogin: null
+      });
+      toast('User created ✅', 'success');
+    }
+    // No manual re-render needed — the users onSnapshot listener in
+    // initUsersListener() will pick up the change and call renderUsersTable().
+    closeUserModal();
+  } catch (e) {
+    console.error('[submitUserForm] error:', e);
+    errEl.textContent = 'Save failed: ' + e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    lbl.textContent = 'Save User';
+    spin.style.display = 'none';
+  }
 }
 
 async function changeUserStatus(userId, newStatus) {
