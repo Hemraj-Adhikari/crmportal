@@ -36,6 +36,7 @@
       <div class="cmd-item" onclick="cmdNav('followup')"><div class="cmd-item-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.3 1.5a11.5 11.5 0 005.3 5.3L15.5 13l5 2v4a2 2 0 01-2.2 2A16.5 16.5 0 013 6.2 2 2 0 015 4z"/></svg></div><div><div class="cmd-item-name">Daily follow-up</div><div class="cmd-item-meta">Pending calls and tasks</div></div></div>
       <div class="cmd-item" onclick="cmdNav('casshield')"><div class="cmd-item-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5.5-3.8 9-8 11-4.2-2-8-5.5-8-11V7l8-4z"/></svg></div><div><div class="cmd-item-name">CAS Shield</div><div class="cmd-item-meta">Pre-CAS readiness checks</div></div></div>
       <div class="cmd-item" onclick="cmdNav('universities')"><div class="cmd-item-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22V9l9-7 9 7v13"/><path d="M9 22V12h6v10"/></svg></div><div><div class="cmd-item-name">Partner Universities</div><div class="cmd-item-meta">University directory &amp; courses</div></div></div>
+      <div class="cmd-item" onclick="cmdNav('chat')"><div class="cmd-item-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9a2 2 0 01-2 2H6l-4 4V4a2 2 0 012-2h8a2 2 0 012 2z"/><path d="M18 9h2a2 2 0 012 2v11l-4-4h-6a2 2 0 01-2-2v-1"/></svg></div><div><div class="cmd-item-name">Internal Chat</div><div class="cmd-item-meta">Team-wide messaging</div></div></div>
       <div class="cmd-item" onclick="cmdNav('reports')"><div class="cmd-item-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="4" y2="11"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="20" y1="20" x2="20" y2="15"/></svg></div><div><div class="cmd-item-name">Reports</div><div class="cmd-item-meta">Pipeline analytics</div></div></div>
     </div>
     <div class="cmd-footer"><span><span class="kbd">↑↓</span> navigate</span><span><span class="kbd">↵</span> select</span><span><span class="kbd">Esc</span> close</span></div>
@@ -149,10 +150,9 @@
           <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
           <span>WhatsApp</span>
         </div>
-        <div class="sb-link" onclick="toast('Internal team chat coming soon','info')">
+        <div class="sb-link" data-view="chat" onclick="switchView('chat',this)">
           <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9a2 2 0 01-2 2H6l-4 4V4a2 2 0 012-2h8a2 2 0 012 2z"/><path d="M18 9h2a2 2 0 012 2v11l-4-4h-6a2 2 0 01-2-2v-1"/></svg>
           <span>Internal Chat</span>
-          <span class="sb-badge sb-badge-soon">Soon</span>
         </div>
         <div class="sb-link" onclick="toast('AI Assistant coming soon','info')">
           <svg class="sb-link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="9" width="14" height="10" rx="2"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M12 9V5"/><circle cx="12" cy="3" r="1"/><path d="M5 13H3"/><path d="M21 13h-2"/></svg>
@@ -513,6 +513,26 @@
           <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:12px"><button class="btn btn-ghost btn-sm" onclick="emailClearForm()">Clear</button><button class="btn btn-primary btn-sm" onclick="sendEmail()"><span id="email-send-lbl">Send</span></button></div>
         </div></div>
         <div><div style="font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:10px">Sent this session</div><div class="card" id="email-history-wrap"><div class="empty-state">No messages sent yet</div></div></div>
+      </div>
+    </div>
+
+    <!-- INTERNAL CHAT -->
+    <div class="view" id="view-chat">
+      <div class="page-header">
+        <div class="page-header-left"><h2>Internal Chat</h2><p>Team-wide messaging, real-time</p></div>
+        <div class="seg-tabs" id="chat-group-tabs">
+          <button class="seg-btn active" onclick="switchChatGroup('global',this)">Global</button>
+          <button class="seg-btn" onclick="switchChatGroup('staff-only',this)">Staff Only</button>
+        </div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;height:68vh;overflow:hidden">
+        <div id="chat-messages" style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:10px">
+          <div class="empty-state">Loading messages…</div>
+        </div>
+        <div style="border-top:1px solid var(--border-subtle);padding:12px 16px;display:flex;gap:8px;align-items:flex-end">
+          <textarea id="chat-input" class="form-control" placeholder="Type a message…" style="min-height:38px;max-height:120px;resize:none" onkeydown="chatInputKeydown(event)"></textarea>
+          <button class="btn btn-primary btn-sm" onclick="sendChatMessage()" id="chat-send-btn">Send</button>
+        </div>
       </div>
     </div>
 
