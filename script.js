@@ -2119,8 +2119,8 @@ console.log('[script-additions.js] Firestore-driven university dropdown + studen
    to Super Admin / Admin via VIEW_PERMISSIONS above.
    Expected doc shape on 'users' collection:
      { name, email, role, status, createdAt, lastLogin }
-   role  ∈ 'Super Admin' | 'Admin' | 'Internal User' |
-           'Application User' | 'Channel Partner'
+   role  ∈ 'Super Admin' | 'Admin' | 'Documentation Officer' |
+           'Application User' | 'Channel Partner' | 'Branch Manager'
    status ∈ 'Active' | 'Inactive'
 ═══════════════════════════════════════════════════════ */
 window.__allUsers = window.__allUsers || [];
@@ -2129,11 +2129,12 @@ let umCurrentPage = 1;
 let umOpenMenuId = null;
 
 const UM_ROLE_COLORS = {
-  'Super Admin'      : { bg: '#FCE7F3', fg: '#DB2777' },
-  'Admin'            : { bg: '#FEF3C7', fg: '#B45309' },
-  'Internal User'    : { bg: '#D1FAE5', fg: '#059669' },
-  'Application User' : { bg: '#DBEAFE', fg: '#2563EB' },
-  'Channel Partner'  : { bg: '#FEE2E2', fg: '#DC2626' }
+  'Super Admin'         : { bg: '#FCE7F3', fg: '#DB2777' },
+  'Admin'               : { bg: '#FEF3C7', fg: '#B45309' },
+  'Documentation Officer': { bg: '#D1FAE5', fg: '#059669' },
+  'Application User'    : { bg: '#DBEAFE', fg: '#2563EB' },
+  'Channel Partner'     : { bg: '#FEE2E2', fg: '#DC2626' },
+  'Branch Manager'      : { bg: '#FFEDD5', fg: '#EA580C' }
 };
 
 const UM_AVATAR_COLORS = ['#EC4899','#3B82F6','#10B981','#F59E0B','#8B5CF6','#06B6D4','#EF4444','#6366F1'];
@@ -2184,16 +2185,17 @@ function initUsersListener() {
 
 function umUpdateKpiCards() {
   const users = window.__allUsers || [];
-  const counts = { 'Super Admin': 0, 'Admin': 0, 'Internal User': 0, 'Application User': 0, 'Channel Partner': 0 };
+  const counts = { 'Super Admin': 0, 'Admin': 0, 'Documentation Officer': 0, 'Application User': 0, 'Channel Partner': 0, 'Branch Manager': 0 };
   users.forEach(u => {
-    const r = u.role === 'Document Officer' ? 'Internal User' : u.role;
+    const r = (u.role === 'Document Officer' || u.role === 'Internal User') ? 'Documentation Officer' : u.role;
     if (counts.hasOwnProperty(r)) counts[r]++;
   });
   setText('um-count-superadmin', counts['Super Admin']);
   setText('um-count-admin', counts['Admin']);
-  setText('um-count-internal', counts['Internal User']);
+  setText('um-count-internal', counts['Documentation Officer']);
   setText('um-count-app', counts['Application User']);
   setText('um-count-partner', counts['Channel Partner']);
+  setText('um-count-branch', counts['Branch Manager']);
 }
 
 function umFilteredUsers() {
