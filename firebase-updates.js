@@ -25,6 +25,86 @@ async function fbUpdateStudent(studentId, patch) {
 }
 
 /* ═══════════════════════════════════════════════════════
+   0. ADD STUDENT MODAL — Cloudinary config, file state,
+      upload functions, and modal open/close.
+      (Consolidated here so everything the Add Student
+      flow depends on lives in one module.)
+═══════════════════════════════════════════════════════ */
+const CLOUDINARY_CLOUD_NAME = 'dv9emyzlg';
+const CLOUDINARY_UPLOAD_PRESET = 'fdtrmpus';
+
+let asSelectedFiles = []; // Files currently staged in the Add Student modal
+
+async function uploadFileToCloudinary(file) {
+  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`;
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  formData.append('folder', 'r2u-students');
+
+  const res = await fetch(url, { method: 'POST', body: formData });
+  if (!res.ok) throw new Error('Upload failed for ' + file.name);
+  const data = await res.json();
+  return { name: file.name, url: data.secure_url, type: file.type, uploadedAt: new Date().toISOString() };
+}
+
+async function uploadAllAsFiles() {
+  const uploaded = [];
+  for (const file of asSelectedFiles) {
+    const result = await uploadFileToCloudinary(file);
+    uploaded.push(result);
+  }
+  return uploaded;
+}
+
+function asHandleDrop(event) {
+  event.preventDefault();
+  event.currentTarget.style.borderColor = '';
+  event.currentTarget.style.background = '';
+  asHandleFiles(event.dataTransfer.files);
+}
+
+function asHandleFiles(fileList) {
+  asSelectedFiles = asSelectedFiles.concat(Array.from(fileList));
+  renderAsFileList();
+}
+
+function asRemoveFile(idx) {
+  asSelectedFiles.splice(idx, 1);
+  renderAsFileList();
+}
+
+function renderAsFileList() {
+  const wrap = document.getElementById('as-file-list');
+  const itemsEl = document.getElementById('as-file-items');
+  if (!wrap || !itemsEl) return;
+  if (!asSelectedFiles.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  itemsEl.innerHTML = asSelectedFiles.map((f, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--surface-inset);border-radius:var(--r-sm);margin-bottom:5px;font-size:12px">
+      <span>${escapeHtml(f.name)} <span style="color:var(--text-muted)">(${Math.round(f.size/1024)} KB)</span></span>
+      <button onclick="asRemoveFile(${i})" style="background:none;border:none;color:var(--crimson-500);cursor:pointer;font-size:14px">✕</button>
+    </div>`).join('');
+}
+
+function openAddStudent() {
+  asSelectedFiles = [];
+  renderAsFileList();
+  document.getElementById('as-error').style.display = 'none';
+  document.getElementById('as-success').style.display = 'none';
+  document.getElementById('add-student-overlay').style.display = 'block';
+}
+
+function closeAddStudent() {
+  document.getElementById('add-student-overlay').style.display = 'none';
+  ['as-name','as-id','as-dob','as-nationality','as-mobile','as-email',
+   'as-level','as-course','as-university','as-agent','as-submitted-by','as-notes']
+   .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  asSelectedFiles = [];
+  renderAsFileList();
+}
+
+/* ═══════════════════════════════════════════════════════
    1. PIPELINE STAGES — Save drawer
 ═══════════════════════════════════════════════════════ */
 async function saveStages() {
@@ -361,6 +441,7 @@ function today() {
 }
 
 console.log('[firebase-updates.js] loaded ✅');
+
 // Add this to the bottom of firebase-updates.js
 window.loadStudentsFromFirebase = async function() {
   if (typeof loading === 'function') loading('Fetching students from Firebase…');
@@ -391,6 +472,7 @@ window.loadStudentsFromFirebase = async function() {
 
 // Override the default loadStudents to use Firebase
 window.loadStudents = window.loadStudentsFromFirebase;
+
 // Override CAS Shield read to use Firebase
 window.loadCAS = async function() {
   if (typeof loading === 'function') loading('Fetching CAS Shield…');
