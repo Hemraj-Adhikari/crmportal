@@ -877,5 +877,26 @@
   }
 })();
 </script>
+  <!-- Load university data from external JSON file -->
+<script>
+(async function() {
+  try {
+    const res = await fetch('universities.json');
+    if (!res.ok) throw new Error("HTTP Status " + res.status);
+    const data = await res.json();
+    
+    const el = document.createElement('script');
+    el.id = 'uni-rawdata';
+    el.type = 'application/json';
+    el.textContent = JSON.stringify(data);
+    document.head.appendChild(el);
+    
+    // Fire event so uni module knows data is ready
+    document.dispatchEvent(new Event('uni-data-ready'));
+  } catch(e) { 
+    console.warn('Could not load universities.json:', e); 
+  }
+})();
+</script>
 </body>
 </html>
