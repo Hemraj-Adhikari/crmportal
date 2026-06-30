@@ -14,28 +14,142 @@
    bhayeko xa bhane, tyo file bata HATAUNU PARXA (delete garnu),
    nabhae duplicate function le purano (unscoped) version le
    override garera RBAC kaam nagarna sakxa.
+
+   THIS REVISION ADDS:
+     - toast() + today() real implementations
+     - Login: doLogin / togglePwd / signOut / checkAccess /
+       guardView / bootSession are NOT redefined here — they
+       live in firebase-auth.js (real Firebase Auth + 'users'
+       collection RBAC) and that file loads first. We only
+       wrap bootSession() to bolt on our own post-login setup
+       (partners grid, universities, chat listener).
+     - Channel Partners: full grid + Add Partner modal-ish flow
+       (collection 'channelPartners', fields: name, type, email,
+       phone, studentsCount)
+     - Notify drawer (Send Notification) — uses EmailJS
+     - Email page (Direct Email) — uses EmailJS
+     - Mock Pre-CAS / Feedback builder (drawer + full page)
+     - CAS Shield table + update drawer
+     - Internal Chat — collection 'chatMessages' with fields
+       {group, senderName, senderRole, text, createdAt}
+     - Reports page
+   EmailJS: replace EMAILJS_SERVICE_ID / EMAILJS_TEMPLATE_ID /
+   EMAILJS_PUBLIC_KEY below with your real EmailJS values.
+   Until then, sends will fail gracefully with a toast.
 ═══════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════
+   CONFIG — EmailJS
+═══════════════════════════════════════════════════════ */
+const EMAILJS_PUBLIC_KEY  = 'YOUR_EMAILJS_PUBLIC_KEY';
+const EMAILJS_SERVICE_ID  = 'YOUR_EMAILJS_SERVICE_ID';
+const EMAILJS_TEMPLATE_ID = 'YOUR_EMAILJS_TEMPLATE_ID';
+
+(function initEmailJS() {
+  try {
+    if (window.emailjs && EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY.indexOf('YOUR_') !== 0) {
+      emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+    }
+  } catch (e) { console.warn('[EmailJS] init failed', e); }
+})();
+
+async function sendViaEmailJS({ to_email, to_name, subject, message }) {
+  if (!window.emailjs) throw new Error('EmailJS SDK not loaded');
+  if (EMAILJS_PUBLIC_KEY.indexOf('YOUR_') === 0) {
+    throw new Error('EmailJS not configured — set EMAILJS_SERVICE_ID / TEMPLATE_ID / PUBLIC_KEY in script-additions.js');
+  }
+  return emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+    to_email, to_name, subject, message,
+    from_name: (window.staff && window.staff.name) || 'Route2Uni CRM'
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   TOAST / LOADING / MISC HELPERS  (real implementations)
+═══════════════════════════════════════════════════════ */
+function toast(msg, type) {
+  type = type || 'success';
+  const wrap = document.getElementById('toast-wrap');
+  if (!wrap) { console.log('[toast:' + type + ']', msg); return; }
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+  el.innerHTML = `<span>${icon}</span><span>${escapeHtml(msg)}</span>`;
+  wrap.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity .2s';
+    el.style.opacity = '0';
+    setTimeout(() => el.remove(), 220);
+  }, 3200);
+}
+window.toast = toast;
+
+function showLoading(msg) {
+  const el = document.getElementById('global-loading');
+  const m = document.getElementById('loading-msg');
+  if (m) m.textContent = msg || 'Processing…';
+  if (el) el.classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('global-loading')?.classList.remove('show');
+}
+
+function today() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
+function nowStr() {
+  return new Date().toLocaleString();
+}
+
+/* ═══════════════════════════════════════════════════════
+   LOGIN
+   doLogin / togglePwd / signOut / checkAccess / guardView /
+   bootSession all live in firebase-auth.js (real Firebase
+   Auth + 'users' collection RBAC) and that file loads BEFORE
+   this one — so they are intentionally NOT redefined here to
+   avoid silently overriding the real implementations.
+
+   To hook our own post-login setup (loading partners,
+   universities, and the chat listener) without touching
+   firebase-auth.js, we wrap its bootSession() below.
+═══════════════════════════════════════════════════════ */
+(function wrapBootSession() {
+  const tryWrap = () => {
+    if (typeof window.bootSession !== 'function' || window.__bootSessionWrapped) return;
+    const original = window.bootSession;
+    window.bootSession = function (...args) {
+      const result = original.apply(this, args);
+      // original already calls loadStudentsFromFirebase() itself —
+      // we only add the extra views it doesn't know about.
+      renderDashboardPartners();
+      loadUniversitiesData();
+      if (typeof initChatListener === 'function') initChatListener(currentChatGroup || 'global');
+      return result;
+    };
+    window.__bootSessionWrapped = true;
+  };
+  tryWrap();
+  document.addEventListener('DOMContentLoaded', tryWrap);
+})();
 
 /* ═══════════════════════════════════════════════════════
    NAVIGATION / VIEW SWITCHING  (RBAC GUARDED)
 ═══════════════════════════════════════════════════════ */
 let currentView = 'students';
 
-// Kun view lai kun role(s) le matra herna milxa.
-// List bhitra nabhayeko view chai sabai logged-in role lai khula huncha.
 const VIEW_PERMISSIONS = {
-  upload       : ['Super Admin', 'Admin'],                                   // Import CSV
+  upload       : ['Super Admin', 'Admin'],
   reports      : ['Super Admin', 'Admin', 'Document Officer'],
-  partners     : ['Super Admin', 'Admin', 'Document Officer'],               // Channel partner ko master list
+  partners     : ['Super Admin', 'Admin', 'Document Officer'],
   casshield    : ['Super Admin', 'Admin', 'Document Officer'],
   feedback     : ['Super Admin', 'Admin', 'Document Officer'],
   email        : ['Super Admin', 'Admin', 'Document Officer', 'Application User'],
   whatsapp     : ['Super Admin', 'Admin', 'Document Officer', 'Application User']
-  // students, universities, followup -> sabai role lai khula (list ma chaina)
 };
 
 function switchView(viewName, linkEl) {
-  // RBAC check — permission nabhae view change nai nagarne
   if (VIEW_PERMISSIONS[viewName] && !guardView(viewName, VIEW_PERMISSIONS[viewName])) {
     return;
   }
@@ -59,13 +173,12 @@ function switchView(viewName, linkEl) {
     email: ['Direct Email', 'Send messages to students, agents, or staff'],
     reports: ['Reports', 'Pipeline breakdowns and conversion insights'],
     upload: ['Import CSV', 'Upload and sync student records'],
-    whatsapp: ['WhatsApp', 'Send WhatsApp messages']
+    whatsapp: ['WhatsApp', 'Send WhatsApp messages'],
+    chat: ['Internal Chat', 'Team-wide messaging, real-time']
   };
   const t = titles[viewName] || [viewName, ''];
-  const titleEl = document.getElementById('page-title');
-  const subEl = document.getElementById('page-subtitle');
-  if (titleEl) titleEl.textContent = t[0];
-  if (subEl) subEl.textContent = t[1];
+  setText('page-title', t[0]);
+  setText('page-subtitle', t[1]);
 
   if (viewName === 'students') {
     filterTableStudents();
@@ -73,6 +186,12 @@ function switchView(viewName, linkEl) {
     updateFunnel();
     renderDashboardPartners();
   }
+  if (viewName === 'partners') renderPartnersGrid();
+  if (viewName === 'followup') renderFollowUp();
+  if (viewName === 'casshield') loadCASShield();
+  if (viewName === 'feedback') initFeedbackPage();
+  if (viewName === 'reports') renderReports();
+  if (viewName === 'chat') initChatListener(currentChatGroup);
 
   if (viewName === 'universities') {
     if (!UNI_DATA_LOADED) {
@@ -121,15 +240,11 @@ function cmdNav(view) {
 function cmdSearch(val) { /* optional: implement later */ }
 document.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openCmd(); }
-  if (e.key === 'Escape') closeCmd();
+  if (e.key === 'Escape') { closeCmd(); closeAllDrawers(); }
 });
 
 /* ═══════════════════════════════════════════════════════
    STUDENTS — LOAD FROM FIREBASE  (RBAC SCOPED)
-   Role anusar Firestore query nai farak huncha:
-     - Channel Partner -> .where('partnerId','==', window.staff.partnerId)
-     - Document Officer -> example stage filter (comment garyera rakheko)
-     - Baaki sabai (Super Admin / Admin / Application User) -> full list
 ═══════════════════════════════════════════════════════ */
 async function loadStudentsFromFirebase() {
   try {
@@ -142,7 +257,7 @@ async function loadStudentsFromFirebase() {
       if (!partnerId) {
         console.error('[loadStudentsFromFirebase] Channel Partner ko partnerId set xaina — unscoped data load garna mana garyo.');
         window.students = [];
-        if (typeof toast === 'function') toast('Tapaiko account ma Partner ID xaina. Admin lai sampark garnu.', 'error');
+        toast('Tapaiko account ma Partner ID xaina. Admin lai sampark garnu.', 'error');
         filterTableStudents();
         updateStats();
         updateFunnel();
@@ -150,12 +265,6 @@ async function loadStudentsFromFirebase() {
       }
       query = query.where('partnerId', '==', partnerId);
     }
-
-    // Document Officer le example ma CAS/visa stage ma matra herna sakxa.
-    // Chahiyena bhane yo block hataun.
-    // if (role === 'Document Officer') {
-    //   query = query.where('CAS STATUS', 'in', ['Pending', 'In Progress', 'Issued']);
-    // }
 
     const snap = await query.get();
     window.students = snap.docs.map(d => {
@@ -172,7 +281,7 @@ async function loadStudentsFromFirebase() {
     updateFunnel();
   } catch (e) {
     console.error('[loadStudentsFromFirebase] Failed:', e);
-    if (typeof toast === 'function') toast('Could not load student data', 'error');
+    toast('Could not load student data', 'error');
     window.students = [];
     filterTableStudents();
   }
@@ -187,7 +296,7 @@ let selectedStudentIds = new Set();
 function setPillFilterStudents(field, value, btnEl) {
   pillFilterField = field;
   pillFilterValue = value;
-  document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#view-students .seg-btn').forEach(b => b.classList.remove('active'));
   if (btnEl) btnEl.classList.add('active');
   filterTableStudents();
 }
@@ -279,24 +388,57 @@ function updateBulkBar() {
   }
 }
 
-function bulkEmail() {
+function selectedStudentsList() {
+  const list = window.students || [];
+  return list.filter(s => selectedStudentIds.has(s['STUDENT ID'] || s.id));
+}
+
+async function bulkEmail() {
   if (!checkAccess(['Super Admin', 'Admin', 'Document Officer', 'Application User'])) {
-    toast("Tapaisanga bulk email garne permission chaina", 'error');
+    toast('Tapaisanga bulk email garne permission chaina', 'error');
     return;
   }
-  toast('Bulk email — coming soon', 'info');
+  const list = selectedStudentsList();
+  if (!list.length) { toast('No students selected', 'error'); return; }
+  const withEmail = list.filter(s => s['EMAIL']);
+  if (!withEmail.length) { toast('Selected students have no email on file', 'error'); return; }
+
+  showLoading('Sending ' + withEmail.length + ' emails…');
+  let ok = 0, fail = 0;
+  for (const s of withEmail) {
+    try {
+      await sendViaEmailJS({
+        to_email: s['EMAIL'],
+        to_name: s['STUDENT NAME'] || '',
+        subject: 'Update from Route2Uni',
+        message: 'Hi ' + (s['STUDENT NAME'] || '') + ', this is a bulk update from your Route2Uni team.'
+      });
+      ok++;
+    } catch (e) { fail++; }
+  }
+  hideLoading();
+  toast(`Sent ${ok}, failed ${fail}`, fail ? 'error' : 'success');
+  clearStudentSelection();
 }
+
+function bulkWhatsApp() {
+  const list = selectedStudentsList();
+  if (!list.length) { toast('No students selected', 'error'); return; }
+  toast('Bulk WhatsApp — opening WhatsApp Web for ' + list.length + ' students is not yet wired to an API. Use individual WhatsApp links from student detail for now.', 'info');
+}
+
 function bulkStatusUpdate() {
   if (!checkAccess(['Super Admin', 'Admin', 'Document Officer'])) {
-    toast("Tapaisanga status update garne permission chaina", 'error');
+    toast('Tapaisanga status update garne permission chaina', 'error');
     return;
   }
-  toast('Bulk status update — coming soon', 'info');
+  const list = selectedStudentsList();
+  if (!list.length) { toast('No students selected', 'error'); return; }
+  toast('Bulk status update for ' + list.length + ' students — open each record and use "Update pipeline" for now.', 'info');
 }
 
 /* ═══════════════════════════════════════════════════════
    DASHBOARD STATS / FUNNEL / DISTRIBUTION
-   (window.students already RBAC-scoped from loadStudentsFromFirebase)
 ═══════════════════════════════════════════════════════ */
 function updateStats() {
   const list = window.students || [];
@@ -367,8 +509,9 @@ function updateFunnel() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   CHANNEL PARTNERS — dashboard mini grid (RBAC-aware)
-   Channel Partner role le aaphno partner card matra dekhne.
+   CHANNEL PARTNERS
+   Collection: 'channelPartners'
+   Fields: { name, type, email, phone, studentsCount }
 ═══════════════════════════════════════════════════════ */
 async function renderDashboardPartners() {
   const grid = document.getElementById('dashboard-cp-grid');
@@ -386,13 +529,87 @@ async function renderDashboardPartners() {
       grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">No channel partners yet</div>';
       return;
     }
-    grid.innerHTML = snap.docs.map(d => {
-      const p = d.data();
-      return `<div class="card" style="padding:12px"><div style="font-weight:600;font-size:13px">${escapeHtml(p.name || d.id)}</div></div>`;
-    }).join('');
+    grid.innerHTML = snap.docs.map(d => partnerCardHTML(d.id, d.data())).join('');
   } catch (e) {
+    console.error('[renderDashboardPartners]', e);
     grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">Could not load partners</div>';
   }
+}
+
+function partnerInitials(name) {
+  return (name || '?').split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+}
+const PARTNER_COLORS = ['#1E3A5F', '#6B3FA0', '#1A5C38', '#7C2D12', '#0C4A6E', '#4C1D95', '#134E4A', '#713F12'];
+function partnerColor(seedStr) {
+  let h = 0;
+  for (let i = 0; i < (seedStr || '').length; i++) h = (h * 31 + seedStr.charCodeAt(i)) >>> 0;
+  return PARTNER_COLORS[h % PARTNER_COLORS.length];
+}
+
+function partnerCardHTML(id, p) {
+  const color = partnerColor(p.name || id);
+  return `<div class="cp-card">
+    <div class="cp-card-head">
+      <div class="cp-avatar" style="background:${color}">${partnerInitials(p.name)}</div>
+      <div>
+        <div class="cp-name">${escapeHtml(p.name || id)}</div>
+        <div class="cp-type">${escapeHtml(p.type || 'Agent')}</div>
+      </div>
+    </div>
+    <div class="cp-stats">
+      <div><div class="cp-stat-val">${p.studentsCount ?? 0}</div><div class="cp-stat-label">Students</div></div>
+      <div><div class="cp-stat-val" style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(p.email || '—')}</div><div class="cp-stat-label">Email</div></div>
+      <div><div class="cp-stat-val" style="font-size:12px">${escapeHtml(p.phone || '—')}</div><div class="cp-stat-label">Phone</div></div>
+    </div>
+  </div>`;
+}
+
+async function renderPartnersGrid() {
+  const grid = document.getElementById('full-cp-grid');
+  if (!grid) return;
+  grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">Loading…</div>';
+  try {
+    let query = db.collection('channelPartners');
+    if (window.staff?.role === 'Channel Partner' && window.staff?.partnerId) {
+      query = query.where(firebase.firestore.FieldPath.documentId(), '==', window.staff.partnerId);
+    }
+    const snap = await query.get();
+    if (snap.empty) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">No channel partners yet — click "Add partner" to create one.</div>';
+      return;
+    }
+    grid.innerHTML = snap.docs.map(d => partnerCardHTML(d.id, d.data())).join('');
+  } catch (e) {
+    console.error('[renderPartnersGrid]', e);
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">Could not load partners</div>';
+  }
+}
+
+function openAddPartner() {
+  if (!checkAccess(['Super Admin', 'Admin', 'Document Officer'])) {
+    toast('Tapaisanga partner add garne permission chaina', 'error');
+    return;
+  }
+  const name = prompt('Partner / agency name:');
+  if (!name) return;
+  const type = prompt('Type (e.g. Sub-agent, Direct, Education Consultancy):', 'Sub-agent') || 'Sub-agent';
+  const email = prompt('Contact email (optional):', '') || '';
+  const phone = prompt('Contact phone (optional):', '') || '';
+
+  showLoading('Adding partner…');
+  db.collection('channelPartners').add({
+    name, type, email, phone, studentsCount: 0,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    hideLoading();
+    toast('Partner added', 'success');
+    renderPartnersGrid();
+    renderDashboardPartners();
+  }).catch(e => {
+    hideLoading();
+    console.error('[openAddPartner]', e);
+    toast('Could not add partner', 'error');
+  });
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -400,7 +617,7 @@ async function renderDashboardPartners() {
 ═══════════════════════════════════════════════════════ */
 function exportStudentsCSV() {
   if (!checkAccess(['Super Admin', 'Admin', 'Document Officer', 'Application User'])) {
-    toast("Tapaisanga export garne permission chaina", 'error');
+    toast('Tapaisanga export garne permission chaina', 'error');
     return;
   }
   const list = window.students || [];
@@ -444,21 +661,694 @@ function openDetail(studentId) {
   setText('dp-email-ro', s['EMAIL'] || '—');
 
   const avatarEl = document.getElementById('detail-avatar');
-  if (avatarEl) {
-    const ini = (s['STUDENT NAME'] || '?').split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
-    avatarEl.textContent = ini;
-  }
+  if (avatarEl) avatarEl.textContent = partnerInitials(s['STUDENT NAME']);
 
   const docsSection = document.getElementById('dp-docs-section');
   if (docsSection) {
     const docs = s.documents || [];
-    if (!docs.length) {
-      docsSection.innerHTML = 'No documents uploaded yet.';
-    } else {
-      docsSection.innerHTML = docs.map(d =>
-        `<a href="${d.url}" target="_blank" style="display:block;margin-bottom:6px;color:var(--navy-600)">${escapeHtml(d.name)}</a>`
-      ).join('');
-    }
+    docsSection.innerHTML = !docs.length ? 'No documents uploaded yet.' :
+      docs.map(d => `<a href="${d.url}" target="_blank" style="display:block;margin-bottom:6px;color:var(--navy-600)">${escapeHtml(d.name)}</a>`).join('');
+  }
+
+  setText('dp-pipeline-score', stageDoneCount(s) + '/' + STAGE_DEFS.length);
+  const pipelineList = document.getElementById('dp-pipeline-list');
+  if (pipelineList) {
+    pipelineList.innerHTML = stageList(s).map((st, i) => `
+      <div class="stage-row${!st.done && stageCurrent(s) < i ? ' locked-row' : ''}">
+        <div class="stage-left">
+          <span class="stage-num">${i + 1}</span>
+          <span class="stage-check${st.done ? ' done' : ''}">${st.done ? '✓' : ''}</span>
+          <span class="stage-name">${escapeHtml(st.label)}</span>
+        </div>
+      </div>`).join('');
+  }
+  const summary = document.getElementById('dp-stage-summary');
+  if (summary) {
+    summary.innerHTML = STAGE_DEFS.map(sd => {
+      const val = s[sd.key] || '—';
+      return `<div class="detail-field-row" style="grid-template-columns:1fr"><span class="detail-field-label">${escapeHtml(sd.label)}</span><span class="detail-field-val">${escapeHtml(val)}</span></div>`;
+    }).join('');
+  }
+}
+
+function openNotifyFromDetail() {
+  if (!detailStudentId) return;
+  const s = (window.students || []).find(st => (st['STUDENT ID'] || st.id) === detailStudentId);
+  if (!s) return;
+  notifyTargetStudent = s;
+  setText('drw-notify-sub', (s['STUDENT NAME'] || '—') + ' · ' + detailStudentId);
+  document.getElementById('notify-role').value = 'Student';
+  notifyPreviewRecip();
+  openDrawerEl('drw-notify');
+}
+
+function openFeedbackFromDetail() {
+  if (!detailStudentId) return;
+  const s = (window.students || []).find(st => (st['STUDENT ID'] || st.id) === detailStudentId);
+  if (!s) return;
+  setText('drw-fb-sub', (s['STUDENT NAME'] || '—') + ' · ' + detailStudentId);
+  document.getElementById('drw-fb-date').value = today();
+  drwFeedbackTarget = s;
+  openDrawerEl('drw-feedback');
+}
+
+/* ═══════════════════════════════════════════════════════
+   NOTIFY DRAWER (uses EmailJS)
+═══════════════════════════════════════════════════════ */
+let notifyTargetStudent = null;
+
+function notifyPreviewRecip() {
+  const role = document.getElementById('notify-role')?.value;
+  const txt = document.getElementById('notify-recip-text');
+  if (!txt) return;
+  if (!notifyTargetStudent) { txt.textContent = 'No student selected'; return; }
+  if (role === 'Student') txt.textContent = 'To: ' + (notifyTargetStudent['STUDENT NAME'] || '') + ' (' + (notifyTargetStudent['EMAIL'] || 'no email on file') + ')';
+  else if (role === 'Agent') txt.textContent = 'To channel partner: ' + (notifyTargetStudent['AGENT'] || 'unknown agent');
+  else txt.textContent = 'To staff team';
+}
+
+async function sendNotification() {
+  const role = document.getElementById('notify-role')?.value;
+  const subject = document.getElementById('notify-subject')?.value || '(no subject)';
+  const message = document.getElementById('notify-message')?.value || '';
+  if (!message.trim()) { toast('Write a message first', 'error'); return; }
+  if (!notifyTargetStudent) { toast('No student selected', 'error'); return; }
+
+  const toEmail = role === 'Student' ? notifyTargetStudent['EMAIL'] : null;
+  if (!toEmail) { toast('No email available for this recipient — message logged only.', 'info'); closeDrawer('drw-notify'); return; }
+
+  const btn = document.getElementById('notify-send-btn');
+  if (btn) btn.disabled = true;
+  try {
+    await sendViaEmailJS({ to_email: toEmail, to_name: notifyTargetStudent['STUDENT NAME'] || '', subject, message });
+    toast('Notification sent', 'success');
+    closeDrawer('drw-notify');
+  } catch (e) {
+    console.error('[sendNotification]', e);
+    toast(e.message || 'Could not send notification', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   EMAIL PAGE (Direct Email)
+═══════════════════════════════════════════════════════ */
+let emailSelectedStudent = null;
+let emailSearchDebounce = null;
+let emailHistory = [];
+
+function emailSearch(value) {
+  clearTimeout(emailSearchDebounce);
+  const box = document.getElementById('email-lookup');
+  if (!box) return;
+  const q = (value || '').trim();
+  if (!q) { box.innerHTML = ''; box.classList.remove('open'); return; }
+  emailSearchDebounce = setTimeout(() => emailSearchFirestore(q), 250);
+}
+
+async function emailSearchFirestore(q) {
+  const box = document.getElementById('email-lookup');
+  if (!box) return;
+  box.innerHTML = '<div class="lookup-item" style="opacity:.6">Searching…</div>';
+  box.classList.add('open');
+  try {
+    const snap = await db.collection('students').orderBy('STUDENT NAME').startAt(q).endAt(q + '\uf8ff').limit(8).get();
+    if (snap.empty) { box.innerHTML = '<div class="lookup-item" style="opacity:.6">No matches</div>'; return; }
+    box.innerHTML = '';
+    snap.docs.forEach(d => {
+      const s = d.data();
+      const id = s['STUDENT ID'] || d.id;
+      const item = document.createElement('div');
+      item.className = 'lookup-item';
+      item.innerHTML = `<div class="lookup-item-name">${escapeHtml(s['STUDENT NAME'] || '—')}</div><div class="lookup-item-sub">${escapeHtml(id)} · ${escapeHtml(s['EMAIL'] || 'no email')}</div>`;
+      item.addEventListener('click', () => emailSelect({ ...s, id }));
+      box.appendChild(item);
+    });
+  } catch (e) {
+    console.error('[emailSearchFirestore]', e);
+    box.innerHTML = '<div class="lookup-item" style="opacity:.6">Search failed</div>';
+  }
+}
+
+function emailSelect(s) {
+  emailSelectedStudent = s;
+  document.getElementById('email-lookup').classList.remove('open');
+  document.getElementById('email-search').value = s['STUDENT NAME'] || '';
+  document.getElementById('email-sel').classList.add('show');
+  setText('email-sel-name', s['STUDENT NAME'] || '—');
+  setText('email-sel-sub', (s['STUDENT ID'] || s.id) + ' · ' + (s['EMAIL'] || 'no email'));
+}
+
+function emailClear() {
+  emailSelectedStudent = null;
+  document.getElementById('email-sel').classList.remove('show');
+  document.getElementById('email-search').value = '';
+}
+
+function emailClearForm() {
+  emailClear();
+  ['email-subject', 'email-message'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+}
+
+async function sendEmail() {
+  const role = document.getElementById('email-role')?.value;
+  const subject = document.getElementById('email-subject')?.value || '';
+  const message = document.getElementById('email-message')?.value || '';
+  if (!message.trim()) { toast('Write a message first', 'error'); return; }
+  if (!emailSelectedStudent) { toast('Search and select a recipient first', 'error'); return; }
+
+  const toEmail = emailSelectedStudent['EMAIL'];
+  if (!toEmail) { toast('Selected student has no email on file', 'error'); return; }
+
+  const lbl = document.getElementById('email-send-lbl');
+  if (lbl) lbl.innerHTML = 'Sending… <span class="spinner-sm"></span>';
+  try {
+    await sendViaEmailJS({ to_email: toEmail, to_name: emailSelectedStudent['STUDENT NAME'] || '', subject, message });
+    emailHistory.unshift({ to: emailSelectedStudent['STUDENT NAME'], email: toEmail, subject, time: nowStr() });
+    renderEmailHistory();
+    toast('Email sent to ' + emailSelectedStudent['STUDENT NAME'], 'success');
+    emailClearForm();
+  } catch (e) {
+    console.error('[sendEmail]', e);
+    toast(e.message || 'Could not send email', 'error');
+  } finally {
+    if (lbl) lbl.textContent = 'Send';
+  }
+}
+
+function renderEmailHistory() {
+  const wrap = document.getElementById('email-history-wrap');
+  if (!wrap) return;
+  if (!emailHistory.length) { wrap.innerHTML = '<div class="empty-state">No messages sent yet</div>'; return; }
+  wrap.innerHTML = emailHistory.map(h => `
+    <div class="email-history-item">
+      <div class="email-avatar" style="background:${partnerColor(h.to)}">${partnerInitials(h.to)}</div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:12px">${escapeHtml(h.to)} <span style="color:var(--text-muted);font-weight:400">· ${escapeHtml(h.email)}</span></div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">${escapeHtml(h.subject || '(no subject)')}</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${escapeHtml(h.time)}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════════════════════════════════
+   MOCK PRE-CAS / FEEDBACK BUILDER
+═══════════════════════════════════════════════════════ */
+const FB_DEFAULT_QUESTIONS = [
+  'Why have you chosen this course?',
+  'Why this university and this country?',
+  'How will you finance your studies?',
+  'What are your career plans after graduation?',
+  'Why not study this course in your home country?',
+  'Tell us about your academic background.'
+];
+let fbQA = [];
+let fbPerf = 'Excellent';
+let drwFeedbackTarget = null;
+
+function initFeedbackPage() {
+  document.getElementById('fb-date').value = today();
+  if (!fbQA.length) fbQA = FB_DEFAULT_QUESTIONS.map(q => ({ q, good: null }));
+  renderFbQARows();
+  fbPreview();
+}
+
+function renderFbQARows() {
+  const wrap = document.getElementById('fb-qa-rows');
+  if (!wrap) return;
+  wrap.innerHTML = fbQA.map((row, i) => `
+    <div class="qa-row">
+      <div class="qa-num">${i + 1}</div>
+      <div class="qa-q">${escapeHtml(row.q)}</div>
+      <div class="qa-toggles">
+        <button class="qa-toggle${row.good === true ? ' sel-good' : ''}" onclick="fbSetQA(${i}, true)">Good</button>
+        <button class="qa-toggle${row.good === false ? ' sel-bad' : ''}" onclick="fbSetQA(${i}, false)">Weak</button>
+      </div>
+    </div>`).join('') + `
+    <div class="qa-summary">
+      <span>Good: ${fbQA.filter(r => r.good === true).length}</span>
+      <span>Weak: ${fbQA.filter(r => r.good === false).length}</span>
+      <span>Unanswered: ${fbQA.filter(r => r.good === null).length}</span>
+    </div>`;
+}
+
+function fbSetQA(i, val) {
+  fbQA[i].good = fbQA[i].good === val ? null : val;
+  renderFbQARows();
+  fbPreview();
+}
+
+function pickPerf(el) {
+  document.querySelectorAll('#fb-grid .perf-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  fbPerf = el.dataset.val;
+  fbPreview();
+}
+
+function toggleFbManual() {
+  const wrap = document.getElementById('fb-manual');
+  const btn = document.getElementById('fb-manual-btn');
+  const show = wrap.style.display === 'none';
+  wrap.style.display = show ? 'block' : 'none';
+  btn.textContent = show ? '− Hide manual entry' : '+ Enter manually';
+}
+
+function fbCurrentStudent() {
+  if (fbSelectedStudent) return { name: fbSelectedStudent['STUDENT NAME'], id: fbSelectedStudent['STUDENT ID'] || fbSelectedStudent.id };
+  const name = document.getElementById('fb-mname')?.value;
+  const id = document.getElementById('fb-mid')?.value;
+  if (name || id) return { name, id };
+  return null;
+}
+
+const PERF_BADGE_CLASS = { Excellent: 'perf-excellent', Good: 'perf-good', Satisfactory: 'perf-satisfactory', 'Needs Improvement': 'perf-needs' };
+
+function fbPreview() {
+  const preview = document.getElementById('fb-preview');
+  if (!preview) return;
+  const student = fbCurrentStudent();
+  if (!student) {
+    preview.innerHTML = `<div style="text-align:center;padding:36px 20px;color:var(--text-muted)"><div style="font-size:12px;font-weight:500">Select a student to preview</div></div>`;
+    return;
+  }
+  const date = document.getElementById('fb-date')?.value || today();
+  const stype = document.getElementById('fb-stype')?.value || '';
+  const uni = document.getElementById('fb-university')?.value || '';
+  const mockno = document.getElementById('fb-mockno')?.value || '1';
+  const text = document.getElementById('fb-text')?.value || '';
+  const recs = document.getElementById('fb-recs')?.value || '';
+
+  preview.innerHTML = `
+    <div class="doc-header">
+      <div class="doc-eyebrow">Route2Uni · ${escapeHtml(stype)}</div>
+      <div class="doc-title">${escapeHtml(student.name || '—')}</div>
+      <div class="doc-meta-grid">
+        <div class="doc-meta-item"><div class="doc-meta-label">Student ID</div><div class="doc-meta-val">${escapeHtml(student.id || '—')}</div></div>
+        <div class="doc-meta-item"><div class="doc-meta-label">Date</div><div class="doc-meta-val">${escapeHtml(date)}</div></div>
+        <div class="doc-meta-item"><div class="doc-meta-label">University</div><div class="doc-meta-val">${escapeHtml(uni || '—')}</div></div>
+        <div class="doc-meta-item"><div class="doc-meta-label">Mock #</div><div class="doc-meta-val">${escapeHtml(mockno)}</div></div>
+        <div class="doc-meta-item"><div class="doc-meta-label">Performance</div><div class="doc-meta-val"><span class="perf-badge ${PERF_BADGE_CLASS[fbPerf] || ''}">${escapeHtml(fbPerf)}</span></div></div>
+      </div>
+    </div>
+    <div class="doc-section">
+      <div class="doc-section-eyebrow">Questionnaire</div>
+      <table class="doc-qa-table"><thead><tr><th>#</th><th>Question</th><th>Result</th></tr></thead>
+      <tbody>${fbQA.map((r, i) => `<tr><td>${i + 1}</td><td>${escapeHtml(r.q)}</td><td class="${r.good === true ? 'qa-cell-good' : r.good === false ? 'qa-cell-bad' : ''}">${r.good === true ? 'Good' : r.good === false ? 'Weak' : '—'}</td></tr>`).join('')}</tbody></table>
+    </div>
+    <div class="doc-section"><div class="doc-section-eyebrow">Feedback</div><div class="doc-section-text">${escapeHtml(text || '—')}</div></div>
+    <div class="doc-section"><div class="doc-section-eyebrow">Recommendations</div><div class="doc-section-text">${escapeHtml(recs || '—')}</div></div>
+    <div class="doc-footer"><span>Generated by ${escapeHtml((window.staff && window.staff.name) || 'Staff')}</span><span>${escapeHtml(nowStr())}</span></div>`;
+}
+
+function fbBuildDoc() {
+  const student = fbCurrentStudent();
+  return {
+    studentName: student?.name || '',
+    studentId: student?.id || '',
+    date: document.getElementById('fb-date')?.value || today(),
+    type: document.getElementById('fb-stype')?.value || '',
+    university: document.getElementById('fb-university')?.value || '',
+    mockNo: document.getElementById('fb-mockno')?.value || '1',
+    qa: fbQA,
+    performance: fbPerf,
+    feedback: document.getElementById('fb-text')?.value || '',
+    recommendations: document.getElementById('fb-recs')?.value || '',
+    createdBy: (window.staff && window.staff.name) || 'Staff',
+    createdAt: nowStr()
+  };
+}
+
+function fbDownloadPDF() {
+  const student = fbCurrentStudent();
+  if (!student) { toast('Select a student first', 'error'); return; }
+  if (!window.jspdf) { toast('PDF library not loaded', 'error'); return; }
+  const doc = fbBuildDoc();
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+  pdf.setFontSize(14); pdf.text('Route2Uni — ' + doc.type, 14, 16);
+  pdf.setFontSize(10);
+  pdf.text(`Student: ${doc.studentName} (${doc.studentId})`, 14, 24);
+  pdf.text(`Date: ${doc.date}   University: ${doc.university}   Mock #: ${doc.mockNo}`, 14, 30);
+  pdf.text(`Performance: ${doc.performance}`, 14, 36);
+
+  if (pdf.autoTable) {
+    pdf.autoTable({
+      startY: 42,
+      head: [['#', 'Question', 'Result']],
+      body: doc.qa.map((r, i) => [i + 1, r.q, r.good === true ? 'Good' : r.good === false ? 'Weak' : '—'])
+    });
+  }
+  const afterTableY = pdf.lastAutoTable ? pdf.lastAutoTable.finalY + 10 : 50;
+  pdf.text('Feedback:', 14, afterTableY);
+  pdf.text(pdf.splitTextToSize(doc.feedback || '—', 180), 14, afterTableY + 6);
+  pdf.text('Recommendations:', 14, afterTableY + 30);
+  pdf.text(pdf.splitTextToSize(doc.recommendations || '—', 180), 14, afterTableY + 36);
+
+  pdf.save(`${doc.studentId || 'feedback'}_${doc.date}.pdf`);
+}
+
+async function fbSave() {
+  const student = fbCurrentStudent();
+  if (!student) { toast('Select a student first', 'error'); return; }
+  const doc = fbBuildDoc();
+  showLoading('Saving feedback…');
+  try {
+    const ref = await db.collection('mockFeedback').add(doc);
+    hideLoading();
+    document.getElementById('fb-success')?.classList.add('show');
+    setText('fb-success-title', 'Feedback saved for ' + doc.studentName);
+    const link = document.getElementById('fb-doc-link');
+    if (link) link.href = '#feedback/' + ref.id;
+    toast('Feedback saved', 'success');
+  } catch (e) {
+    hideLoading();
+    console.error('[fbSave]', e);
+    toast('Could not save feedback', 'error');
+  }
+}
+
+function resetFeedback() {
+  document.getElementById('fb-success')?.classList.remove('show');
+  fbClear();
+  fbQA = FB_DEFAULT_QUESTIONS.map(q => ({ q, good: null }));
+  fbPerf = 'Excellent';
+  ['fb-text', 'fb-recs', 'fb-university'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('fb-date').value = today();
+  renderFbQARows();
+  fbPreview();
+}
+
+async function submitFeedbackDrawer() {
+  if (!drwFeedbackTarget) { toast('No student selected', 'error'); return; }
+  const doc = {
+    studentName: drwFeedbackTarget['STUDENT NAME'] || '',
+    studentId: drwFeedbackTarget['STUDENT ID'] || drwFeedbackTarget.id || '',
+    date: document.getElementById('drw-fb-date')?.value || today(),
+    performance: document.getElementById('drw-fb-perf')?.value || 'Good',
+    feedback: document.getElementById('drw-fb-text')?.value || '',
+    recommendations: document.getElementById('drw-fb-recs')?.value || '',
+    createdBy: (window.staff && window.staff.name) || 'Staff',
+    createdAt: nowStr()
+  };
+  showLoading('Saving feedback…');
+  try {
+    await db.collection('mockFeedback').add(doc);
+    hideLoading();
+    toast('Feedback saved for ' + doc.studentName, 'success');
+    closeDrawer('drw-feedback');
+  } catch (e) {
+    hideLoading();
+    console.error('[submitFeedbackDrawer]', e);
+    toast('Could not save feedback', 'error');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   CAS SHIELD
+═══════════════════════════════════════════════════════ */
+let casRows = [];
+
+async function loadCASShield() {
+  const tbody = document.getElementById('cas-table-body');
+  if (tbody) tbody.innerHTML = '<tr><td colspan="13" class="empty-state">Loading…</td></tr>';
+  try {
+    const list = window.students && window.students.length ? window.students : (await (async () => {
+      const snap = await db.collection('students').get();
+      return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+    })());
+    casRows = list;
+    renderCASTable(casRows);
+  } catch (e) {
+    console.error('[loadCASShield]', e);
+    if (tbody) tbody.innerHTML = '<tr><td colspan="13" class="empty-state">Could not load CAS Shield data</td></tr>';
+  }
+}
+
+function casYN(val) {
+  const v = (val || '').toLowerCase();
+  if (v === 'yes') return '<span class="cas-yn-yes">✓ Yes</span>';
+  if (v === 'no') return '<span class="cas-yn-no">— No</span>';
+  return '<span class="cas-yn-warn">⚠ —</span>';
+}
+
+function renderCASTable(list) {
+  const tbody = document.getElementById('cas-table-body');
+  if (!tbody) return;
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="13" class="empty-state">No records found</td></tr>'; return; }
+  tbody.innerHTML = list.map(s => {
+    const id = s['STUDENT ID'] || s.id;
+    return `<tr>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px">${escapeHtml(id)}</td>
+      <td><a onclick="openDetail('${id}')" style="cursor:pointer;font-weight:600">${escapeHtml(s['STUDENT NAME'] || '—')}</a></td>
+      <td>${escapeHtml(s['AGENT'] || '—')}</td>
+      <td>${escapeHtml(s['NATIONALITY'] || '—')}</td>
+      <td>${escapeHtml(s['COURSE'] || '—')}</td>
+      <td>${casYN(s['STUDY GAP'])}</td>
+      <td>${casYN(s['SAME LEVEL'])}</td>
+      <td>${casYN(s['VISA REFUSAL'])}</td>
+      <td>${casYN(s['READY FOR PCI'])}</td>
+      <td>${casYN(s['INFO CHECK'])}</td>
+      <td>${casYN(s['PRE-CAS QUESTIONNAIRE'])}</td>
+      <td>${escapeHtml(s['PCI INVITE DATE'] || '—')}</td>
+      <td style="text-align:right"><button class="btn btn-ghost btn-sm" onclick="openCASUpdate('${id}')">Update</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterCAS() {
+  const q = (document.getElementById('cas-search')?.value || '').toLowerCase();
+  const pci = document.getElementById('cas-filter-pci')?.value || '';
+  const visa = document.getElementById('cas-filter-visa')?.value || '';
+  let list = casRows;
+  if (q) list = list.filter(s => [s['STUDENT ID'] || s.id, s['STUDENT NAME'], s['AGENT']].join(' ').toLowerCase().includes(q));
+  if (pci) list = list.filter(s => (s['READY FOR PCI'] || '').toLowerCase() === pci.toLowerCase());
+  if (visa) list = list.filter(s => (s['VISA REFUSAL'] || '').toLowerCase() === visa.toLowerCase());
+  renderCASTable(list);
+}
+
+let casUpdateTarget = null;
+function openCASUpdate(id) {
+  const s = casRows.find(st => (st['STUDENT ID'] || st.id) === id);
+  if (!s) return;
+  casUpdateTarget = s;
+  setText('drw-casupd-sub', (s['STUDENT NAME'] || '—') + ' · ' + id);
+  document.getElementById('cup-pci').value = /yes/i.test(s['READY FOR PCI'] || '') ? 'Yes' : 'No';
+  document.getElementById('cup-visa-r').value = /yes/i.test(s['VISA REFUSAL'] || '') ? 'Yes' : 'No';
+  document.getElementById('cup-info').value = /yes/i.test(s['INFO CHECK'] || '') ? 'Yes' : 'No';
+  document.getElementById('cup-precas').value = /yes/i.test(s['PRE-CAS QUESTIONNAIRE'] || '') ? 'Yes' : 'No';
+  document.getElementById('cup-gap').value = /yes/i.test(s['STUDY GAP'] || '') ? 'Yes' : 'No';
+  document.getElementById('cup-same').value = /yes/i.test(s['SAME LEVEL'] || '') ? 'Yes' : 'No';
+  document.getElementById('cup-invite').value = s['PCI INVITE DATE'] || '';
+  document.getElementById('cup-comment').value = s['CAS TEAM COMMENT'] || '';
+  openDrawerEl('drw-cas-update');
+}
+
+async function submitCASUpdate() {
+  if (!casUpdateTarget) return;
+  const payload = {
+    'READY FOR PCI': document.getElementById('cup-pci').value,
+    'VISA REFUSAL': document.getElementById('cup-visa-r').value,
+    'INFO CHECK': document.getElementById('cup-info').value,
+    'PRE-CAS QUESTIONNAIRE': document.getElementById('cup-precas').value,
+    'STUDY GAP': document.getElementById('cup-gap').value,
+    'SAME LEVEL': document.getElementById('cup-same').value,
+    'PCI INVITE DATE': document.getElementById('cup-invite').value,
+    'CAS TEAM COMMENT': document.getElementById('cup-comment').value
+  };
+  const docId = casUpdateTarget.id || casUpdateTarget['STUDENT ID'];
+  showLoading('Saving…');
+  try {
+    await db.collection('students').doc(docId).update(payload);
+    hideLoading();
+    toast('CAS Shield record updated', 'success');
+    closeDrawer('drw-cas-update');
+    loadStudentsFromFirebase();
+    loadCASShield();
+  } catch (e) {
+    hideLoading();
+    console.error('[submitCASUpdate]', e);
+    toast('Could not save — check Firestore rules', 'error');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   STAGE PIPELINE — SAVE
+═══════════════════════════════════════════════════════ */
+async function saveStages() {
+  if (!activeStudentId) return;
+  const payload = {};
+  Object.values(stageEdits || {}).forEach(e => { if (e && e.key) payload[e.key] = e.val; });
+  if (!Object.keys(payload).length) { toast('No changes to save', 'info'); closeDrawer('drw-stage'); return; }
+
+  const saveTxt = document.getElementById('stage-save-txt');
+  const saveSpin = document.getElementById('stage-save-spin');
+  if (saveTxt) saveTxt.style.display = 'none';
+  if (saveSpin) saveSpin.style.display = 'inline-block';
+
+  try {
+    await db.collection('students').doc(activeStudentId).update(payload);
+    toast('Pipeline updated', 'success');
+    closeDrawer('drw-stage');
+    loadStudentsFromFirebase();
+    if (currentView === 'student-detail' && detailStudentId === activeStudentId) openDetail(activeStudentId);
+  } catch (e) {
+    console.error('[saveStages]', e);
+    toast('Could not save stage changes', 'error');
+  } finally {
+    if (saveTxt) saveTxt.style.display = '';
+    if (saveSpin) saveSpin.style.display = 'none';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   DAILY FOLLOW-UP
+═══════════════════════════════════════════════════════ */
+function renderFollowUp() {
+  const wrap = document.getElementById('followup-content');
+  if (!wrap) return;
+  const list = window.students || [];
+  const groups = {
+    'Pre-screening pending': list.filter(s => !/received|withdrew/i.test(s['PRE-SCREENING CALL STATUS'] || '')),
+    'Offer follow-up': list.filter(s => (s['OFFER STATUS'] || '').toLowerCase() === 'pending'),
+    'CAS in progress': list.filter(s => ['Pending', 'In Progress'].includes(s['CAS STATUS']))
+  };
+  const sections = Object.entries(groups).filter(([, arr]) => arr.length);
+  if (!sections.length) { wrap.innerHTML = '<div class="empty-state">Nothing pending today 🎉</div>'; return; }
+  wrap.innerHTML = sections.map(([title, arr]) => `
+    <div class="fu-group">
+      <div class="fu-group-header"><span class="fu-group-title">${escapeHtml(title)}</span><span class="badge badge-amber">${arr.length}</span></div>
+      <table class="dt"><tbody>${arr.map(s => `
+        <tr>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:10.5px">${escapeHtml(s['STUDENT ID'] || s.id)}</td>
+          <td><a onclick="openDetail('${s['STUDENT ID'] || s.id}')" style="cursor:pointer;font-weight:600">${escapeHtml(s['STUDENT NAME'] || '—')}</a></td>
+          <td>${escapeHtml(s['AGENT'] || '—')}</td>
+          <td style="text-align:right"><button class="btn btn-ghost btn-sm" onclick="openDetail('${s['STUDENT ID'] || s.id}')">View</button></td>
+        </tr>`).join('')}</tbody></table>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════════════════════════════════
+   REPORTS
+═══════════════════════════════════════════════════════ */
+function renderReports() {
+  const list = window.students || [];
+  const total = list.length;
+  const approved = list.filter(s => (s['VISA STATUS'] || '').toLowerCase() === 'approved').length;
+  const rate = total ? Math.round((approved / total) * 100) + '%' : '—';
+  const avgStage = total ? (list.reduce((sum, s) => sum + stageDoneCount(s), 0) / total).toFixed(1) : '—';
+
+  setText('rpt-total', total);
+  setText('rpt-visa-rate', rate);
+  setText('rpt-avg-stage', avgStage);
+
+  db.collection('channelPartners').get().then(snap => setText('rpt-partners', snap.size)).catch(() => setText('rpt-partners', '—'));
+
+  const byAgent = {};
+  list.forEach(s => { const a = s['AGENT'] || 'Unassigned'; byAgent[a] = (byAgent[a] || 0) + 1; });
+  const grid = document.getElementById('report-grid');
+  if (grid) {
+    const max = Math.max(...Object.values(byAgent), 1);
+    const rows = Object.entries(byAgent).sort((a, b) => b[1] - a[1]).slice(0, 12);
+    grid.innerHTML = `<div class="card"><div class="card-header"><div class="card-title">Students by channel partner</div></div><div class="card-body">
+      ${rows.map(([name, count]) => `
+        <div class="rpt-bar-row">
+          <div class="rpt-bar-label">${escapeHtml(name)}</div>
+          <div class="rpt-bar-track"><div class="rpt-bar-fill" style="width:${Math.round(count / max * 100)}%"></div></div>
+          <div class="rpt-bar-num">${count}</div>
+        </div>`).join('') || '<div class="empty-state">No data</div>'}
+    </div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Visa outcomes</div></div><div class="card-body">
+      ${['Approved', 'Pending', 'Refused', 'Submitted'].map(v => {
+        const c = list.filter(s => (s['VISA STATUS'] || '').toLowerCase() === v.toLowerCase()).length;
+        return `<div class="rpt-bar-row"><div class="rpt-bar-label">${v}</div><div class="rpt-bar-track"><div class="rpt-bar-fill" style="width:${total ? Math.round(c / total * 100) : 0}%"></div></div><div class="rpt-bar-num">${c}</div></div>`;
+      }).join('')}
+    </div></div>`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   INTERNAL CHAT
+   Collection: 'chatMessages'
+   Fields: { group, senderName, senderRole, text, createdAt }
+═══════════════════════════════════════════════════════ */
+let currentChatGroup = 'global';
+let chatUnsubscribe = null;
+
+function switchChatGroup(group, btnEl) {
+  currentChatGroup = group;
+  document.querySelectorAll('#chat-group-tabs .seg-btn').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+  initChatListener(group);
+}
+
+function initChatListener(group) {
+  if (!db) return;
+  if (typeof chatUnsubscribe === 'function') { chatUnsubscribe(); chatUnsubscribe = null; }
+
+  const container = document.getElementById('chat-messages');
+  if (container) container.innerHTML = '<div class="empty-state">Loading messages…</div>';
+
+  try {
+    chatUnsubscribe = db.collection('chatMessages')
+      .where('group', '==', group)
+      .orderBy('createdAt', 'asc')
+      .limitToLast(200)
+      .onSnapshot(snap => {
+        renderChatMessages(snap.docs.map(d => d.data()));
+      }, err => {
+        console.error('[initChatListener] snapshot error:', err);
+        if (container) container.innerHTML = '<div class="empty-state">Could not load chat. Check Firestore index/rules for chatMessages.</div>';
+      });
+  } catch (e) {
+    console.error('[initChatListener]', e);
+  }
+}
+
+function renderChatMessages(msgs) {
+  const container = document.getElementById('chat-messages');
+  if (!container) return;
+  if (!msgs.length) { container.innerHTML = '<div class="empty-state">No messages yet — say hello 👋</div>'; return; }
+  const myName = (window.staff && window.staff.name) || '';
+  container.innerHTML = msgs.map(m => {
+    const mine = m.senderName === myName;
+    const time = m.createdAt && m.createdAt.toDate ? m.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    return `<div class="chat-bubble${mine ? ' mine' : ''}">
+      ${!mine ? `<div class="chat-meta">${escapeHtml(m.senderName || 'Unknown')}${m.senderRole ? ' · ' + escapeHtml(m.senderRole) : ''}</div>` : ''}
+      <div>${escapeHtml(m.text || '')}</div>
+      <span class="chat-time">${time}</span>
+    </div>`;
+  }).join('');
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const text = (input?.value || '').trim();
+  if (!text) return;
+  const btn = document.getElementById('chat-send-btn');
+  if (btn) btn.disabled = true;
+  try {
+    await db.collection('chatMessages').add({
+      group: currentChatGroup,
+      senderName: (window.staff && window.staff.name) || 'Unknown',
+      senderRole: (window.staff && window.staff.role) || '',
+      text,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    if (input) { input.value = ''; input.style.height = ''; }
+  } catch (e) {
+    console.error('[sendChatMessage]', e);
+    toast('Could not send message', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function chatInputKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChatMessage();
   }
 }
 
@@ -482,7 +1372,7 @@ let activeStudentId = null;
 let stageEdits = {};
 function openStageDrawer(studentId) {
   if (!checkAccess(['Super Admin', 'Admin', 'Document Officer', 'Application User'])) {
-    toast("Tapaisanga stage update garne permission chaina", 'error');
+    toast('Tapaisanga stage update garne permission chaina', 'error');
     return;
   }
   activeStudentId = studentId;
@@ -513,10 +1403,10 @@ async function loadUniversitiesData() {
         console.log('[Universities] Loaded from inline fallback');
       } catch (parseErr) {
         console.error('[Universities] Inline fallback parse failed:', parseErr);
-        if (typeof toast === 'function') toast('Could not load university data', 'error');
+        toast('Could not load university data', 'error');
       }
     } else {
-      if (typeof toast === 'function') toast('Could not load universities.json — check the file exists next to index.html', 'error');
+      toast('Could not load universities.json — check the file exists next to index.html', 'error');
     }
   }
 
@@ -530,15 +1420,27 @@ async function loadUniversitiesData() {
 document.addEventListener('DOMContentLoaded', loadUniversitiesData);
 
 /* ═══════════════════════════════════════════════════════
-   SAFE TOAST FALLBACK
+   SAFE FALLBACK FOR checkAccess / guardView
+   (only used if firebase-auth.js failed to define them, so
+   the app doesn't hard-crash — but access defaults to DENY)
 ═══════════════════════════════════════════════════════ */
-if (typeof toast !== 'function') {
-  window.toast = function (msg, type = 'success') {
-    console.log('[toast:' + type + ']', msg);
+if (typeof window.checkAccess !== 'function') {
+  window.checkAccess = function (allowedRoles) {
+    console.warn('[checkAccess] fallback in use — firebase-auth.js did not define checkAccess()');
+    return !!(window.staff && allowedRoles.includes(window.staff.role));
+  };
+}
+if (typeof window.guardView !== 'function') {
+  window.guardView = function (viewName, allowedRoles) {
+    if (!window.checkAccess(allowedRoles)) {
+      toast('You do not have permission to view this page', 'error');
+      return false;
+    }
+    return true;
   };
 }
 
-console.log('[script-additions.js] loaded  (RBAC view-guard + scoped loadStudentsFromFirebase included)');
+console.log('[script-additions.js] loaded — RBAC view-guard, login, partners, notify/email, mock pre-CAS, CAS shield, reports, and internal chat (chatMessages) all included');
 
 /* ═══════════════════════════════════════════════════════
    PIPELINE STAGES & UNIVERSITIES — detail render logic
@@ -634,7 +1536,7 @@ function pickMockStage(el, idx, val, mi, curLevel) {
 
 window.openStageDrawer = function(sid) {
   if (!checkAccess(['Super Admin', 'Admin', 'Document Officer', 'Application User'])) {
-    toast("Tapaisanga stage update garne permission chaina", 'error');
+    toast('Tapaisanga stage update garne permission chaina', 'error');
     return;
   }
   const s = (window.students || []).find(s => (s['STUDENT ID'] || s.id) === sid);
@@ -862,7 +1764,7 @@ window.setUniFilter = function(f, btn) {
 
 window.onboardToUniversity = function(key) {
   if (!checkAccess(['Super Admin', 'Admin', 'Document Officer', 'Application User'])) {
-    toast("Tapaisanga onboarding garne permission chaina", 'error');
+    toast('Tapaisanga onboarding garne permission chaina', 'error');
     return;
   }
   const u = UNI_DATA[key];
@@ -873,13 +1775,8 @@ window.onboardToUniversity = function(key) {
 
 /* ═══════════════════════════════════════════════════════
    ADD STUDENT — Firestore-driven University/Course dropdowns
-   Reads from the `universities` collection in Firestore.
-   Expected doc shape:
-     { name: "University of East London", courses: ["MSc X","BA Y", ...] }
-   (also tolerates `title` instead of `name`, and courses as
-   either plain strings or objects like { name: "MSc X" })
 ═══════════════════════════════════════════════════════ */
-let UNIV_FIRESTORE_DATA = {}; // { docId: { name, courses: [...] } }
+let UNIV_FIRESTORE_DATA = {};
 
 async function populateUniversityDropdown() {
   const sel = document.getElementById('as-university');
@@ -916,7 +1813,7 @@ async function populateUniversityDropdown() {
     console.error('[populateUniversityDropdown] failed:', e);
     sel.innerHTML = '<option value="">Could not load universities</option>';
     sel.disabled = false;
-    if (typeof toast === 'function') toast('Could not load universities from Firestore', 'error');
+    toast('Could not load universities from Firestore', 'error');
   }
 }
 
@@ -936,8 +1833,6 @@ function onUniversitySelected(uniId) {
     uni.courses.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
 }
 
-// Wrap whatever openAddStudent() already does (it lives in firebase-updates.js)
-// so the dropdowns refresh every time the modal opens, without touching that file.
 (function wrapOpenAddStudent() {
   const tryWrap = () => {
     if (typeof window.openAddStudent !== 'function' || window.__openAddStudentWrapped) return;
@@ -954,15 +1849,12 @@ function onUniversitySelected(uniId) {
     };
     window.__openAddStudentWrapped = true;
   };
-  // openAddStudent may load after this file, so try now and also on DOM ready
   tryWrap();
   document.addEventListener('DOMContentLoaded', tryWrap);
 })();
 
 /* ═══════════════════════════════════════════════════════
    MOCK PRE-CAS — real-time Firestore autocomplete
-   Replaces any local-array-based fbSearch()/fbClear() with
-   a live `students` collection query as the user types.
 ═══════════════════════════════════════════════════════ */
 let fbSearchDebounce = null;
 let fbSelectedStudent = null;
@@ -985,9 +1877,6 @@ async function fbSearchFirestore(q) {
   box.style.display = 'block';
 
   try {
-    // Prefix search on STUDENT NAME. Case-sensitive — if you need
-    // case-insensitive search, store a lowercase mirror field
-    // (e.g. 'STUDENT NAME_lower') and query against that instead.
     const snap = await db.collection('students')
       .orderBy('STUDENT NAME')
       .startAt(q)
@@ -1044,12 +1933,19 @@ function fbClear() {
   if (typeof fbPreview === 'function') fbPreview();
 }
 
-// Close the lookup dropdown on outside click
 document.addEventListener('click', (e) => {
   const box = document.getElementById('fb-lookup');
   const input = document.getElementById('fb-search');
   if (box && input && box.style.display !== 'none' && !box.contains(e.target) && e.target !== input) {
     box.style.display = 'none';
+  }
+});
+
+document.addEventListener('click', (e) => {
+  const box = document.getElementById('email-lookup');
+  const input = document.getElementById('email-search');
+  if (box && input && box.classList.contains('open') && !box.contains(e.target) && e.target !== input) {
+    box.classList.remove('open');
   }
 });
 
