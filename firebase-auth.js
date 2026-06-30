@@ -32,7 +32,7 @@ auth.onAuthStateChanged(async (user) => {
   if (!user) return; // Login screen nai dekhaucha by default
 
   try {
-    const doc = await db.collection('staff').doc(user.email).get();
+    const doc = await db.collection('staff').doc(user.uid).get();
     if (doc.exists) {
       const { name, role } = doc.data();
       bootSession(name, role, user.email);
