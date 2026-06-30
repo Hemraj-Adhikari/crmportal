@@ -33,7 +33,7 @@ button{cursor:pointer}
 @keyframes pulseGold{0%,100%{opacity:1}50%{opacity:.5}}
 
 .view{display:none!important}
-.view.active{display:block!important}
+.view.active{display:block!important;animation:fadeIn .28s ease}
 
 /* ══════════════════════════════════════════
    SIDEBAR
@@ -452,17 +452,47 @@ textarea.form-control{resize:vertical;min-height:72px;line-height:1.55}
 .alert-success.show{display:flex}
 
 /* ── TOAST ── */
-#toast-wrap{position:fixed;bottom:18px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none}
-.toast{background:var(--navy-800);color:#FFF;padding:9px 14px;border-radius:var(--r-md);font-size:12px;font-weight:500;box-shadow:var(--shadow-lg);animation:slideUp .18s ease;display:flex;align-items:center;gap:8px;max-width:300px;pointer-events:all}
-.toast.success{border-left:3px solid var(--emerald-500)}
-.toast.error{border-left:3px solid var(--crimson-500)}
-.toast.info{border-left:3px solid var(--gold-400)}
+@keyframes toastIn{from{transform:translateY(14px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+#toast-wrap{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;align-items:flex-end}
+.toast{
+  background:rgba(10,22,40,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  color:#FFF;padding:11px 16px;border-radius:var(--r-lg);font-size:12px;font-weight:500;
+  box-shadow:0 10px 28px rgba(3,13,26,.35),0 2px 6px rgba(3,13,26,.2);
+  animation:toastIn .22s cubic-bezier(.22,1,.36,1);
+  display:flex;align-items:center;gap:9px;max-width:320px;pointer-events:all;
+  border:1px solid rgba(255,255,255,.08);
+}
+.toast span:first-child{
+  width:18px;height:18px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;
+}
+.toast.success span:first-child{background:rgba(5,150,105,.25);color:#34D399}
+.toast.error span:first-child{background:rgba(220,38,38,.25);color:#F87171}
+.toast.info span:first-child{background:rgba(200,135,26,.25);color:var(--gold-300)}
 
 /* ── LOADING ── */
 #global-loading{position:fixed;inset:0;background:rgba(255,255,255,.75);z-index:9000;display:none;align-items:center;justify-content:center;gap:12px;flex-direction:column;backdrop-filter:blur(4px)}
 #global-loading.show{display:flex}
 .spinner{width:24px;height:24px;border:2.5px solid var(--slate-200);border-top-color:var(--navy-700);border-radius:50%;animation:spin .75s linear infinite}
 .spinner-sm{width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#FFF;border-radius:50%;animation:spin .75s linear infinite}
+
+/* Generic button busy-state: hides label text and shows a small spinner,
+   used in place of "Processing…" text on the button itself.
+   Usage: add class "btn-busy" + a <span class="spinner-sm btn-busy-spin"></span>
+   inside the button, and toggle the class via setBtnBusy(btn, true/false). */
+.btn{position:relative}
+.btn .btn-busy-spin{display:none;width:12px;height:12px;border-width:2px}
+.btn.btn-busy{pointer-events:none;opacity:.85}
+.btn.btn-busy .btn-label{visibility:hidden}
+.btn.btn-busy .btn-busy-spin{
+  display:inline-block;position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%);
+  border-color:rgba(255,255,255,.35);border-top-color:#FFF;
+}
+.btn-secondary.btn-busy .btn-busy-spin,.btn-ghost.btn-busy .btn-busy-spin{
+  border-color:var(--border-default);border-top-color:var(--navy-700);
+}
+.btn-gold.btn-busy .btn-busy-spin{border-color:rgba(15,28,46,.25);border-top-color:var(--navy-900)}
 
 /* ── LOGIN ── */
 #login-screen{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#030D1A 0%,#0A1628 50%,#162338 100%);display:flex;align-items:center;justify-content:center;transition:opacity .22s ease}
@@ -509,14 +539,44 @@ textarea.form-control{resize:vertical;min-height:72px;line-height:1.55}
 .detail-field-label{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em}
 .detail-field-val{font-size:12.5px;color:var(--text-primary);font-weight:500}
 
-.stage-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border-subtle)}
-.stage-row:last-child{border-bottom:none}
-.stage-left{display:flex;align-items:center;gap:8px}
-.stage-num{font-size:9.5px;font-weight:700;color:var(--text-muted);width:14px;text-align:right;flex-shrink:0}
-.stage-check{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border-default);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.stage-check.done{background:var(--emerald-500);border-color:var(--emerald-500)}
-.stage-name{font-size:11.5px;color:var(--text-secondary);font-weight:500}
-.stage-row.locked-row .stage-name{color:var(--text-disabled)}
+/* ── PERSONAL INFO / DOCUMENTS GRID (student detail) ── */
+.detail-info-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:12px;align-items:start;margin-bottom:12px}
+@media (max-width:980px){.detail-info-grid{grid-template-columns:1fr}}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 18px;padding-bottom:8px}
+.info-cell{padding:9px 0;border-bottom:1px solid var(--border-subtle);display:flex;flex-direction:column;gap:3px}
+.info-cell:nth-last-child(-n+2){border-bottom:none}
+.info-label{font-size:9.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em}
+.info-val{font-size:13.5px;font-weight:700;color:var(--text-primary);letter-spacing:-.01em}
+
+/* ── PIPELINE TIMELINE (student detail sidebar) ──
+   Restyles the .stage-row list rendered by openDetail() into a clean
+   connected step-by-step vertical timeline. */
+.pipeline-timeline{position:relative;display:flex;flex-direction:column}
+.pipeline-timeline .stage-row{
+  display:flex;align-items:flex-start;justify-content:flex-start;gap:0;
+  padding:0 0 16px;border-bottom:none;position:relative;
+}
+.pipeline-timeline .stage-row:last-child{padding-bottom:2px}
+.pipeline-timeline .stage-left{display:flex;align-items:flex-start;gap:10px;width:100%}
+.pipeline-timeline .stage-num{display:none}
+.pipeline-timeline .stage-check{
+  width:20px;height:20px;border-radius:50%;flex-shrink:0;position:relative;z-index:1;
+  border:2px solid var(--border-default);background:var(--surface-card);
+  display:flex;align-items:center;justify-content:center;font-size:10px;color:transparent;
+  transition:all .15s;
+}
+.pipeline-timeline .stage-check.done{background:var(--emerald-500);border-color:var(--emerald-500);color:#fff}
+/* connecting line between steps */
+.pipeline-timeline .stage-row:not(:last-child) .stage-check::after{
+  content:'';position:absolute;top:20px;left:50%;transform:translateX(-50%);
+  width:2px;height:calc(100% + 2px);background:var(--border-subtle);z-index:0;
+}
+.pipeline-timeline .stage-row.locked-row:not(:last-child) .stage-check::after{background:var(--border-subtle)}
+.pipeline-timeline .stage-check.done::after{background:var(--emerald-300)!important}
+.pipeline-timeline .stage-name{
+  font-size:12px;font-weight:600;color:var(--text-primary);padding-top:1px;line-height:1.3;
+}
+.pipeline-timeline .stage-row.locked-row .stage-name{color:var(--text-disabled);font-weight:500}
 
 /* ── REPORTS ── */
 .report-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
