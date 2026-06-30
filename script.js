@@ -44,23 +44,49 @@
 /* ═══════════════════════════════════════════════════════
    CONFIG — EmailJS
 ═══════════════════════════════════════════════════════ */
-const EMAILJS_PUBLIC_KEY  = 'YOUR_EMAILJS_PUBLIC_KEY';
-const EMAILJS_SERVICE_ID  = 'YOUR_EMAILJS_SERVICE_ID';
-const EMAILJS_TEMPLATE_ID = 'YOUR_EMAILJS_TEMPLATE_ID';
+window.EMAILJS_PUBLIC_KEY = 'YOUR_EMAILJS_PUBLIC_KEY';
+window.EMAILJS_SERVICE_ID = 'YOUR_EMAILJS_SERVICE_ID';
+window.EMAILJS_TEMPLATE_ID = 'YOUR_EMAILJS_TEMPLATE_ID';
 
 (function initEmailJS() {
   try {
-    if (window.emailjs && EMAILJS_PUBLIC_KEY && EMAILJS_PUBLIC_KEY.indexOf('YOUR_') !== 0) {
-      emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+    if (
+      window.emailjs &&
+      window.EMAILJS_PUBLIC_KEY &&
+      !window.EMAILJS_PUBLIC_KEY.startsWith('YOUR_')
+    ) {
+      emailjs.init({
+        publicKey: window.EMAILJS_PUBLIC_KEY
+      });
     }
-  } catch (e) { console.warn('[EmailJS] init failed', e); }
+  } catch (e) {
+    console.warn('[EmailJS] init failed', e);
+  }
 })();
 
 async function sendViaEmailJS({ to_email, to_name, subject, message }) {
-  if (!window.emailjs) throw new Error('EmailJS SDK not loaded');
-  if (EMAILJS_PUBLIC_KEY.indexOf('YOUR_') === 0) {
-    throw new Error('EmailJS not configured — set EMAILJS_SERVICE_ID / TEMPLATE_ID / PUBLIC_KEY in script-additions.js');
+
+  if (!window.emailjs) {
+    throw new Error('EmailJS SDK not loaded');
   }
+
+  if (window.EMAILJS_PUBLIC_KEY.startsWith('YOUR_')) {
+    throw new Error(
+      'EmailJS not configured.'
+    );
+  }
+
+  return emailjs.send(
+    window.EMAILJS_SERVICE_ID,
+    window.EMAILJS_TEMPLATE_ID,
+    {
+      to_email,
+      to_name,
+      subject,
+      message
+    }
+  );
+}
   return emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
     to_email, to_name, subject, message,
     from_name: (window.staff && window.staff.name) || 'Route2Uni CRM'
