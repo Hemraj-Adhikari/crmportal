@@ -1,7 +1,12 @@
 /* ═══════════════════════════════════════════════════════
    FIREBASE AUTH  ·  Route2Uni CRM Portal
-   Handles: login, logout, session boot, student loading
+   Handles: login, logout, session boot
    Replaces: script.js ko doLogin(), bootSession(), signOut()
+
+   NOTE: loadStudentsFromFirebase() is NOT defined here.
+   The canonical version lives in firebase-updates.js.
+   bootSession() calls it and awaits it so the UI stays
+   gated behind a boot overlay until data is ready.
 ═══════════════════════════════════════════════════════ */
 
 /* ─── Firebase init (ek palta matra garne) ─── */
@@ -108,6 +113,9 @@ function showLoginError(msg) {
 
 /* ═══════════════════════════════════════════════════════
    BOOT SESSION  —  login success pachhi UI set up garcha
+   Waits for loadStudentsFromFirebase() (defined in
+   firebase-updates.js) before releasing the boot overlay,
+   so stats/table/funnel never render against empty data.
 ═══════════════════════════════════════════════════════ */
 function bootSession(name, role, email = '') {
   const ini = name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -127,8 +135,33 @@ function bootSession(name, role, email = '') {
   // Hide login screen
   hideLogin();
 
-  // Load data
-  loadStudentsFromFirebase();
+  // Block UI on a boot overlay until student data has loaded
+  showBootOverlay();
+
+  if (typeof loadStudentsFromFirebase !== 'function') {
+    console.error('[bootSession] loadStudentsFromFirebase is not defined — check that firebase-updates.js loaded before this runs.');
+    hideBootOverlay();
+    return;
+  }
+
+  loadStudentsFromFirebase().finally(hideBootOverlay);
+}
+
+/* ─── Boot overlay — shown between login and data being ready ─── */
+function showBootOverlay() {
+  let el = document.getElementById('boot-overlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'boot-overlay';
+    el.style.cssText = 'position:fixed;inset:0;background:var(--surface-base,#fff);z-index:999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px';
+    el.innerHTML = '<div class="spinner"></div><span style="font-size:12px;color:var(--text-muted)">Loading your data…</span>';
+    document.body.appendChild(el);
+  }
+  el.style.display = 'flex';
+}
+
+function hideBootOverlay() {
+  document.getElementById('boot-overlay')?.remove();
 }
 
 /* ─── Role-based UI ─── */
@@ -160,39 +193,6 @@ function hideLogin() {
 function signOut() {
   auth.signOut().then(() => location.reload()).catch(() => location.reload());
 }
-
-/* ═══════════════════════════════════════════════════════
-   LOAD STUDENTS FROM FIRESTORE
-═══════════════════════════════════════════════════════ */
-async function loadStudentsFromFirebase() {
-  console.log('[Firebase] Loading students from Firestore…');
-  try {
-    const snapshot = await db.collection('students').orderBy('createdAt', 'desc').get();
-    window.students = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    console.log('[Firebase] Students loaded:', window.students.length);
-
-    // Trigger UI refreshes
-    if (typeof filterTableStudents   === 'function') filterTableStudents();
-    if (typeof updateStats           === 'function') updateStats();
-    if (typeof updateFunnel          === 'function') updateFunnel();
-    if (typeof renderDashboardPartners === 'function') renderDashboardPartners();
-  } catch (e) {
-    console.error('[Firebase] Student load error:', e);
-    if (typeof toast === 'function') toast('Could not load students: ' + e.message, 'error');
-  }
-}
-
-/* ─── loadDashboardLazy override ─── */
-window.loadDashboardLazy = async function () {
-  if (typeof loading === 'function') loading('Loading dashboard…');
-  try {
-    await loadStudentsFromFirebase();
-  } catch (e) {
-    console.error('[Firebase] Dashboard load error:', e);
-  } finally {
-    if (typeof hideLoading === 'function') hideLoading();
-  }
-};
 
 /* ─── Password eye toggle ─── */
 function togglePwd() {
