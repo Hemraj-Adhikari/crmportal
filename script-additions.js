@@ -145,6 +145,7 @@ let currentView = 'students';
 
 const VIEW_PERMISSIONS = {
   upload       : ['Super Admin', 'Admin'],
+  users        : ['Super Admin', 'Admin'],
   reports      : ['Super Admin', 'Admin', 'Document Officer'],
   partners     : ['Super Admin', 'Admin', 'Document Officer'],
   casshield    : ['Super Admin', 'Admin', 'Document Officer'],
@@ -187,7 +188,8 @@ function switchView(viewName, linkEl) {
     reports: ['Reports', 'Pipeline breakdowns and conversion insights'],
     upload: ['Import CSV', 'Upload and sync student records'],
     whatsapp: ['WhatsApp', 'Send WhatsApp messages'],
-    chat: ['Internal Chat', 'Team-wide messaging, real-time']
+    chat: ['Internal Chat', 'Team-wide messaging, real-time'],
+    users: ['User Management', 'Manage staff accounts, roles & access']
   };
   const t = titles[viewName] || [viewName, ''];
   setText('page-title', t[0]);
@@ -208,6 +210,13 @@ function switchView(viewName, linkEl) {
   if (viewName === 'feedback') initFeedbackPage();
   if (viewName === 'reports') renderReports();
   if (viewName === 'chat') initChatListener(currentChatGroup);
+  if (viewName === 'users') {
+    if (!window.__usersListenerStarted) {
+      initUsersListener();
+    } else {
+      renderUsersTable();
+    }
+  }
 
   if (viewName === 'universities') {
     if (!UNI_DATA_LOADED) {
@@ -2103,3 +2112,232 @@ document.addEventListener('click', (e) => {
 });
 
 console.log('[script-additions.js] Firestore-driven university dropdown + student autocomplete loaded');
+
+/* ═══════════════════════════════════════════════════════
+   USER MANAGEMENT  ·  data-view="users"
+   Reactive listener on db.collection('users'), restricted
+   to Super Admin / Admin via VIEW_PERMISSIONS above.
+   Expected doc shape on 'users' collection:
+     { name, email, role, status, createdAt, lastLogin }
+   role  ∈ 'Super Admin' | 'Admin' | 'Internal User' |
+           'Application User' | 'Channel Partner'
+   status ∈ 'Active' | 'Inactive'
+═══════════════════════════════════════════════════════ */
+window.__allUsers = window.__allUsers || [];
+window.__usersListenerStarted = false;
+let umCurrentPage = 1;
+let umOpenMenuId = null;
+
+const UM_ROLE_COLORS = {
+  'Super Admin'      : { bg: '#FCE7F3', fg: '#DB2777' },
+  'Admin'            : { bg: '#FEF3C7', fg: '#B45309' },
+  'Internal User'    : { bg: '#D1FAE5', fg: '#059669' },
+  'Application User' : { bg: '#DBEAFE', fg: '#2563EB' },
+  'Channel Partner'  : { bg: '#FEE2E2', fg: '#DC2626' }
+};
+
+const UM_AVATAR_COLORS = ['#EC4899','#3B82F6','#10B981','#F59E0B','#8B5CF6','#06B6D4','#EF4444','#6366F1'];
+
+function umAvatarColor(name) {
+  const str = String(name || '?');
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  return UM_AVATAR_COLORS[Math.abs(hash) % UM_AVATAR_COLORS.length];
+}
+
+function umInitials(name) {
+  if (!name) return '?';
+  const parts = String(name).trim().split(/\s+/);
+  return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || name[0].toUpperCase();
+}
+
+function umFmtDate(val) {
+  if (!val) return '—';
+  try {
+    const d = val?.toDate ? val.toDate() : new Date(val);
+    if (isNaN(d.getTime())) return '—';
+    return (d.getMonth() + 1).toString().padStart(2, '0') + '/' +
+           d.getDate().toString().padStart(2, '0') + '/' + d.getFullYear();
+  } catch { return '—'; }
+}
+
+function initUsersListener() {
+  if (!window.db) { toast('Firestore not ready', 'error'); return; }
+  window.__usersListenerStarted = true;
+  document.getElementById('um-table-body').innerHTML = '<tr><td colspan="7" class="empty-state">Loading…</td></tr>';
+
+  db.collection('users').onSnapshot(
+    (snap) => {
+      window.__allUsers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      umUpdateKpiCards();
+      umCurrentPage = 1;
+      renderUsersTable();
+    },
+    (err) => {
+      console.error('users listener error:', err);
+      document.getElementById('um-table-body').innerHTML =
+        '<tr><td colspan="7" class="empty-state">Failed to load users — check Firestore rules/connection.</td></tr>';
+      toast('Could not load users', 'error');
+    }
+  );
+}
+
+function umUpdateKpiCards() {
+  const users = window.__allUsers || [];
+  const counts = { 'Super Admin': 0, 'Admin': 0, 'Internal User': 0, 'Application User': 0, 'Channel Partner': 0 };
+  users.forEach(u => {
+    const r = u.role === 'Document Officer' ? 'Internal User' : u.role;
+    if (counts.hasOwnProperty(r)) counts[r]++;
+  });
+  setText('um-count-superadmin', counts['Super Admin']);
+  setText('um-count-admin', counts['Admin']);
+  setText('um-count-internal', counts['Internal User']);
+  setText('um-count-app', counts['Application User']);
+  setText('um-count-partner', counts['Channel Partner']);
+}
+
+function umFilteredUsers() {
+  const q = (document.getElementById('um-search-input')?.value || '').toLowerCase().trim();
+  const roleFilter = document.getElementById('um-role-filter')?.value || '';
+  return (window.__allUsers || []).filter(u => {
+    if (roleFilter && u.role !== roleFilter) return false;
+    if (!q) return true;
+    return (u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q);
+  });
+}
+
+function renderUsersTable() {
+  const tbody = document.getElementById('um-table-body');
+  if (!tbody) return;
+
+  const filtered = umFilteredUsers();
+  const rowsPerPage = parseInt(document.getElementById('um-rows-per-page')?.value || '10', 10);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
+  if (umCurrentPage > totalPages) umCurrentPage = totalPages;
+  const start = (umCurrentPage - 1) * rowsPerPage;
+  const pageRows = filtered.slice(start, start + rowsPerPage);
+
+  if (!pageRows.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No users found.</td></tr>';
+  } else {
+    tbody.innerHTML = pageRows.map(u => {
+      const roleColor = UM_ROLE_COLORS[u.role] || { bg: '#F1F5F9', fg: '#475569' };
+      const isActive = (u.status || 'Active') === 'Active';
+      const avColor = umAvatarColor(u.name);
+      return `
+        <tr>
+          <td>
+            <div class="um-name-cell">
+              <div class="um-avatar" style="background:${avColor}1A;color:${avColor}">${umInitials(u.name)}</div>
+              <span class="um-name-text">${(u.name || 'Unnamed').replace(/</g, '&lt;')}</span>
+            </div>
+          </td>
+          <td>${(u.email || '—').replace(/</g, '&lt;')}</td>
+          <td><span class="um-role-pill" style="background:${roleColor.bg};color:${roleColor.fg}">${u.role || 'Unassigned'}</span></td>
+          <td>
+            <span class="um-status-wrap${isActive ? '' : ' inactive'}">
+              <select onchange="changeUserStatus('${u.id}', this.value)">
+                <option value="Active" ${isActive ? 'selected' : ''}>Active</option>
+                <option value="Inactive" ${!isActive ? 'selected' : ''}>Inactive</option>
+              </select>
+            </span>
+          </td>
+          <td>${umFmtDate(u.createdAt)}</td>
+          <td>${umFmtDate(u.lastLogin)}</td>
+          <td style="text-align:center;position:relative">
+            <button class="um-actions-btn" onclick="umToggleActionsMenu(event,'${u.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+            </button>
+            <div class="um-actions-menu" id="um-menu-${u.id}">
+              <div onclick="openAddUserModal('${u.id}')">Edit user</div>
+              <div class="danger" onclick="deleteUser('${u.id}')">Delete user</div>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  setText('um-range-label', filtered.length
+    ? `${start + 1}–${Math.min(start + rowsPerPage, filtered.length)} of ${filtered.length} records`
+    : '0 records');
+
+  umRenderPager(totalPages);
+}
+
+function umRenderPager(totalPages) {
+  const pager = document.getElementById('um-pager');
+  if (!pager) return;
+  let html = `<button ${umCurrentPage === 1 ? 'disabled' : ''} onclick="umGoToPage(${umCurrentPage - 1})">‹ Previous</button>`;
+  const maxBtns = 3;
+  let from = Math.max(1, umCurrentPage - 1);
+  let to = Math.min(totalPages, from + maxBtns - 1);
+  from = Math.max(1, to - maxBtns + 1);
+  for (let p = from; p <= to; p++) {
+    html += `<button class="${p === umCurrentPage ? 'active' : ''}" onclick="umGoToPage(${p})">${p}</button>`;
+  }
+  html += `<button ${umCurrentPage === totalPages ? 'disabled' : ''} onclick="umGoToPage(${umCurrentPage + 1})">Next ›</button>`;
+  pager.innerHTML = html;
+}
+
+function umGoToPage(p) {
+  umCurrentPage = p;
+  renderUsersTable();
+}
+
+function umChangeRowsPerPage() {
+  umCurrentPage = 1;
+  renderUsersTable();
+}
+
+function umToggleActionsMenu(evt, userId) {
+  evt.stopPropagation();
+  document.querySelectorAll('#view-users .um-actions-menu.open').forEach(m => {
+    if (m.id !== `um-menu-${userId}`) m.classList.remove('open');
+  });
+  const menu = document.getElementById(`um-menu-${userId}`);
+  if (menu) menu.classList.toggle('open');
+}
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('#view-users .um-actions-menu.open').forEach(m => m.classList.remove('open'));
+});
+
+/* ───────────────────────────────────────────────────────
+   STUBS — wire these up to your actual modal / write logic
+─────────────────────────────────────────────────────── */
+function openAddUserModal(userId) {
+  if (!checkAccess(['Super Admin', 'Admin'])) return;
+  const existing = userId ? (window.__allUsers || []).find(u => u.id === userId) : null;
+  toast(existing ? `Edit user: ${existing.name || existing.email}` : 'Add User modal — wire up your form here', 'info');
+  // TODO: open real modal, then on submit:
+  // db.collection('users').doc(userId || undefined).set({
+  //   name, email, role, status: 'Active',
+  //   createdAt: existing ? existing.createdAt : firebase.firestore.FieldValue.serverTimestamp()
+  // }, { merge: true });
+}
+
+async function changeUserStatus(userId, newStatus) {
+  if (!checkAccess(['Super Admin', 'Admin'])) { renderUsersTable(); return; }
+  try {
+    await db.collection('users').doc(userId).set({ status: newStatus }, { merge: true });
+    toast(`Status updated to ${newStatus}`, 'success');
+  } catch (err) {
+    console.error('changeUserStatus error:', err);
+    toast('Failed to update status', 'error');
+  }
+}
+
+async function deleteUser(userId) {
+  if (!checkAccess(['Super Admin', 'Admin'])) return;
+  const u = (window.__allUsers || []).find(x => x.id === userId);
+  if (!confirm(`Delete user "${u?.name || u?.email || userId}"? This cannot be undone.`)) return;
+  try {
+    await db.collection('users').doc(userId).delete();
+    toast('User deleted', 'success');
+  } catch (err) {
+    console.error('deleteUser error:', err);
+    toast('Failed to delete user', 'error');
+  }
+}
+
+console.log('[script-additions.js] User Management module loaded');
