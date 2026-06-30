@@ -1,21 +1,45 @@
 /* ═══════════════════════════════════════════════════════
-   R2U CRM — CORE LOGIC ADDITIONS  (UPDATED)
+   R2U CRM — CORE LOGIC ADDITIONS  (RBAC UPDATED)
    Paste this whole file at the BOTTOM of your script.js
-   (firebase-auth.js, firebase-import.js, firebase-updates.js
-   must be loaded BEFORE this file, same as before)
+   (firebase-auth.js MUST be loaded BEFORE this file —
+   checkAccess(), guardView(), window.staff aaunu firebase-auth.js bata)
 
    NOTE: Cloudinary config, asSelectedFiles, upload functions,
    file drop/list handlers, and openAddStudent()/closeAddStudent()
    have been moved to firebase-updates.js — they are NOT here
    anymore to avoid duplicate declarations.
+
+   RBAC NOTE: loadStudentsFromFirebase() yahaan define vayeko xa.
+   Tapaiko firebase-updates.js maa yo function ALREADY DEFINED
+   bhayeko xa bhane, tyo file bata HATAUNU PARXA (delete garnu),
+   nabhae duplicate function le purano (unscoped) version le
+   override garera RBAC kaam nagarna sakxa.
 ═══════════════════════════════════════════════════════ */
 
 /* ═══════════════════════════════════════════════════════
-   NAVIGATION / VIEW SWITCHING
+   NAVIGATION / VIEW SWITCHING  (RBAC GUARDED)
 ═══════════════════════════════════════════════════════ */
 let currentView = 'students';
 
+// Kun view lai kun role(s) le matra herna milxa.
+// List bhitra nabhayeko view chai sabai logged-in role lai khula huncha.
+const VIEW_PERMISSIONS = {
+  upload       : ['Super Admin', 'Admin'],                                   // Import CSV
+  reports      : ['Super Admin', 'Admin', 'Document Officer'],
+  partners     : ['Super Admin', 'Admin', 'Document Officer'],               // Channel partner ko master list
+  casshield    : ['Super Admin', 'Admin', 'Document Officer'],
+  feedback     : ['Super Admin', 'Admin', 'Document Officer'],
+  email        : ['Super Admin', 'Admin', 'Document Officer', 'Application User'],
+  whatsapp     : ['Super Admin', 'Admin', 'Document Officer', 'Application User']
+  // students, universities, followup -> sabai role lai khula (list ma chaina)
+};
+
 function switchView(viewName, linkEl) {
+  // RBAC check — permission nabhae view change nai nagarne
+  if (VIEW_PERMISSIONS[viewName] && !guardView(viewName, VIEW_PERMISSIONS[viewName])) {
+    return;
+  }
+
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   const target = document.getElementById('view-' + viewName);
   if (target) target.classList.add('active');
@@ -99,6 +123,60 @@ document.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openCmd(); }
   if (e.key === 'Escape') closeCmd();
 });
+
+/* ═══════════════════════════════════════════════════════
+   STUDENTS — LOAD FROM FIREBASE  (RBAC SCOPED)
+   Role anusar Firestore query nai farak huncha:
+     - Channel Partner -> .where('partnerId','==', window.staff.partnerId)
+     - Document Officer -> example stage filter (comment garyera rakheko)
+     - Baaki sabai (Super Admin / Admin / Application User) -> full list
+═══════════════════════════════════════════════════════ */
+async function loadStudentsFromFirebase() {
+  try {
+    let query = db.collection('students');
+
+    const role      = window.staff?.role;
+    const partnerId = window.staff?.partnerId;
+
+    if (role === 'Channel Partner') {
+      if (!partnerId) {
+        console.error('[loadStudentsFromFirebase] Channel Partner ko partnerId set xaina — unscoped data load garna mana garyo.');
+        window.students = [];
+        if (typeof toast === 'function') toast('Tapaiko account ma Partner ID xaina. Admin lai sampark garnu.', 'error');
+        filterTableStudents();
+        updateStats();
+        updateFunnel();
+        return;
+      }
+      query = query.where('partnerId', '==', partnerId);
+    }
+
+    // Document Officer le example ma CAS/visa stage ma matra herna sakxa.
+    // Chahiyena bhane yo block hataun.
+    // if (role === 'Document Officer') {
+    //   query = query.where('CAS STATUS', 'in', ['Pending', 'In Progress', 'Issued']);
+    // }
+
+    const snap = await query.get();
+    window.students = snap.docs.map(d => {
+      const data = d.data();
+      if (!data['STUDENT ID']) data['STUDENT ID'] = d.id;
+      data.id = d.id;
+      return data;
+    });
+
+    console.log('[loadStudentsFromFirebase] Loaded', window.students.length, 'students for role:', role);
+
+    filterTableStudents();
+    updateStats();
+    updateFunnel();
+  } catch (e) {
+    console.error('[loadStudentsFromFirebase] Failed:', e);
+    if (typeof toast === 'function') toast('Could not load student data', 'error');
+    window.students = [];
+    filterTableStudents();
+  }
+}
 
 /* ═══════════════════════════════════════════════════════
    STUDENTS TABLE — FILTER, RENDER
@@ -201,11 +279,24 @@ function updateBulkBar() {
   }
 }
 
-function bulkEmail() { toast('Bulk email — coming soon', 'info'); }
-function bulkStatusUpdate() { toast('Bulk status update — coming soon', 'info'); }
+function bulkEmail() {
+  if (!checkAccess(['Super Admin', 'Admin', 'Document Officer', 'Application User'])) {
+    toast("Tapaisanga bulk email garne permission chaina", 'error');
+    return;
+  }
+  toast('Bulk email — coming soon', 'info');
+}
+function bulkStatusUpdate() {
+  if (!checkAccess(['Super Admin', 'Admin', 'Document Officer'])) {
+    toast("Tapaisanga status update garne permission chaina", 'error');
+    return;
+  }
+  toast('Bulk status update — coming soon', 'info');
+}
 
 /* ═══════════════════════════════════════════════════════
    DASHBOARD STATS / FUNNEL / DISTRIBUTION
+   (window.students already RBAC-scoped from loadStudentsFromFirebase)
 ═══════════════════════════════════════════════════════ */
 function updateStats() {
   const list = window.students || [];
@@ -276,13 +367,21 @@ function updateFunnel() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   CHANNEL PARTNERS — dashboard mini grid (stub-safe)
+   CHANNEL PARTNERS — dashboard mini grid (RBAC-aware)
+   Channel Partner role le aaphno partner card matra dekhne.
 ═══════════════════════════════════════════════════════ */
 async function renderDashboardPartners() {
   const grid = document.getElementById('dashboard-cp-grid');
   if (!grid) return;
   try {
-    const snap = await db.collection('channelPartners').limit(6).get();
+    let query = db.collection('channelPartners').limit(6);
+
+    if (window.staff?.role === 'Channel Partner' && window.staff?.partnerId) {
+      query = db.collection('channelPartners')
+                .where(firebase.firestore.FieldPath.documentId(), '==', window.staff.partnerId);
+    }
+
+    const snap = await query.get();
     if (snap.empty) {
       grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">No channel partners yet</div>';
       return;
@@ -297,9 +396,13 @@ async function renderDashboardPartners() {
 }
 
 /* ═══════════════════════════════════════════════════════
-   EXPORT CSV
+   EXPORT CSV  (RBAC — Channel Partner lai export band)
 ═══════════════════════════════════════════════════════ */
 function exportStudentsCSV() {
+  if (!checkAccess(['Super Admin', 'Admin', 'Document Officer', 'Application User'])) {
+    toast("Tapaisanga export garne permission chaina", 'error');
+    return;
+  }
   const list = window.students || [];
   if (!list.length) { toast('No students to export', 'error'); return; }
   const csv = Papa.unparse(list);
@@ -378,6 +481,10 @@ function openDrawerEl(id) {
 let activeStudentId = null;
 let stageEdits = {};
 function openStageDrawer(studentId) {
+  if (!checkAccess(['Super Admin', 'Admin', 'Document Officer', 'Application User'])) {
+    toast("Tapaisanga stage update garne permission chaina", 'error');
+    return;
+  }
   activeStudentId = studentId;
   stageEdits = {};
   openDrawerEl('drw-stage');
@@ -385,9 +492,6 @@ function openStageDrawer(studentId) {
 
 /* ═══════════════════════════════════════════════════════
    PARTNER UNIVERSITIES — JSON LOADER
-   Fetches universities.json instead of relying on the inline
-   <script id="uni-rawdata"> block (now removed from index.html).
-   Falls back to the inline block ONLY if present, for safety.
 ═══════════════════════════════════════════════════════ */
 let UNI_DATA = {};
 let UNI_DATA_LOADED = false;
@@ -423,7 +527,6 @@ async function loadUniversitiesData() {
   }
 }
 
-// Kick off load early so it's ready by the time the user clicks the tab
 document.addEventListener('DOMContentLoaded', loadUniversitiesData);
 
 /* ═══════════════════════════════════════════════════════
@@ -435,23 +538,22 @@ if (typeof toast !== 'function') {
   };
 }
 
-console.log('[script-additions.js] loaded ✅ (Universities loader included)');
+console.log('[script-additions.js] loaded  (RBAC view-guard + scoped loadStudentsFromFirebase included)');
 
 /* ═══════════════════════════════════════════════════════
    PIPELINE STAGES & UNIVERSITIES — detail render logic
 ═══════════════════════════════════════════════════════ */
 
-/* ── 1. PIPELINE STAGES LOGIC ── */
 const STAGE_DEFS = [
   {id:'app_submitted',label:'Application submitted',key:'APPLICATION SUBMITTED DATE',done:s=>!!(s['APPLICATION SUBMITTED DATE']),prevDone:s=>true,type:'date',desc:'Record the date the application was submitted to the university.'},
-  {id:'prescreening',label:'Pre-screening call',key:'PRE-SCREENING CALL STATUS',done:s=>/received|no connectivity|on hold|scheduled|withdrew|interested/i.test(s['PRE-SCREENING CALL STATUS']||''),prevDone:s=>!!(s['APPLICATION SUBMITTED DATE']),type:'select',options:[{val:'Received',icon:'📥'},{val:'No Connectivity',icon:'📵'},{val:'On Hold',icon:'⏸️'},{val:'Scheduled',icon:'📅'},{val:'Withdrew',icon:'🚫'},{val:'Called – Interested',icon:'👍'},{val:'Called – Not Interested',icon:'👎'}],desc:'Log the outcome of the initial pre-screening call with the student.'},
-  {id:'offer',label:'Offer received',key:'OFFER STATUS',done:s=>/conditional|unconditional|received/i.test(s['OFFER STATUS']||''),prevDone:s=>!!(s['PRE-SCREENING CALL STATUS']),type:'select',options:[{val:'Conditional',icon:'📋'},{val:'Unconditional',icon:'🎉'},{val:'Received',icon:'✅'},{val:'Pending',icon:'⏳'},{val:'Rejected',icon:'❌'}],desc:'Update the offer status from the university.'},
-  {id:'cas_payment',label:'Payment for CAS Shield',key:'CAS PAYMENT STATUS',done:s=>s['CAS PAYMENT STATUS']==='Paid',prevDone:s=>/conditional|unconditional|received/i.test(s['OFFER STATUS']||''),type:'select',options:[{val:'Paid',icon:'💳'},{val:'Unpaid',icon:'⏳'}],desc:'Confirm payment has been received for CAS Shield processing.'},
+  {id:'prescreening',label:'Pre-screening call',key:'PRE-SCREENING CALL STATUS',done:s=>/received|no connectivity|on hold|scheduled|withdrew|interested/i.test(s['PRE-SCREENING CALL STATUS']||''),prevDone:s=>!!(s['APPLICATION SUBMITTED DATE']),type:'select',options:[{val:'Received',icon:''},{val:'No Connectivity',icon:''},{val:'On Hold',icon:'⏸'},{val:'Scheduled',icon:''},{val:'Withdrew',icon:''},{val:'Called – Interested',icon:''},{val:'Called – Not Interested',icon:''}],desc:'Log the outcome of the initial pre-screening call with the student.'},
+  {id:'offer',label:'Offer received',key:'OFFER STATUS',done:s=>/conditional|unconditional|received/i.test(s['OFFER STATUS']||''),prevDone:s=>!!(s['PRE-SCREENING CALL STATUS']),type:'select',options:[{val:'Conditional',icon:''},{val:'Unconditional',icon:''},{val:'Received',icon:''},{val:'Pending',icon:''},{val:'Rejected',icon:''}],desc:'Update the offer status from the university.'},
+  {id:'cas_payment',label:'Payment for CAS Shield',key:'CAS PAYMENT STATUS',done:s=>s['CAS PAYMENT STATUS']==='Paid',prevDone:s=>/conditional|unconditional|received/i.test(s['OFFER STATUS']||''),type:'select',options:[{val:'Paid',icon:''},{val:'Unpaid',icon:''}],desc:'Confirm payment has been received for CAS Shield processing.'},
   {id:'mock',label:'Mock interview',key:'MOCK INTERVIEW STATUS',done:s=>s['MOCK INTERVIEW STATUS']==='Stage 4 Done',prevDone:s=>s['CAS PAYMENT STATUS']==='Paid',type:'mock_stages',desc:'Track progress through all 4 mock interview preparation stages.'},
-  {id:'precas',label:'Pre-CAS interview',key:'PRE-CAS INTERVIEW',done:s=>s['PRE-CAS INTERVIEW']==='Pass',prevDone:s=>s['MOCK INTERVIEW STATUS']==='Stage 4 Done',type:'select',options:[{val:'Pass',icon:'✅'},{val:'Fail',icon:'❌'}],desc:'Record the result of the Pre-CAS interview. Pass required to proceed.'},
-  {id:'cas_requested',label:'CAS requested',key:'CAS REQUESTED STATUS',done:s=>s['CAS REQUESTED STATUS']==='Requested',prevDone:s=>s['PRE-CAS INTERVIEW']==='Pass',type:'select',options:[{val:'Requested',icon:'📨'},{val:'Not Requested',icon:'⭕'}],desc:'Confirm that the CAS has been formally requested from the university.'},
-  {id:'cas_received',label:'CAS received',key:'CAS STATUS',done:s=>/issued/i.test(s['CAS STATUS']||''),prevDone:s=>s['CAS REQUESTED STATUS']==='Requested',type:'select',options:[{val:'Issued',icon:'✅'},{val:'Pending',icon:'⏳'},{val:'Rejected',icon:'❌'}],desc:'Update when the CAS document has been issued by the university.'},
-  {id:'visa',label:'Visa status',key:'VISA STATUS',done:s=>/approved/i.test(s['VISA STATUS']||''),prevDone:s=>/issued/i.test(s['CAS STATUS']||''),type:'select',options:[{val:'Approved',icon:'🎉'},{val:'Submitted',icon:'📤'},{val:'Biometrics Booked',icon:'🖐️'},{val:'Pending',icon:'⏳'},{val:'Refused',icon:'❌'},{val:'Withdrawn',icon:'🚫'}],desc:'Track the student\'s visa application status.'}
+  {id:'precas',label:'Pre-CAS interview',key:'PRE-CAS INTERVIEW',done:s=>s['PRE-CAS INTERVIEW']==='Pass',prevDone:s=>s['MOCK INTERVIEW STATUS']==='Stage 4 Done',type:'select',options:[{val:'Pass',icon:''},{val:'Fail',icon:''}],desc:'Record the result of the Pre-CAS interview. Pass required to proceed.'},
+  {id:'cas_requested',label:'CAS requested',key:'CAS REQUESTED STATUS',done:s=>s['CAS REQUESTED STATUS']==='Requested',prevDone:s=>s['PRE-CAS INTERVIEW']==='Pass',type:'select',options:[{val:'Requested',icon:''},{val:'Not Requested',icon:''}],desc:'Confirm that the CAS has been formally requested from the university.'},
+  {id:'cas_received',label:'CAS received',key:'CAS STATUS',done:s=>/issued/i.test(s['CAS STATUS']||''),prevDone:s=>s['CAS REQUESTED STATUS']==='Requested',type:'select',options:[{val:'Issued',icon:''},{val:'Pending',icon:''},{val:'Rejected',icon:''}],desc:'Update when the CAS document has been issued by the university.'},
+  {id:'visa',label:'Visa status',key:'VISA STATUS',done:s=>/approved/i.test(s['VISA STATUS']||''),prevDone:s=>/issued/i.test(s['CAS STATUS']||''),type:'select',options:[{val:'Approved',icon:'🎉'},{val:'Submitted',icon:''},{val:'Biometrics Booked',icon:''},{val:'Pending',icon:''},{val:'Refused',icon:''},{val:'Withdrawn',icon:''}],desc:"Track the student's visa application status."}
 ];
 
 const MOCK_STAGES = ['Stage 1 Done','Stage 2 Done','Stage 3 Done','Stage 4 Done'];
@@ -531,6 +633,10 @@ function pickMockStage(el, idx, val, mi, curLevel) {
 }
 
 window.openStageDrawer = function(sid) {
+  if (!checkAccess(['Super Admin', 'Admin', 'Document Officer', 'Application User'])) {
+    toast("Tapaisanga stage update garne permission chaina", 'error');
+    return;
+  }
   const s = (window.students || []).find(s => (s['STUDENT ID'] || s.id) === sid);
   if(!s) { toast('Student not found', 'error'); return; }
   activeStudentId = sid;
@@ -541,7 +647,6 @@ window.openStageDrawer = function(sid) {
   openDrawerEl('drw-stage');
 };
 
-/* ── 2. PARTNER UNIVERSITIES RENDER LOGIC ── */
 const UNI_COLORS=[
   ['#1E3A5F','#E8C84E'],['#6B3FA0','#F0E6FF'],['#1A5C38','#D1FAE5'],
   ['#7C2D12','#FEE2E2'],['#0C4A6E','#BAE6FD'],['#4C1D95','#EDE9FE'],
@@ -756,6 +861,10 @@ window.setUniFilter = function(f, btn) {
 };
 
 window.onboardToUniversity = function(key) {
+  if (!checkAccess(['Super Admin', 'Admin', 'Document Officer', 'Application User'])) {
+    toast("Tapaisanga onboarding garne permission chaina", 'error');
+    return;
+  }
   const u = UNI_DATA[key];
   if(!u) { toast('University not found', 'error'); return; }
   openAddStudent(u.title);
