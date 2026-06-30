@@ -35,6 +35,78 @@ const auth = firebase.auth();
 db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
 
 /* ═══════════════════════════════════════════════════════
+   CENTRALIZED FIRESTORE LISTENER MANAGER
+   Single source of truth for every onSnapshot() subscription
+   in the app (students, channelPartners, notifications, chat,
+   users, cas_shield, …).
+
+   Why: previously each module kept its own
+   window._xUnsubscribe variable and re-implemented the same
+   "unsubscribe old one before starting a new one" guard by
+   hand. That's easy to forget (duplicate listeners → duplicate
+   reads / duplicate UI updates / memory leaks) and there was
+   no single place to tear everything down on sign-out or
+   tab/view changes.
+
+   Usage (existing call sites are unchanged — they just route
+   through this instead of managing their own unsubscribe var):
+
+     ListenerManager.register('students', () => query.onSnapshot(...));
+     ListenerManager.unregister('students');     // stop just one
+     ListenerManager.has('students');             // is it active?
+     ListenerManager.unsubscribeAll();             // stop everything (sign-out)
+
+   register(key, attachFn) automatically unsubscribes any
+   existing listener registered under the same key before
+   calling attachFn(), so callers never need to manage their
+   own unsubscribe variable — this is what prevents duplicate
+   listeners regardless of how many times a screen/view is
+   re-entered.
+═══════════════════════════════════════════════════════ */
+window.ListenerManager = (function () {
+  const listeners = {}; // key -> unsubscribe function
+
+  function register(key, attachFn) {
+    // Always tear down any existing listener under this key first —
+    // this is the single choke point that prevents duplicate listeners.
+    unregister(key);
+    try {
+      const unsubscribe = attachFn();
+      if (typeof unsubscribe === 'function') {
+        listeners[key] = unsubscribe;
+      } else {
+        console.warn(`[ListenerManager] register('${key}') — attachFn did not return an unsubscribe function`);
+      }
+      return unsubscribe;
+    } catch (e) {
+      console.error(`[ListenerManager] failed to attach listener '${key}':`, e);
+      return null;
+    }
+  }
+
+  function unregister(key) {
+    if (typeof listeners[key] === 'function') {
+      try { listeners[key](); } catch (e) { console.warn(`[ListenerManager] error unsubscribing '${key}':`, e); }
+    }
+    delete listeners[key];
+  }
+
+  function has(key) {
+    return typeof listeners[key] === 'function';
+  }
+
+  function unsubscribeAll() {
+    Object.keys(listeners).forEach(unregister);
+  }
+
+  function activeKeys() {
+    return Object.keys(listeners);
+  }
+
+  return { register, unregister, has, unsubscribeAll, activeKeys };
+})();
+
+/* ═══════════════════════════════════════════════════════
    RBAC — ROLE DEFINITIONS, RANK & ACCESS CHECK
    (yo section maathi raakhya kina ki auth listener ले
    tala यही functions use garcha)
@@ -88,7 +160,10 @@ function guardView(viewName, requiredRoles) {
    Page load ma automatically check garcha
 ═══════════════════════════════════════════════════════ */
 auth.onAuthStateChanged(async (user) => {
-  if (!user) return; // Login screen nai dekhaucha by default
+  if (!user) {
+    if (window.ListenerManager) window.ListenerManager.unsubscribeAll();
+    return; // Login screen nai dekhaucha by default
+  }
 
   const emailKey = (user.email || '').trim().toLowerCase();
 
@@ -274,6 +349,7 @@ function hideLogin() {
    SIGN OUT
 ═══════════════════════════════════════════════════════ */
 function signOut() {
+  if (window.ListenerManager) window.ListenerManager.unsubscribeAll();
   auth.signOut().then(() => location.reload()).catch(() => location.reload());
 }
 
