@@ -273,6 +273,17 @@
               <span style="font-size:14px;font-weight:700;color:var(--crimson-700)" id="stat-refused">—</span>
             </div>
           </div>
+          <!-- Channel Partner only — hidden by default, shown via applyChannelPartnerRestrictions() in script-additions.js -->
+          <button class="btn btn-secondary btn-sm" id="cp-download-template-btn" style="display:none" onclick="downloadStudentTemplate()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Template
+          </button>
+          <button class="btn btn-primary btn-sm" id="cp-upload-btn" style="display:none" onclick="document.getElementById('cp-upload-file').click()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16a4.5 4.5 0 010-9 5.5 5.5 0 0110.4-1.7A5 5 0 0117 16"/><path d="M12 11v8"/><path d="M9 14l3-3 3 3"/></svg>
+            Upload Students
+          </button>
+          <input type="file" id="cp-upload-file" accept=".csv" style="display:none" onchange="handleChannelPartnerUpload(event)">
+          <!-- /Channel Partner only -->
           <button class="btn btn-secondary btn-sm" onclick="exportStudentsCSV()">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Export
