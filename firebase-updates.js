@@ -464,6 +464,11 @@ window.showErrorBanner = function(msg) {
   if (banner) banner.style.display = 'flex';
 };
 
+window.hideErrorBanner = function() {
+  const banner = document.getElementById('data-error-banner');
+  if (banner) banner.style.display = 'none';
+};
+
 window.loadStudentsFromFirebase = function() {
   if (typeof loading === 'function') loading('Connecting to live student stream…');
 
@@ -507,6 +512,7 @@ window.loadStudentsFromFirebase = function() {
       if (firstLoad) {
         if (typeof toast === 'function') toast('Live: ' + fetched.length + ' students synced', 'success');
         if (typeof hideLoading === 'function') hideLoading();
+        if (typeof window.hideErrorBanner === 'function') window.hideErrorBanner();
         firstLoad = false;
         resolve();
       }
