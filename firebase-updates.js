@@ -318,7 +318,7 @@ async function submitAddStudent() {
     document.getElementById('as-drive-link-wrap').style.display = 'none';
     successEl.style.display = 'block';
     lblEl.textContent       = '✓ Added';
-    toast(`${name} added ✅`, 'success');
+    toast(`${name} added `, 'success');
 
     // Reset selected files for next entry
     if (typeof asSelectedFiles !== 'undefined') asSelectedFiles = [];
@@ -369,7 +369,7 @@ async function submitCASUpdate() {
 
     if (typeof filterCAS === 'function') filterCAS();
     closeDrawer('drw-cas-update');
-    toast('CAS record updated ✅', 'success');
+    toast('CAS record updated ', 'success');
 
   } catch (e) {
     console.error('[submitCASUpdate] Error:', e);
@@ -394,9 +394,14 @@ async function sendNotification() {
   if (btn) btn.disabled = true;
 
   try {
-    // Log notification to Firestore (audit trail)
+    // Resolve the target student's partnerId so this notification can be
+    // routed to the right Channel Partner in real time
+    const studentObj = (window.students || []).find(s => s['STUDENT ID'] === window.detailStudentId);
+
+    // Log notification to Firestore (audit trail + real-time trigger)
     await db.collection('notifications').add({
       studentId  : window.detailStudentId || null,
+      partnerId  : studentObj?.partnerId || null,
       role, type, subject, message,
       sentBy     : window.staff?.name || 'Staff',
       sentAt     : firebase.firestore.FieldValue.serverTimestamp()
@@ -532,6 +537,11 @@ window.loadChannelPartnersFromFirebase = function() {
     window.totalPartners = fetched.length;
     if (typeof renderDashboard === 'function') renderDashboard();
     if (typeof setText === 'function') setText('kpi-partners', fetched.length);
+
+    // Keep the dedicated Partners page grid and Reports page live too
+    if (currentView === 'partners' && typeof renderPartnersGrid === 'function') renderPartnersGrid();
+    if (currentView === 'reports' && typeof renderReports === 'function') renderReports();
+
     console.log('[Reactive Firestore Stream] channelPartners synced:', fetched.length);
   }, error => {
     console.error('[loadChannelPartnersFromFirebase] onSnapshot error:', error);
@@ -597,4 +607,102 @@ window.loadCAS = async function() {
   }
 };
 
-console.log('[firebase-updates.js] loaded ✅');
+/* ═══════════════════════════════════════════════════════
+   9. REAL-TIME NOTIFICATIONS
+   Listens on 'notifications'. Channel Partners only see
+   notifications addressed to their own partnerId; staff
+   roles see the full live stream. Skips the initial batch
+   so existing history doesn't toast-storm on page load —
+   only newly-added docs trigger a toast.
+═══════════════════════════════════════════════════════ */
+window._notificationsUnsubscribe = null;
+window.__notificationsFirstLoad = true;
+
+function initNotificationsListener() {
+  if (!window.db || !window.staff) return;
+  if (typeof window._notificationsUnsubscribe === 'function') {
+    window._notificationsUnsubscribe();
+    window._notificationsUnsubscribe = null;
+  }
+
+  let query = db.collection('notifications').orderBy('sentAt', 'desc').limit(50);
+  if (window.staff.role === 'Channel Partner' && window.staff.partnerId) {
+    query = db.collection('notifications')
+      .where('partnerId', '==', window.staff.partnerId)
+      .orderBy('sentAt', 'desc')
+      .limit(50);
+  }
+
+  window.__notificationsFirstLoad = true;
+  window._notificationsUnsubscribe = query.onSnapshot(snapshot => {
+    if (window.__notificationsFirstLoad) {
+      window.__notificationsFirstLoad = false;
+      return;
+    }
+    snapshot.docChanges().forEach(change => {
+      if (change.type === 'added') {
+        const n = change.doc.data();
+        if (typeof toast === 'function') toast(` ${n.subject || 'New notification'}`, 'info');
+        const dot = document.querySelector('.notif-dot');
+        if (dot) dot.style.background = '#EF4444';
+      }
+    });
+  }, err => console.error('[initNotificationsListener] error:', err));
+}
+
+// Auto-start once the session is live (mirrors the channelPartners listener boot)
+document.addEventListener('students-data-ready', function onceNotificationsInit() {
+  if (typeof initNotificationsListener === 'function' && !window._notificationsUnsubscribe) {
+    initNotificationsListener();
+  }
+});
+
+/* ═══════════════════════════════════════════════════════
+   10. STUDENT DETAIL — Personal Info inline edit
+   Toggles the read-only "Personal Info" panel into editable
+   inputs and saves via the existing queueBatchEdit() writer.
+   Reuse this same id->key / toggle pattern for any other
+   read-only panel you want to make editable.
+═══════════════════════════════════════════════════════ */
+const PERSONAL_INFO_FIELDS = [
+  { id: 'dp-sid',       key: 'STUDENT ID',   locked: true },
+  { id: 'dp-level',     key: 'LEVEL' },
+  { id: 'dp-sname',     key: 'STUDENT NAME' },
+  { id: 'dp-course',    key: 'COURSE' },
+  { id: 'dp-dob',       key: 'DOB', type: 'date' },
+  { id: 'dp-agent',     key: 'AGENT' },
+  { id: 'dp-mobile-ro', key: 'MOBILE' },
+  { id: 'dp-email-ro',  key: 'EMAIL', type: 'email' }
+];
+window.__personalInfoEditing = false;
+
+function toggleEditPersonalInfo() {
+  const btn = document.getElementById('dp-edit-btn');
+  const s = (window.students || []).find(s => s['STUDENT ID'] === window.detailStudentId);
+  if (!s || !btn) return;
+
+  if (!window.__personalInfoEditing) {
+    PERSONAL_INFO_FIELDS.forEach(f => {
+      if (f.locked) return;
+      const el = document.getElementById(f.id);
+      if (!el) return;
+      const val = (s[f.key] || '').toString().replace(/"/g, '&quot;');
+      el.innerHTML = `<input class="form-control" style="font-size:12.5px;padding:4px 7px" type="${f.type || 'text'}" id="edit-${f.id}" value="${val}">`;
+    });
+    btn.textContent = ' Save';
+    window.__personalInfoEditing = true;
+  } else {
+    const patch = {};
+    PERSONAL_INFO_FIELDS.forEach(f => {
+      if (f.locked) return;
+      const input = document.getElementById('edit-' + f.id);
+      if (input) patch[f.key] = input.value.trim();
+    });
+    if (typeof queueBatchEdit === 'function') queueBatchEdit(window.detailStudentId, patch);
+    btn.textContent = ' Edit';
+    window.__personalInfoEditing = false;
+    setTimeout(() => { if (typeof openDetail === 'function') openDetail(window.detailStudentId); }, 250);
+  }
+}
+
+console.log('[firebase-updates.js] loaded ');
