@@ -23,5 +23,22 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated() && getUserRole() in ['Super Admin', 'Admin'];
     }
+
+    match /chatMessages/{messageId} {
+      allow read: if isAuthenticated() && (
+        resource.data.group == 'global' ||
+        (resource.data.group == 'staff-only' && isStaff()) ||
+        (resource.data.isDirect == true &&
+          (resource.data.senderEmail == request.auth.token.email ||
+           resource.data.toEmail == request.auth.token.email))
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.senderEmail == request.auth.token.email && (
+          request.resource.data.group == 'global' ||
+          (request.resource.data.group == 'staff-only' && isStaff()) ||
+          (request.resource.data.isDirect == true && request.resource.data.toEmail is string)
+        );
+      allow update, delete: if false;
+    }
   }
 }
