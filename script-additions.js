@@ -2896,16 +2896,20 @@ if (typeof window.guardView !== 'function') {
 console.log('[script-additions.js] loaded — RBAC view-guard, login, partners, notify/email, mock pre-CAS, CAS shield, reports, internal chat (chatMessages), and Channel Partner restricted view + template upload all included');
 
 
+// stageHasDocs: stage lai "fully updated" mannu bhanda pahile required document(s)
+// upload bhaisakeko hunu paryo. Yesले locking chain ma pani feed huncha (prevDone).
+const stageHasDocs = (s, docKey) => Array.isArray(s[docKey]) && s[docKey].length > 0;
+
 const STAGE_DEFS = [
-  {id:'app_submitted',label:'Application submitted',key:'APPLICATION SUBMITTED DATE',done:s=>!!(s['APPLICATION SUBMITTED DATE']),prevDone:s=>true,type:'date',desc:'Record the date the application was submitted to the university.'},
-  {id:'prescreening',label:'Pre-screening call',key:'PRE-SCREENING CALL STATUS',done:s=>/received|no connectivity|on hold|scheduled|withdrew|interested/i.test(s['PRE-SCREENING CALL STATUS']||''),prevDone:s=>!!(s['APPLICATION SUBMITTED DATE']),type:'select',options:[{val:'Received',icon:''},{val:'No Connectivity',icon:''},{val:'On Hold',icon:'⏸'},{val:'Scheduled',icon:''},{val:'Withdrew',icon:''},{val:'Called – Interested',icon:''},{val:'Called – Not Interested',icon:''}],desc:'Log the outcome of the initial pre-screening call with the student.'},
-  {id:'offer',label:'Offer received',key:'OFFER STATUS',done:s=>/conditional|unconditional|received/i.test(s['OFFER STATUS']||''),prevDone:s=>!!(s['PRE-SCREENING CALL STATUS']),type:'select',options:[{val:'Conditional',icon:''},{val:'Unconditional',icon:''},{val:'Received',icon:''},{val:'Pending',icon:''},{val:'Rejected',icon:''}],desc:'Update the offer status from the university.'},
-  {id:'cas_payment',label:'Payment for CAS Shield',key:'CAS PAYMENT STATUS',done:s=>s['CAS PAYMENT STATUS']==='Paid',prevDone:s=>/conditional|unconditional|received/i.test(s['OFFER STATUS']||''),type:'select',options:[{val:'Paid',icon:''},{val:'Unpaid',icon:''}],desc:'Confirm payment has been received for CAS Shield processing.'},
-  {id:'mock',label:'Mock interview',key:'MOCK INTERVIEW STATUS',done:s=>s['MOCK INTERVIEW STATUS']==='Stage 4 Done',prevDone:s=>s['CAS PAYMENT STATUS']==='Paid',type:'mock_stages',desc:'Track progress through all 4 mock interview preparation stages.'},
-  {id:'precas',label:'Pre-CAS interview',key:'PRE-CAS INTERVIEW',done:s=>s['PRE-CAS INTERVIEW']==='Pass',prevDone:s=>s['MOCK INTERVIEW STATUS']==='Stage 4 Done',type:'select',options:[{val:'Pass',icon:''},{val:'Fail',icon:''}],desc:'Record the result of the Pre-CAS interview. Pass required to proceed.'},
-  {id:'cas_requested',label:'CAS requested',key:'CAS REQUESTED STATUS',done:s=>s['CAS REQUESTED STATUS']==='Requested',prevDone:s=>s['PRE-CAS INTERVIEW']==='Pass',type:'select',options:[{val:'Requested',icon:''},{val:'Not Requested',icon:''}],desc:'Confirm that the CAS has been formally requested from the university.'},
-  {id:'cas_received',label:'CAS received',key:'CAS STATUS',done:s=>/issued/i.test(s['CAS STATUS']||''),prevDone:s=>s['CAS REQUESTED STATUS']==='Requested',type:'select',options:[{val:'Issued',icon:''},{val:'Pending',icon:''},{val:'Rejected',icon:''}],desc:'Update when the CAS document has been issued by the university.'},
-  {id:'visa',label:'Visa status',key:'VISA STATUS',done:s=>/approved/i.test(s['VISA STATUS']||''),prevDone:s=>/issued/i.test(s['CAS STATUS']||''),type:'select',options:[{val:'Approved',icon:'🎉'},{val:'Submitted',icon:''},{val:'Biometrics Booked',icon:''},{val:'Pending',icon:''},{val:'Refused',icon:''},{val:'Withdrawn',icon:''}],desc:"Track the student's visa application status."}
+  {id:'app_submitted',label:'Application submitted',key:'APPLICATION SUBMITTED DATE',docKey:'APPLICATION SUBMITTED DATE DOCS',requiresDoc:true,done:s=>!!(s['APPLICATION SUBMITTED DATE']) && stageHasDocs(s,'APPLICATION SUBMITTED DATE DOCS'),prevDone:s=>true,type:'date',desc:'Record the date the application was submitted to the university. Upload the submitted application copy.'},
+  {id:'prescreening',label:'Pre-screening call',key:'PRE-SCREENING CALL STATUS',requiresDoc:false,done:s=>/received|no connectivity|on hold|scheduled|withdrew|interested/i.test(s['PRE-SCREENING CALL STATUS']||''),prevDone:s=>!!(s['APPLICATION SUBMITTED DATE']) && stageHasDocs(s,'APPLICATION SUBMITTED DATE DOCS'),type:'select',options:[{val:'Received',icon:''},{val:'No Connectivity',icon:''},{val:'On Hold',icon:'⏸'},{val:'Scheduled',icon:''},{val:'Withdrew',icon:''},{val:'Called – Interested',icon:''},{val:'Called – Not Interested',icon:''}],desc:'Log the outcome of the initial pre-screening call with the student.'},
+  {id:'offer',label:'Offer received',key:'OFFER STATUS',docKey:'OFFER STATUS DOCS',requiresDoc:true,done:s=>/conditional|unconditional|received/i.test(s['OFFER STATUS']||'') && stageHasDocs(s,'OFFER STATUS DOCS'),prevDone:s=>!!(s['PRE-SCREENING CALL STATUS']),type:'select',options:[{val:'Conditional',icon:''},{val:'Unconditional',icon:''},{val:'Received',icon:''},{val:'Pending',icon:''},{val:'Rejected',icon:''}],desc:'Update the offer status from the university. Upload the offer letter.'},
+  {id:'cas_payment',label:'Payment for CAS Shield',key:'CAS PAYMENT STATUS',docKey:'CAS PAYMENT STATUS DOCS',requiresDoc:true,done:s=>s['CAS PAYMENT STATUS']==='Paid' && stageHasDocs(s,'CAS PAYMENT STATUS DOCS'),prevDone:s=>/conditional|unconditional|received/i.test(s['OFFER STATUS']||'') && stageHasDocs(s,'OFFER STATUS DOCS'),type:'select',options:[{val:'Paid',icon:''},{val:'Unpaid',icon:''}],desc:'Confirm payment has been received for CAS Shield processing. Upload the payment receipt.'},
+  {id:'mock',label:'Mock interview',key:'MOCK INTERVIEW STATUS',requiresDoc:false,done:s=>s['MOCK INTERVIEW STATUS']==='Stage 4 Done',prevDone:s=>s['CAS PAYMENT STATUS']==='Paid' && stageHasDocs(s,'CAS PAYMENT STATUS DOCS'),type:'mock_stages',desc:'Track progress through all 4 mock interview preparation stages.'},
+  {id:'precas',label:'Pre-CAS interview',key:'PRE-CAS INTERVIEW',docKey:'PRE-CAS INTERVIEW DOCS',requiresDoc:true,done:s=>s['PRE-CAS INTERVIEW']==='Pass' && stageHasDocs(s,'PRE-CAS INTERVIEW DOCS'),prevDone:s=>s['MOCK INTERVIEW STATUS']==='Stage 4 Done',type:'select',options:[{val:'Pass',icon:''},{val:'Fail',icon:''}],desc:'Record the result of the Pre-CAS interview. Pass required to proceed. Upload the interview result/report.'},
+  {id:'cas_requested',label:'CAS requested',key:'CAS REQUESTED STATUS',docKey:'CAS REQUESTED STATUS DOCS',requiresDoc:true,done:s=>s['CAS REQUESTED STATUS']==='Requested' && stageHasDocs(s,'CAS REQUESTED STATUS DOCS'),prevDone:s=>s['PRE-CAS INTERVIEW']==='Pass' && stageHasDocs(s,'PRE-CAS INTERVIEW DOCS'),type:'select',options:[{val:'Requested',icon:''},{val:'Not Requested',icon:''}],desc:'Confirm that the CAS has been formally requested from the university. Upload the request confirmation.'},
+  {id:'cas_received',label:'CAS received',key:'CAS STATUS',docKey:'CAS STATUS DOCS',requiresDoc:true,done:s=>/issued/i.test(s['CAS STATUS']||'') && stageHasDocs(s,'CAS STATUS DOCS'),prevDone:s=>s['CAS REQUESTED STATUS']==='Requested' && stageHasDocs(s,'CAS REQUESTED STATUS DOCS'),type:'select',options:[{val:'Issued',icon:''},{val:'Pending',icon:''},{val:'Rejected',icon:''}],desc:'Update when the CAS document has been issued by the university. Upload the CAS document.'},
+  {id:'visa',label:'Visa status',key:'VISA STATUS',docKey:'VISA STATUS DOCS',requiresDoc:true,done:s=>/approved/i.test(s['VISA STATUS']||'') && stageHasDocs(s,'VISA STATUS DOCS'),prevDone:s=>/issued/i.test(s['CAS STATUS']||'') && stageHasDocs(s,'CAS STATUS DOCS'),type:'select',options:[{val:'Approved',icon:'🎉'},{val:'Submitted',icon:''},{val:'Biometrics Booked',icon:''},{val:'Pending',icon:''},{val:'Refused',icon:''},{val:'Withdrawn',icon:''}],desc:"Track the student's visa application status. Upload the visa decision letter."}
 ];
 
 const MOCK_STAGES = ['Stage 1 Done','Stage 2 Done','Stage 3 Done','Stage 4 Done'];
@@ -2963,6 +2967,27 @@ function renderStagePipeline(s) {
           contentHTML += `<div class="stage-opt${isSel ? ' selected' : ''}${!mockUnlocked ? ' locked-row' : ''}" onclick="pickMockStage(this,${i},'${escapeHtml(ms)}',${mi},${curLevel})" style="${!mockUnlocked ? 'opacity:.4;pointer-events:none' : ''}"><span class="stage-opt-icon">${isSel || curLevel >= mi ? '' : ''}</span>Mock ${ms}</div>`;
         });
         contentHTML += `</div>`;
+      }
+      if(sd.requiresDoc) {
+        const docs = merged[sd.docKey] || [];
+        contentHTML += `<div class="stage-docs" data-stage-idx="${i}">`;
+        contentHTML += `<label style="display:block;font-size:9.5px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin:10px 0 5px">Documents (required to complete this stage)</label>`;
+        if(docs.length) {
+          contentHTML += docs.map((d, di) => `
+            <div class="stage-doc-chip">
+              <a href="${escapeHtml(d.url || '')}" target="_blank" rel="noopener">${escapeHtml(d.name || 'Document')}</a>
+              <button type="button" class="stage-doc-remove" onclick="removeStageDoc('${escapeHtml(activeStudentId)}','${escapeHtml(sd.docKey)}',${di})" title="Remove">✕</button>
+            </div>`).join('');
+        } else {
+          contentHTML += `<div class="stage-doc-empty">No document uploaded yet — this stage stays locked until one is added.</div>`;
+        }
+        contentHTML += `
+          <label class="stage-doc-upload-btn" for="stage-doc-input-${i}">
+            <span id="stage-doc-upload-lbl-${i}">+ Add document</span>
+            <span class="spinner-sm" id="stage-doc-upload-spin-${i}" style="display:none"></span>
+          </label>
+          <input type="file" id="stage-doc-input-${i}" style="display:none" onchange="uploadStageDoc(this,'${escapeHtml(activeStudentId)}','${escapeHtml(sd.docKey)}',${i})">
+        </div>`;
       }
       contentHTML += `<div class="stage-notes"><label>Notes (optional)</label><textarea placeholder="Add notes…" id="stage-note-${i}" data-note-key="${escapeHtml(noteKey)}" oninput="stageEdits['note_${i}']={key:'${escapeHtml(noteKey)}',val:this.value}">${escapeHtml(noteVal)}</textarea></div>`;
     }
