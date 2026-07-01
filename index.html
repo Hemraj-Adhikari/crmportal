@@ -289,32 +289,32 @@
 
       <!-- KPI cards -->
       <div class="kpi-grid">
-        <div class="kpi-card kpi-navy">
+        <div class="kpi-card kpi-navy" onclick="goToStudentsFiltered('','')" title="View all students">
           <div class="kpi-label">Total Students</div>
           <div class="kpi-val" id="kpi-total">—</div>
           <div class="kpi-sub">All pipeline stages</div>
         </div>
-        <div class="kpi-card kpi-green">
+        <div class="kpi-card kpi-green" onclick="goToStudentsFiltered('visa','Approved')" title="View visa approved students">
           <div class="kpi-label">Visa Approved</div>
           <div class="kpi-val" id="kpi-visa">—</div>
           <div class="kpi-sub">Successful outcomes</div>
         </div>
-        <div class="kpi-card kpi-gold">
+        <div class="kpi-card kpi-gold" onclick="goToStudentsFiltered('cas','Pending')" title="View CAS in progress students">
           <div class="kpi-label">CAS In Progress</div>
           <div class="kpi-val" id="kpi-cas">—</div>
           <div class="kpi-sub">Active applications</div>
         </div>
-        <div class="kpi-card kpi-red">
+        <div class="kpi-card kpi-red" onclick="goToStudentsFiltered('visa','Refused')" title="View visa refused students">
           <div class="kpi-label">Visa Refused</div>
           <div class="kpi-val" id="kpi-refused">—</div>
           <div class="kpi-sub">Needs review</div>
         </div>
-        <div class="kpi-card kpi-blue">
+        <div class="kpi-card kpi-blue" onclick="goToStudentsFiltered('offer','Received')" title="View students with offers received">
           <div class="kpi-label">Offers Received</div>
           <div class="kpi-val" id="kpi-offers">—</div>
           <div class="kpi-sub">Conditional + unconditional</div>
         </div>
-        <div class="kpi-card kpi-violet">
+        <div class="kpi-card kpi-violet" onclick="goToPartners()" title="View all channel partners">
           <div class="kpi-label">Total Channel Partners</div>
           <div class="kpi-val" id="kpi-partners">—</div>
           <div class="kpi-sub">Active agencies · live</div>
@@ -343,11 +343,11 @@
                 </svg>
               </div>
               <div style="flex:1;display:flex;flex-direction:column;gap:5px">
-                <div style="display:flex;align-items:center;gap:7px"><span class="legend-dot" style="background:var(--navy-600)"></span><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:500">Applied &amp; called</span><span style="font-size:11.5px;font-weight:700;color:var(--text-primary)" id="l-applied">0</span></div>
-                <div style="display:flex;align-items:center;gap:7px"><span class="legend-dot" style="background:var(--gold-500)"></span><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:500">Conditional offer</span><span style="font-size:11.5px;font-weight:700;color:var(--text-primary)" id="l-cond">0</span></div>
-                <div style="display:flex;align-items:center;gap:7px"><span class="legend-dot" style="background:var(--violet-500)"></span><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:500">Mock / Pre-CAS</span><span style="font-size:11.5px;font-weight:700;color:var(--text-primary)" id="l-mock">0</span></div>
-                <div style="display:flex;align-items:center;gap:7px"><span class="legend-dot" style="background:#0EA5E9"></span><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:500">CAS in progress</span><span style="font-size:11.5px;font-weight:700;color:var(--text-primary)" id="l-cas">0</span></div>
-                <div style="display:flex;align-items:center;gap:7px"><span class="legend-dot" style="background:var(--emerald-500)"></span><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:500">Visa received</span><span style="font-size:11.5px;font-weight:700;color:var(--text-primary)" id="l-visa">0</span></div>
+                <div class="legend-row" style="display:flex;align-items:center;gap:7px" onclick="goToStudentsFiltered('','')" title="View all students"><span class="legend-dot" style="background:var(--navy-600)"></span><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:500">Applied &amp; called</span><span style="font-size:11.5px;font-weight:700;color:var(--text-primary)" id="l-applied">0</span></div>
+                <div class="legend-row" style="display:flex;align-items:center;gap:7px" onclick="goToStudentsFiltered('offer','Received')" title="View students with offers received"><span class="legend-dot" style="background:var(--gold-500)"></span><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:500">Conditional offer</span><span style="font-size:11.5px;font-weight:700;color:var(--text-primary)" id="l-cond">0</span></div>
+                <div class="legend-row" style="display:flex;align-items:center;gap:7px" onclick="goToStudentsFiltered('mock','Done')" title="View students with Mock/Pre-CAS done"><span class="legend-dot" style="background:var(--violet-500)"></span><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:500">Mock / Pre-CAS</span><span style="font-size:11.5px;font-weight:700;color:var(--text-primary)" id="l-mock">0</span></div>
+                <div class="legend-row" style="display:flex;align-items:center;gap:7px" onclick="goToStudentsFiltered('cas','Pending')" title="View CAS in progress students"><span class="legend-dot" style="background:#0EA5E9"></span><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:500">CAS in progress</span><span style="font-size:11.5px;font-weight:700;color:var(--text-primary)" id="l-cas">0</span></div>
+                <div class="legend-row" style="display:flex;align-items:center;gap:7px" onclick="goToStudentsFiltered('visa','Approved')" title="View visa approved students"><span class="legend-dot" style="background:var(--emerald-500)"></span><span style="flex:1;font-size:11px;color:var(--text-secondary);font-weight:500">Visa received</span><span style="font-size:11.5px;font-weight:700;color:var(--text-primary)" id="l-visa">0</span></div>
               </div>
             </div>
           </div>
@@ -1166,6 +1166,7 @@
 <script src="firebase-import.js"></script>
 <script src="firebase-storage-upload.js"></script>
 <script src="firebase-updates.js"></script>
+<script src="script.js"></script>
 <script src="script-additions.js"></script>
 <script src="bulk-communication.js"></script>
 
