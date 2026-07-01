@@ -1852,9 +1852,6 @@ async function fbSave() {
     toast('Could not save feedback', 'error');
   }
 }
-    setText('fb-success-title', 'Feedback saved for ' + doc.studentName);
-    const link = document.getElementById('fb-doc-link');
-    if (link) link.href = '#feedback/' + ref.id;
 
 
 function resetFeedback() {
