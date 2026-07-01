@@ -139,6 +139,10 @@ function nowStr() {
       renderDashboardPartners();
       loadUniversitiesData();
 
+      if (typeof startPresenceHeartbeat === 'function') {
+        startPresenceHeartbeat();
+      }
+
       if (typeof refreshChatView === 'function') {
         refreshChatView();
       }
@@ -2090,13 +2094,16 @@ function switchChatGroup(group, btnEl) {
 
   if (btnEl) btnEl.classList.add('active');
 
-  const recipientBar = document.getElementById('chat-recipient-bar');
+  const contactsPanel = document.getElementById('chat-contacts-panel');
+  const threadHeader = document.getElementById('chat-thread-header');
 
   if (group === 'direct') {
-    if (recipientBar) recipientBar.style.display = '';
+    if (contactsPanel) contactsPanel.style.display = '';
     populateChatRecipients();
+    updateChatThreadHeader();
   } else {
-    if (recipientBar) recipientBar.style.display = 'none';
+    if (contactsPanel) contactsPanel.style.display = 'none';
+    if (threadHeader) { threadHeader.style.display = 'none'; threadHeader.innerHTML = ''; }
     currentChatRecipient = null;
   }
 
@@ -2113,64 +2120,190 @@ function directGroupId(otherEmail) {
   return 'dm_' + [me, other].sort().join('__');
 }
 
+// ==============================================================================
+// CHAT PRESENCE ("who's online") + PEOPLE LIST FOR DIRECT MESSAGES
+// ==============================================================================
+
+// A user counts as "online" if their presence doc was refreshed within this
+// window. The heartbeat below writes every 25s, so 45s comfortably covers
+// one missed beat without flashing offline/online.
+const PRESENCE_ONLINE_MS = 45000;
+const PRESENCE_HEARTBEAT_MS = 25000;
+
+let __presenceInterval = null;
+let __chatContactsRefreshInterval = null;
+
+function isUserOnline(u) {
+  const ts = u && u.lastSeen && typeof u.lastSeen.toDate === 'function'
+    ? u.lastSeen.toDate().getTime()
+    : null;
+  return !!ts && (Date.now() - ts) < PRESENCE_ONLINE_MS;
+}
+
 /**
- * Fills the recipient dropdown with Admin/Staff users and Channel Partner
- * users pulled from the 'users' collection (window.__allUsers).
+ * Marks the signed-in user online/offline. Only touches the `online` and
+ * `lastSeen` fields — Firestore rules only allow a user to write their own
+ * doc for exactly those two fields, so this never needs Admin rights.
  */
-function populateChatRecipients() {
-  const select = document.getElementById('chat-recipient-select');
-  if (!select) return;
-
-  if (typeof initUsersListener === 'function' && !window.ListenerManager.has('users')) {
-    initUsersListener();
-  }
-
-  const myEmail = (firebase.auth().currentUser?.email || '').toLowerCase();
-  const users = (window.__allUsers || [])
-    .filter(u => (u.email || '').toLowerCase() !== myEmail && u.active !== false)
-    .sort((a, b) => (a.name || a.email || '').localeCompare(b.name || b.email || ''));
-
-  const adminUsers = users.filter(u => u.role !== 'Channel Partner');
-  const partnerUsers = users.filter(u => u.role === 'Channel Partner');
-
-  const optionHTML = (u) =>
-    `<option value="${escapeHtml((u.email || '').toLowerCase())}" data-name="${escapeHtml(u.name || u.email || '')}" data-role="${escapeHtml(u.role || '')}">${escapeHtml(u.name || u.email || '')}${u.role ? ' — ' + escapeHtml(u.role) : ''}</option>`;
-
-  const currentValue = currentChatRecipient ? currentChatRecipient.email : select.value;
-
-  select.innerHTML =
-    '<option value="">Select recipient…</option>' +
-    (adminUsers.length ? '<optgroup label="Admin / Staff">' + adminUsers.map(optionHTML).join('') + '</optgroup>' : '') +
-    (partnerUsers.length ? '<optgroup label="Channel Partners">' + partnerUsers.map(optionHTML).join('') + '</optgroup>' : '');
-
-  if (currentValue) {
-    select.value = currentValue;
+async function writePresence(online) {
+  try {
+    const email = (firebase.auth().currentUser?.email || '').toLowerCase();
+    if (!email || !window.db) return;
+    await db.collection('users').doc(email).update({
+      online: online,
+      lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (e) {
+    console.warn('[presence] could not update status:', e);
   }
 }
 
 /**
- * Called when a recipient is picked from the Direct Message dropdown.
+ * Starts the presence heartbeat for the signed-in session: marks online
+ * immediately, then refreshes every 25s while the tab is visible, and
+ * marks offline on tab close / navigation away.
  */
-function onChatRecipientChange(email) {
-  const select = document.getElementById('chat-recipient-select');
-  const opt = select?.selectedOptions?.[0];
+function startPresenceHeartbeat() {
+  if (__presenceInterval) return; // already running for this session
 
-  if (!email || !opt) {
-    currentChatRecipient = null;
-    const container = document.getElementById('chat-messages');
-    if (container) {
-      container.innerHTML = '<div class="empty-state">Select a recipient to start a conversation.</div>';
+  writePresence(true);
+
+  __presenceInterval = setInterval(() => {
+    if (document.visibilityState !== 'hidden') writePresence(true);
+  }, PRESENCE_HEARTBEAT_MS);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') writePresence(true);
+  });
+
+  window.addEventListener('beforeunload', () => writePresence(false));
+
+  ensureChatContactsRefreshLoop();
+}
+
+/**
+ * Since a person can go stale (tab closed without a clean beforeunload)
+ * without triggering a new Firestore snapshot, re-render the dots on a
+ * timer too so "Online" flips to "Offline" once their heartbeat lapses.
+ */
+function ensureChatContactsRefreshLoop() {
+  if (__chatContactsRefreshInterval) return;
+  __chatContactsRefreshInterval = setInterval(() => {
+    if (currentView === 'chat' && currentChatGroup === 'direct') {
+      renderChatContacts();
+      updateChatThreadHeader();
     }
+  }, 15000);
+}
+
+function ccInitials(name) {
+  if (!name) return '?';
+  const parts = String(name).trim().split(/\s+/);
+  return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase() || name[0].toUpperCase();
+}
+
+/**
+ * Loads the people list (Admin/Staff + Channel Partners) from the 'users'
+ * collection (window.__allUsers) and renders it.
+ */
+function populateChatRecipients() {
+  if (typeof initUsersListener === 'function' && !window.ListenerManager.has('users')) {
+    initUsersListener();
+  }
+  renderChatContacts();
+}
+
+/**
+ * Renders the clickable "People" list for Direct Message, with a live
+ * green/grey dot showing who's currently online. Selecting a person opens
+ * (or creates) the 1:1 thread with them — see selectChatContact() and the
+ * delegated click listener registered near the bottom of this file.
+ */
+function renderChatContacts() {
+  const list = document.getElementById('chat-contacts-list');
+  if (!list) return;
+
+  const myEmail = (firebase.auth().currentUser?.email || '').toLowerCase();
+  const users = (window.__allUsers || [])
+    .filter(u => (u.email || '').toLowerCase() !== myEmail && u.active !== false)
+    .sort((a, b) => {
+      const aOn = isUserOnline(a) ? 0 : 1;
+      const bOn = isUserOnline(b) ? 0 : 1;
+      if (aOn !== bOn) return aOn - bOn; // online people float to the top
+      return (a.name || a.email || '').localeCompare(b.name || b.email || '');
+    });
+
+  if (!users.length) {
+    list.innerHTML = '<div class="empty-state" style="padding:20px 8px;font-size:12px">No other users found</div>';
     return;
   }
 
-  currentChatRecipient = {
-    email,
-    name: opt.getAttribute('data-name') || email,
-    role: opt.getAttribute('data-role') || ''
-  };
+  list.innerHTML = users.map(u => {
+    const email = (u.email || '').toLowerCase();
+    const name = u.name || u.email || 'Unknown';
+    const role = u.role || '';
+    const online = isUserOnline(u);
+    const active = !!(currentChatRecipient && currentChatRecipient.email === email);
+    const avatarColor = typeof umAvatarColor === 'function' ? umAvatarColor(name) : '#3B82F6';
 
+    return `
+      <div class="cc-item${active ? ' active' : ''}" data-email="${escapeHtml(email)}" data-name="${escapeHtml(name)}" data-role="${escapeHtml(role)}">
+        <div class="cc-avatar" style="background:${avatarColor}">
+          ${escapeHtml(ccInitials(name))}
+          <span class="cc-dot${online ? ' online' : ''}"></span>
+        </div>
+        <div style="min-width:0">
+          <div class="cc-name">${escapeHtml(name)}</div>
+          <div class="cc-sub">${role ? escapeHtml(role) + ' · ' : ''}${online ? 'Online' : 'Offline'}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/**
+ * Called when a person is clicked in the People list — opens (or switches
+ * to) that 1:1 direct-message thread.
+ */
+function selectChatContact(email, name, role) {
+  if (!email) return;
+  currentChatRecipient = { email, name: name || email, role: role || '' };
+  renderChatContacts();      // refresh highlight on the selected row
+  updateChatThreadHeader();
   refreshChatView();
+}
+
+// Delegated click handler — the list is re-rendered often, so we bind once
+// on a stable ancestor instead of re-binding per item.
+document.addEventListener('click', (e) => {
+  const item = e.target.closest('#chat-contacts-list .cc-item');
+  if (!item) return;
+  selectChatContact(item.dataset.email, item.dataset.name, item.dataset.role);
+});
+
+/**
+ * Shows "You're chatting with <name> [role] · Online/Offline" above the
+ * message list whenever a Direct Message thread is open, so it's always
+ * clear who a message is going to / coming from.
+ */
+function updateChatThreadHeader() {
+  const header = document.getElementById('chat-thread-header');
+  if (!header) return;
+
+  if (currentChatGroup !== 'direct' || !currentChatRecipient) {
+    header.style.display = 'none';
+    header.innerHTML = '';
+    return;
+  }
+
+  const u = (window.__allUsers || []).find(x => (x.email || '').toLowerCase() === currentChatRecipient.email);
+  const online = u ? isUserOnline(u) : false;
+
+  header.style.display = 'flex';
+  header.innerHTML = `
+    <span class="cth-dot${online ? ' online' : ''}"></span>
+    <span>${escapeHtml(currentChatRecipient.name)}</span>
+    <span style="font-weight:400;color:var(--text-muted)">${currentChatRecipient.role ? '· ' + escapeHtml(currentChatRecipient.role) + ' ' : ''}· ${online ? 'Online' : 'Offline'}</span>
+  `;
 }
 
 /**
@@ -2178,13 +2311,15 @@ function onChatRecipientChange(email) {
  * (Global / Staff Only / a specific Direct Message thread).
  */
 function refreshChatView() {
+  updateChatThreadHeader();
+
   if (currentChatGroup === 'direct') {
     if (currentChatRecipient) {
       initChatListener(directGroupId(currentChatRecipient.email));
     } else {
       const container = document.getElementById('chat-messages');
       if (container) {
-        container.innerHTML = '<div class="empty-state">Select a recipient to start a conversation.</div>';
+        container.innerHTML = '<div class="empty-state">Select a person from the list to start a conversation.</div>';
       }
     }
     return;
@@ -3119,6 +3254,13 @@ function initUsersListener() {
       umUpdateKpiCards();
       umCurrentPage = 1;
       renderUsersTable();
+
+      // Live-refresh the chat "People" list / thread header the instant
+      // anyone's presence (online/lastSeen) or profile changes.
+      if (currentChatGroup === 'direct') {
+        if (typeof renderChatContacts === 'function') renderChatContacts();
+        if (typeof updateChatThreadHeader === 'function') updateChatThreadHeader();
+      }
     },
     (err) => {
       console.error('users listener error:', err);
