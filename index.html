@@ -504,6 +504,33 @@
           Add partner
         </button>
       </div>
+
+      <div class="cp-summary-bar">
+        <div class="cp-summary-item">
+          <div class="cp-summary-val" id="cp-summary-total">0</div>
+          <div class="cp-summary-label">Total Partners</div>
+        </div>
+        <div class="cp-summary-item">
+          <div class="cp-summary-val" id="cp-summary-students">0</div>
+          <div class="cp-summary-label">Students via Partners</div>
+        </div>
+        <div class="cp-summary-item">
+          <div class="cp-summary-val" id="cp-summary-avg">0</div>
+          <div class="cp-summary-label">Avg Students / Partner</div>
+        </div>
+      </div>
+
+      <div class="cp-toolbar">
+        <div class="tbl-search-wrap">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="cp-search-input" type="text" oninput="renderPartnersGrid()" placeholder="Search partners…">
+        </div>
+        <label class="cp-selectall-wrap">
+          <input type="checkbox" id="cp-select-all" onchange="toggleSelectAllPartners(this.checked)">
+          Select all
+        </label>
+      </div>
+
       <div class="cp-grid" id="full-cp-grid">
         <div class="empty-state" style="grid-column:1/-1">Loading…</div>
       </div>
@@ -1205,6 +1232,37 @@
     Bulk Status Update
   </button>
   <button onclick="clearStudentSelection()" title="Clear selection" style="
+    background:transparent;border:none;color:rgba(255,255,255,.45);
+    cursor:pointer;padding:4px;border-radius:var(--r-sm);line-height:1;
+    font-size:16px;transition:color .13s
+  " onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.45)'">✕</button>
+</div>
+<div id="bulk-action-bar-partners" style="
+  display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:var(--navy-800);color:#fff;border-radius:var(--r-lg);
+  box-shadow:var(--shadow-xl);padding:10px 16px;
+  align-items:center;gap:12px;z-index:200;
+  border:1px solid rgba(255,255,255,.1);min-width:360px;
+">
+  <span id="bulk-count-label-partners" style="font-size:12px;font-weight:600;color:var(--gold-300);white-space:nowrap">0 selected</span>
+  <div style="flex:1;height:1px;background:rgba(255,255,255,.12)"></div>
+  <button onclick="bulkEmailPartners()" style="
+    background:var(--navy-600);border:1px solid rgba(255,255,255,.15);color:#fff;
+    border-radius:var(--r-md);padding:6px 14px;font-size:11.5px;font-weight:600;
+    cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s
+  " onmouseover="this.style.background='var(--navy-500)'" onmouseout="this.style.background='var(--navy-600)'">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    Bulk Email
+  </button>
+  <button onclick="bulkWhatsAppPartners()" style="
+    background:#25D366;border:none;color:#fff;
+    border-radius:var(--r-md);padding:6px 14px;font-size:11.5px;font-weight:700;
+    cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:filter .15s
+  " onmouseover="this.style.filter='brightness(1.08)'" onmouseout="this.style.filter='none'">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+    Bulk WhatsApp
+  </button>
+  <button onclick="clearPartnerSelection()" title="Clear selection" style="
     background:transparent;border:none;color:rgba(255,255,255,.45);
     cursor:pointer;padding:4px;border-radius:var(--r-sm);line-height:1;
     font-size:16px;transition:color .13s
