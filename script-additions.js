@@ -927,7 +927,7 @@ function renderDashboardPartners() {
     return;
   }
 
-  grid.innerHTML = partners.slice(0, 6).map((partner) => partnerCardHTML(partner.id, partner, true)).join('');
+  grid.innerHTML = partners.slice(0, 6).map((partner) => partnerCardHTML(partner.id, partner, 'dashboard')).join('');
 }
 
 // ==============================================================================
@@ -965,11 +965,18 @@ function partnerColor(seedString) {
 /**
  * Generate HTML for partner card
  */
-function partnerCardHTML(partnerId, partnerData, clickable) {
+function partnerCardHTML(partnerId, partnerData, mode) {
   const color = partnerColor(partnerData.name || partnerId);
-  const clickAttr = clickable ? ` onclick="goToPartners()" title="View all channel partners"` : '';
+  const isDashboard = mode === 'dashboard';
+  const isSelectable = mode === 'grid';
+  const clickAttr = isDashboard ? ` onclick="goToPartners()" title="View all channel partners"` : '';
+  const isSelected = isSelectable && selectedPartnerIds.has(partnerId);
+  const checkboxHtml = isSelectable
+    ? `<input type="checkbox" class="cp-select" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation()" onchange="toggleSelectPartner('${partnerId}', this.checked)" title="Select partner">`
+    : '';
   return `
-    <div class="cp-card"${clickAttr}>
+    <div class="cp-card${isSelected ? ' selected' : ''}" id="cp-card-${partnerId}"${clickAttr}>
+      ${checkboxHtml}
       <div class="cp-card-head">
         <div class="cp-avatar" style="background: ${color}">${partnerInitials(partnerData.name)}</div>
         <div>
@@ -997,23 +1004,169 @@ function partnerCardHTML(partnerId, partnerData, clickable) {
   `;
 }
 
+// ==============================================================================
+// CHANNEL PARTNERS — BULK SELECT & BULK ACTIONS
+// ==============================================================================
+
+let selectedPartnerIds = new Set();
+
+function toggleSelectPartner(id, checked) {
+  if (checked) selectedPartnerIds.add(id); else selectedPartnerIds.delete(id);
+  const card = document.getElementById(`cp-card-${id}`);
+  if (card) card.classList.toggle('selected', checked);
+  updatePartnerBulkBar();
+}
+
+function toggleSelectAllPartners(checked) {
+  const list = window.channelPartners || [];
+  selectedPartnerIds = checked ? new Set(list.map(p => p.id)) : new Set();
+  renderPartnersGrid();
+}
+
+function clearPartnerSelection() {
+  selectedPartnerIds = new Set();
+  renderPartnersGrid();
+}
+
+function updatePartnerBulkBar() {
+  const bar = document.getElementById('bulk-action-bar-partners');
+  const label = document.getElementById('bulk-count-label-partners');
+  const selectAllBox = document.getElementById('cp-select-all');
+  if (!bar) return;
+  if (selectedPartnerIds.size > 0) {
+    bar.style.display = 'flex';
+    if (label) label.textContent = selectedPartnerIds.size + ' selected';
+  } else {
+    bar.style.display = 'none';
+  }
+  if (selectAllBox) {
+    const total = (window.channelPartners || []).length;
+    selectAllBox.checked = total > 0 && selectedPartnerIds.size === total;
+    selectAllBox.indeterminate = selectedPartnerIds.size > 0 && selectedPartnerIds.size < total;
+  }
+}
+
+function selectedPartnersList() {
+  const list = window.channelPartners || [];
+  return list.filter(p => selectedPartnerIds.has(p.id));
+}
+
 /**
- * Render full partner grid (all partners)
+ * Send bulk email to selected channel partners
+ */
+async function bulkEmailPartners() {
+  if (!checkAccess(['Super Admin', 'Admin', 'Document Officer'])) {
+    toast('You do not have permission to send bulk emails', 'error');
+    return;
+  }
+
+  const selectedList = selectedPartnersList();
+  if (!selectedList.length) {
+    toast('No partners selected', 'error');
+    return;
+  }
+
+  const withEmail = selectedList.filter((p) => p.email);
+  if (!withEmail.length) {
+    toast('Selected partners have no email on file', 'error');
+    return;
+  }
+
+  showLoading(`Sending ${withEmail.length} emails...`);
+
+  let successCount = 0;
+  let failureCount = 0;
+
+  for (const partner of withEmail) {
+    try {
+      await sendViaEmailJS({
+        to_email: partner.email,
+        to_name: partner.name || '',
+        subject: 'Update from Route2Uni',
+        message: `Hi ${partner.name || ''}, this is a bulk update from your Route2Uni team.`
+      });
+      successCount++;
+    } catch (error) {
+      console.error('[bulkEmailPartners] Failed for partner:', partner.id, error);
+      failureCount++;
+    }
+  }
+
+  hideLoading();
+  const message = failureCount > 0
+    ? `Sent ${successCount}, failed ${failureCount}`
+    : `Sent ${successCount} emails`;
+  toast(message, failureCount > 0 ? 'error' : 'success');
+  clearPartnerSelection();
+}
+
+/**
+ * Open WhatsApp chats for selected channel partners (opens one tab per partner,
+ * staggered slightly so browsers don't block them all as popups)
+ */
+function bulkWhatsAppPartners() {
+  const selectedList = selectedPartnersList();
+  if (!selectedList.length) {
+    toast('No partners selected', 'error');
+    return;
+  }
+
+  const withPhone = selectedList.filter((p) => p.phone);
+  if (!withPhone.length) {
+    toast('Selected partners have no phone number on file', 'error');
+    return;
+  }
+
+  withPhone.forEach((partner, i) => {
+    setTimeout(() => {
+      const digits = String(partner.phone).replace(/[^0-9]/g, '');
+      window.open(`https://wa.me/${digits}`, '_blank');
+    }, i * 400);
+  });
+
+  toast(`Opening WhatsApp for ${withPhone.length} partner(s)`, 'success');
+  clearPartnerSelection();
+}
+window.toggleSelectPartner = toggleSelectPartner;
+window.toggleSelectAllPartners = toggleSelectAllPartners;
+window.clearPartnerSelection = clearPartnerSelection;
+window.bulkEmailPartners = bulkEmailPartners;
+window.bulkWhatsAppPartners = bulkWhatsAppPartners;
+
+/**
+ * Render full partner grid (all partners) — with search filter + bulk select
  */
 function renderPartnersGrid() {
   const grid = document.getElementById('full-cp-grid');
   if (!grid) return;
 
-  const partners = window.channelPartners || [];
+  const allPartners = window.channelPartners || [];
+  const query = (document.getElementById('cp-search-input')?.value || '').toLowerCase();
+
+  const partners = query
+    ? allPartners.filter((p) =>
+        [p.name, p.email, p.phone, p.type].join(' ').toLowerCase().includes(query)
+      )
+    : allPartners;
+
+  // Summary stats
+  const totalStudents = allPartners.reduce((sum, p) => sum + (p.studentsCount || 0), 0);
+  setText('cp-summary-total', allPartners.length);
+  setText('cp-summary-students', totalStudents);
+  setText('cp-summary-avg', allPartners.length ? Math.round(totalStudents / allPartners.length) : 0);
 
   if (!partners.length) {
-    grid.innerHTML =
-      '<div class="empty-state" style="grid-column: 1 / -1">No channel partners yet — click "Add partner" to create one.</div>';
+    grid.innerHTML = query
+      ? '<div class="empty-state" style="grid-column: 1 / -1">No partners match your search.</div>'
+      : '<div class="empty-state" style="grid-column: 1 / -1">No channel partners yet — click "Add partner" to create one.</div>';
+    updatePartnerBulkBar();
     return;
   }
 
-  grid.innerHTML = partners.map((partner) => partnerCardHTML(partner.id, partner)).join('');
+  grid.innerHTML = partners.map((partner) => partnerCardHTML(partner.id, partner, 'grid')).join('');
+  updatePartnerBulkBar();
 }
+window.renderPartnersGrid = renderPartnersGrid;
 
 /**
  * Open dialog to add new partner
