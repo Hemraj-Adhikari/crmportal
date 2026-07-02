@@ -78,29 +78,24 @@ async function fbUpdateStudent(studentId, patch) {
       (Consolidated here so everything the Add Student
       flow depends on lives in one module.)
 ═══════════════════════════════════════════════════════ */
-const CLOUDINARY_CLOUD_NAME = 'dv9emyzlg';
-const CLOUDINARY_UPLOAD_PRESET = 'fdtrmpus';
-
 let asSelectedFiles = []; // Files currently staged in the Add Student modal
 
-async function uploadFileToCloudinary(file) {
-  const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`;
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-  formData.append('folder', 'r2u-students');
-
-  const res = await fetch(url, { method: 'POST', body: formData });
-  if (!res.ok) throw new Error('Upload failed for ' + file.name);
-  const data = await res.json();
-  return { name: file.name, url: data.secure_url, type: file.type, uploadedAt: new Date().toISOString() };
-}
-
-async function uploadAllAsFiles() {
+// BUGFIX: this used to call the old uploadFileToCloudinary(), which posted
+// files to a public, unauthenticated Cloudinary upload preset — bypassing
+// Firebase Storage security/auth rules entirely. firebase-storage-upload.js
+// (uploadFileToStorage) was built as the replacement but was never actually
+// wired in here. Now it is.
+async function uploadAllAsFiles(studentId) {
   const uploaded = [];
   for (const file of asSelectedFiles) {
-    const result = await uploadFileToCloudinary(file);
-    uploaded.push(result);
+    const result = await uploadFileToStorage(file, studentId, 'general');
+    uploaded.push({
+      name      : result.name,
+      url       : result.url,
+      path      : result.path,       // needed by deleteFileFromStorage() later
+      type      : result.type,
+      uploadedAt: new Date().toISOString()
+    });
   }
   return uploaded;
 }
@@ -154,48 +149,11 @@ function closeAddStudent() {
 
 /* ═══════════════════════════════════════════════════════
    1. PIPELINE STAGES — Save drawer
+   CLEANUP: the real, active saveStages() lives in
+   script-additions.js. This file used to also define one,
+   but since script-additions.js loads after this file, that
+   copy always won and this one was dead code. Removed.
 ═══════════════════════════════════════════════════════ */
-async function saveStages() {
-  if (!Object.keys(stageEdits || {}).length) {
-    closeDrawer('drw-stage');
-    return;
-  }
-
-  const s = (window.students || []).find(s => s['STUDENT ID'] === activeStudentId);
-  if (!s) return;
-
-  const txtEl  = document.getElementById('stage-save-txt');
-  const spinEl = document.getElementById('stage-save-spin');
-  if (txtEl)  txtEl.textContent    = 'Saving…';
-  if (spinEl) spinEl.style.display = '';
-
-  // Build patch from stageEdits
-  const patch = {};
-  Object.values(stageEdits).forEach(e => { if (e.val) patch[e.key] = e.val; });
-
-  // Optimistic local update first
-  Object.assign(s, patch);
-  if (typeof filterTableStudents    === 'function') filterTableStudents();
-  if (typeof updateStats            === 'function') updateStats();
-  if (typeof updateFunnel           === 'function') updateFunnel();
-  if (typeof renderDashboardPartners === 'function') renderDashboardPartners();
-  if (currentView === 'student-detail' && detailStudentId === activeStudentId) {
-    if (typeof openDetail === 'function') openDetail(activeStudentId);
-  }
-
-  try {
-    await fbUpdateStudent(activeStudentId, patch);
-    toast('Pipeline updated ', 'success');
-  } catch (e) {
-    console.error('[saveStages] Firestore error:', e);
-    toast('Saved locally — sync failed: ' + e.message, 'info');
-  } finally {
-    if (txtEl)  txtEl.textContent    = 'Save changes';
-    if (spinEl) spinEl.style.display = 'none';
-    closeDrawer('drw-stage');
-    window.stageEdits = {};
-  }
-}
 
 /* ═══════════════════════════════════════════════════════
    2. INLINE FIELD EDIT
@@ -327,7 +285,7 @@ async function submitAddStudent() {
     if (typeof asSelectedFiles !== 'undefined' && asSelectedFiles.length > 0) {
       lblEl.textContent = 'Uploading files…';
       try {
-        uploadedDocs = await uploadAllAsFiles();
+        uploadedDocs = await uploadAllAsFiles(sid);
       } catch (uploadErr) {
         console.error('[submitAddStudent] File upload error:', uploadErr);
         errEl.textContent   = 'File upload failed: ' + uploadErr.message + ' (Student saved without files — try uploading again from detail page)';
@@ -413,88 +371,29 @@ async function submitAddStudent() {
 
 /* ═══════════════════════════════════════════════════════
    4. CAS SHIELD UPDATE
+   CLEANUP: the real, active submitCASUpdate() lives in
+   script-additions.js and correctly writes CAS fields onto
+   the student document (matching what the CAS Shield table
+   reads). This file's old copy wrote to a separate,
+   never-read 'cas_shield' collection and was shadowed dead
+   code — removed.
 ═══════════════════════════════════════════════════════ */
-async function submitCASUpdate() {
-  const get = id => document.getElementById(id)?.value || '';
-
-  const updateData = {
-    'Ready for PCI'                                         : get('cup-pci'),
-    'Visa Refusal Y/N'                                      : get('cup-visa-r'),
-    'Information check on CAS Shield completed? Y/N'        : get('cup-info'),
-    'Pre-CAS questionnaire on CAS shield Completed? Y/N'    : get('cup-precas'),
-    'Study Gap Y/N'                                         : get('cup-gap'),
-    'Same Level Studies Y/N'                                : get('cup-same'),
-    'PCI Invite'                                            : get('cup-invite'),
-    'Team Comment'                                          : get('cup-comment'),
-    applicantId : window.activeCASId,
-    updatedBy   : window.staff?.name || 'Staff',
-    updatedAt   : firebase.firestore.FieldValue.serverTimestamp()
-  };
-
-  try {
-    if (typeof loading === 'function') loading('Saving CAS record…');
-
-    await db.collection('cas_shield').doc(window.activeCASId).set(updateData, { merge: true });
-
-    // Local cache update
-    const row = (window.casData || []).find(r => r['Applicant ID'] === window.activeCASId);
-    if (row) Object.assign(row, updateData);
-
-    if (typeof filterCAS === 'function') filterCAS();
-    closeDrawer('drw-cas-update');
-    toast('CAS record updated ', 'success');
-
-  } catch (e) {
-    console.error('[submitCASUpdate] Error:', e);
-    toast('Update failed: ' + e.message, 'error');
-  } finally {
-    if (typeof hideLoading === 'function') hideLoading();
-  }
-}
 
 /* ═══════════════════════════════════════════════════════
-   5. NOTIFICATION / EMAIL SEND (Google Script jhandai)
+   5. NOTIFICATION / EMAIL SEND
+   CLEANUP: the real, active sendNotification() lives in
+   script-additions.js. Removed the shadowed duplicate.
 ═══════════════════════════════════════════════════════ */
-async function sendNotification() {
-  const role    = document.getElementById('notify-role')?.value;
-  const type    = document.getElementById('notify-type')?.value;
-  const subject = document.getElementById('notify-subject')?.value?.trim();
-  const message = document.getElementById('notify-message')?.value?.trim();
-
-  if (!subject || !message) { toast('Fill in subject and message', 'error'); return; }
-
-  const btn = document.getElementById('notify-send-btn');
-  if (btn) btn.disabled = true;
-
-  try {
-    // Resolve the target student's partnerId so this notification can be
-    // routed to the right Channel Partner in real time
-    const studentObj = (window.students || []).find(s => s['STUDENT ID'] === window.detailStudentId);
-
-    // Log notification to Firestore (audit trail + real-time trigger)
-    await db.collection('notifications').add({
-      studentId  : window.detailStudentId || null,
-      partnerId  : studentObj?.partnerId || null,
-      role, type, subject, message,
-      sentBy     : window.staff?.name || 'Staff',
-      sentAt     : firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    toast('Notification logged ', 'success');
-    closeDrawer('drw-notify');
-  } catch (e) {
-    console.error('[sendNotification] Error:', e);
-    toast('Failed: ' + e.message, 'error');
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
 
 /* ═══════════════════════════════════════════════════════
    6. DELETE STUDENT (Admin only)
 ═══════════════════════════════════════════════════════ */
 async function deleteStudent(studentId) {
-  if (window.staff?.role !== 'Admin') {
+  // BUGFIX: was a strict `role !== 'Admin'` check, which excluded Super Admin
+  // even though every other permission check in the app treats Super Admin
+  // as senior to Admin. Use the same hierarchy-aware checkAccess() everything
+  // else uses.
+  if (!checkAccess(['Super Admin', 'Admin'])) {
     toast('Only admins can delete students', 'error');
     return;
   }
@@ -520,10 +419,7 @@ async function deleteStudent(studentId) {
   }
 }
 
-/* ─── Date helper ─── */
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
+/* ─── today() helper: canonical definition lives in script-additions.js ─── */
 
 /* ═══════════════════════════════════════════════════════
    7. STUDENTS — Load from Firestore
