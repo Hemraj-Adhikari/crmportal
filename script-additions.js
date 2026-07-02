@@ -3524,6 +3524,109 @@ function onUniversitySelected(uniId) {
     uni.courses.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
 }
 
+/* ═══════════════════════════════════════════════════════
+   ADD STUDENT MODAL — Channel Partner dropdown
+   Populates as-agent from the same window.channelPartners
+   list the Partners tab uses (kept live by
+   loadChannelPartnersFromFirebase() in firebase-updates.js).
+   Options carry the partner's Firestore doc id as the value
+   so submitAddStudent() can save both a readable AGENT name
+   AND a proper partnerId link (matches how Channel Partner
+   staff logins get scoped via partnerId elsewhere in the app).
+   An "Other / not listed" option reveals a free-text fallback
+   for one-off agents who haven't been added as a partner yet.
+═══════════════════════════════════════════════════════ */
+function populatePartnerDropdown() {
+  const sel = document.getElementById('as-agent');
+  const manual = document.getElementById('as-agent-manual');
+  if (!sel) return;
+
+  const partners = window.channelPartners || [];
+  manual.style.display = 'none';
+  manual.value = '';
+
+  if (!partners.length) {
+    sel.innerHTML = '<option value="">No partners added yet</option><option value="__other__">Other / type manually</option>';
+    sel.value = '';
+    return;
+  }
+
+  sel.innerHTML = '<option value="">Select channel partner / agent</option>' +
+    partners
+      .slice()
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+      .map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name || p.id)}</option>`)
+      .join('') +
+    '<option value="__other__">Other / type manually</option>';
+  sel.value = '';
+}
+window.populatePartnerDropdown = populatePartnerDropdown;
+
+function onPartnerSelected(val) {
+  const manual = document.getElementById('as-agent-manual');
+  if (!manual) return;
+  if (val === '__other__') {
+    manual.style.display = '';
+    manual.focus();
+  } else {
+    manual.style.display = 'none';
+    manual.value = '';
+  }
+}
+window.onPartnerSelected = onPartnerSelected;
+
+/* ═══════════════════════════════════════════════════════
+   ADD STUDENT MODAL — Auto-generated Student ID
+   Pattern: R2U-<year>-<seq>, e.g. R2U-2026-001. Scans existing
+   students' IDs for the current year and picks the next free
+   sequence number, so staff never have to invent one by hand
+   (and never collide with an existing ID). Runs each time the
+   modal opens; submitAddStudent()'s existing duplicate check
+   is the final safety net in case two people add a student at
+   almost the same moment.
+═══════════════════════════════════════════════════════ */
+async function generateStudentId() {
+  const idEl = document.getElementById('as-id');
+  if (!idEl) return;
+
+  const year = new Date().getFullYear();
+  idEl.value = 'Generating…';
+
+  try {
+    const prefix = `R2U-${year}-`;
+    let maxSeq = 0;
+
+    // Prefer whatever's already loaded locally (fast, no read cost);
+    // fall back to a Firestore scan scoped to this year's prefix if
+    // the local cache is empty (e.g. fresh page load / cache cleared).
+    const localIds = (window.students || [])
+      .map(s => s['STUDENT ID'] || s.id)
+      .filter(id => typeof id === 'string' && id.startsWith(prefix));
+
+    if (localIds.length) {
+      localIds.forEach(id => {
+        const seq = parseInt(id.slice(prefix.length), 10);
+        if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+      });
+    } else if (window.db) {
+      const snap = await db.collection('students')
+        .where(firebase.firestore.FieldPath.documentId(), '>=', prefix)
+        .where(firebase.firestore.FieldPath.documentId(), '<', `R2U-${year + 1}-`)
+        .get();
+      snap.forEach(doc => {
+        const seq = parseInt(doc.id.slice(prefix.length), 10);
+        if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+      });
+    }
+
+    idEl.value = prefix + String(maxSeq + 1).padStart(3, '0');
+  } catch (e) {
+    console.error('[generateStudentId] failed, falling back to timestamp id:', e);
+    idEl.value = `R2U-${year}-${Date.now().toString().slice(-6)}`;
+  }
+}
+window.generateStudentId = generateStudentId;
+
 (function wrapOpenAddStudent() {
   const tryWrap = () => {
     if (typeof window.openAddStudent !== 'function' || window.__openAddStudentWrapped) return;
@@ -3531,6 +3634,8 @@ function onUniversitySelected(uniId) {
     window.openAddStudent = function (...args) {
       const result = original.apply(this, args);
       populateUniversityDropdown();
+      populatePartnerDropdown();
+      generateStudentId();
       const courseSel = document.getElementById('as-course');
       if (courseSel) {
         courseSel.innerHTML = '<option value="">Select a university first</option>';
