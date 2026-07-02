@@ -341,7 +341,10 @@ function openCmd() {
   const overlay = document.getElementById('cmd-overlay');
   if (overlay) {
     overlay.classList.add('open');
-    document.getElementById('cmd-input')?.focus();
+    const input = document.getElementById('cmd-input');
+    if (input) input.value = '';
+    cmdSearch(''); // always start on the quick-actions list, not a stale search
+    input?.focus();
   }
 }
 
@@ -362,10 +365,82 @@ function cmdNav(viewName) {
 }
 
 /**
- * Search via command palette (extensible stub)
+ * Search via command palette — live student search with debouncing
+ * and match highlighting. Falls back to the static "Quick actions"
+ * list (captured once on load) when the query is empty.
  */
-function cmdSearch() {
-  // Placeholder for future search implementation
+let _cmdQuickActionsHTML = null;
+let _cmdSearchTimer = null;
+
+function cmdSearch(query) {
+  clearTimeout(_cmdSearchTimer);
+  _cmdSearchTimer = setTimeout(() => renderCmdResults(query), 150);
+}
+
+function renderCmdResults(query) {
+  const resultsEl = document.getElementById('cmd-results');
+  if (!resultsEl) return;
+
+  // Capture the original "Quick actions" markup the first time this runs,
+  // before we ever overwrite it, so we can restore it for empty queries.
+  if (_cmdQuickActionsHTML === null) {
+    _cmdQuickActionsHTML = resultsEl.innerHTML;
+  }
+
+  const q = (query || '').trim().toLowerCase();
+  if (!q) {
+    resultsEl.innerHTML = _cmdQuickActionsHTML;
+    return;
+  }
+
+  const matches = (window.students || [])
+    .filter((s) => {
+      const haystack = [
+        s['STUDENT ID'], s.id, s['STUDENT NAME'], s['COURSE'], s['AGENT'], s['UNIVERSITY']
+      ].join(' ').toLowerCase();
+      return haystack.includes(q);
+    })
+    .slice(0, 8);
+
+  if (!matches.length) {
+    resultsEl.innerHTML = `<div class="cmd-section">Students</div>
+      <div class="empty-state" style="padding:16px 20px;font-size:12.5px">No students match "${escapeHtml(query)}"</div>`;
+    return;
+  }
+
+  resultsEl.innerHTML = '<div class="cmd-section">Students</div>' + matches.map((s) => {
+    const id = s['STUDENT ID'] || s.id;
+    return `<div class="cmd-item" onclick="cmdOpenStudent('${escapeHtml(id)}')">
+      <div class="cmd-item-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+      <div>
+        <div class="cmd-item-name">${cmdHighlight(s['STUDENT NAME'] || id, query)}</div>
+        <div class="cmd-item-meta">${escapeHtml(s['COURSE'] || '—')} · ${cmdHighlight(id, query)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/**
+ * Wraps the first case-insensitive match of `query` inside `text` in <mark>,
+ * escaping everything else so no raw student data is ever injected as HTML.
+ */
+function cmdHighlight(text, query) {
+  const safeText = escapeHtml(text ?? '');
+  const q = (query || '').trim();
+  if (!q) return safeText;
+  const idx = safeText.toLowerCase().indexOf(escapeHtml(q).toLowerCase());
+  if (idx === -1) return safeText;
+  return safeText.slice(0, idx) + '<mark>' + safeText.slice(idx, idx + q.length) + '</mark>' + safeText.slice(idx + q.length);
+}
+
+/**
+ * Open a student directly from command-palette search results.
+ */
+function cmdOpenStudent(id) {
+  closeCmd();
+  const link = document.querySelector('.sb-link[data-view="students"]');
+  switchView('students', link);
+  if (typeof openDetail === 'function') openDetail(id);
 }
 
 // Keyboard shortcuts
