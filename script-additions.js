@@ -1776,12 +1776,19 @@ function renderEmailHistory() {
 // ==============================================================================
 
 const FB_DEFAULT_QUESTIONS = [
-  'Why have you chosen this course?',
-  'Why this university and this country?',
-  'How will you finance your studies?',
-  'What are your career plans after graduation?',
-  'Why not study this course in your home country?',
-  'Tell us about your academic background.'
+  'Introduction',
+  'Reasons for choosing the UK as a study destination and comparisons with home country and other countries',
+  'Reasons for choosing this course',
+  'Reasons for choosing University and comparisons with other UK universities',
+  'Career plan and alignment of the chosen course (in terms of its benefits/skills/knowledge for career upliftment)',
+  'Academic Background & Gap Explanations',
+  'Alignment of last academic qualification and work experience to the current course chosen',
+  'Financial challenges and ways to deal with it (sponsor based)',
+  'Working Restrictions in the UK and the consequences for breaching it',
+  'Accommodation',
+  'Extra Questions',
+  'English Fluency',
+  'Communication Skills'
 ];
 
 const PERFORMANCE_BADGE_CLASSES = {
