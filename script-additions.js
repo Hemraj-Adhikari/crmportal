@@ -3123,8 +3123,27 @@ async function uploadStageDoc(inputEl, studentId, docKey, stageIdx) {
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const path = `student-docs/${studentId}/${docKey}/${Date.now()}_${safeName}`;
     const storageRef = firebase.storage().ref(path);
+    const uploadTask = storageRef.put(file);
 
-    await storageRef.put(file);
+    // SAFETY NET: uploadTask can hang indefinitely (never resolve OR reject)
+    // if the request never comes back — most commonly because the Storage
+    // bucket has no CORS policy for browser uploads, or a bucket/SDK
+    // mismatch. Without this timeout the button just spins forever with no
+    // error and no way to tell what's wrong. Race it against a timeout,
+    // cancel the stuck task, and surface something actionable.
+    const UPLOAD_TIMEOUT_MS = 20000;
+    await Promise.race([
+      uploadTask,
+      new Promise((_, reject) => setTimeout(() => {
+        try { uploadTask.cancel(); } catch (_) {}
+        reject(new Error(
+          'Upload timed out after 20s — the request never came back from Firebase Storage. ' +
+          'This usually means the Storage bucket is missing a CORS policy for browser uploads, ' +
+          'or (less likely) Storage security rules are silently blocking it. Check the browser ' +
+          'console/network tab for the real network error.'
+        ));
+      }, UPLOAD_TIMEOUT_MS))
+    ]);
     const url = await storageRef.getDownloadURL();
 
     const newDoc = {
