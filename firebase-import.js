@@ -143,7 +143,7 @@ async function confirmUpload() {
     }
 
     // ── Success ──
-    const msg = `✅ Import done! Added: ${added} | Updated: ${updated}${failed ? ` | Skipped: ${failed}` : ''}`;
+    const msg = ` Import done! Added: ${added} | Updated: ${updated}${failed ? ` | Skipped: ${failed}` : ''}`;
     if (typeof toast === 'function') toast(msg, 'success');
     clearUpload();
     await loadStudentsFromFirebase();
@@ -158,29 +158,10 @@ async function confirmUpload() {
 
 /* ═══════════════════════════════════════════════════════
    EXPORT CSV
+   CLEANUP: the real, active exportStudentsCSV() lives in
+   script-additions.js (loads after this file, so it always
+   won) and additionally enforces an RBAC permission check
+   this copy was missing. Removed the shadowed duplicate.
 ═══════════════════════════════════════════════════════ */
-function exportStudentsCSV() {
-  const data = window.students || [];
-  if (!data.length) { toast('No students to export', 'error'); return; }
 
-  // Remove internal Firestore fields
-  const clean = data.map(s => {
-    const r = { ...s };
-    delete r.id;
-    delete r.createdAt;
-    delete r.updatedAt;
-    return r;
-  });
-
-  const csv  = Papa.unparse(clean);
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `R2U_Students_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-  toast('CSV exported ✅', 'success');
-}
-
-console.log('[firebase-import.js] loaded ✅');
+console.log('[firebase-import.js] loaded ');
