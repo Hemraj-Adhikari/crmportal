@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://hemraj-adhikari.github.io"],
+    "method": ["GET", "PUT", "POST", "HEAD", "DELETE"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type", "Authorization", "Content-Length", "User-Agent", "x-goog-resumable"]
+  }
+]
