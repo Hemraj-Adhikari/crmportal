@@ -141,8 +141,10 @@ function openAddStudent() {
 function closeAddStudent() {
   document.getElementById('add-student-overlay').style.display = 'none';
   ['as-name','as-id','as-dob','as-nationality','as-mobile','as-email',
-   'as-level','as-course','as-university','as-agent','as-submitted-by','as-notes']
+   'as-level','as-course','as-university','as-agent','as-agent-manual','as-submitted-by','as-notes']
    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const manual = document.getElementById('as-agent-manual');
+  if (manual) manual.style.display = 'none';
   asSelectedFiles = [];
   renderAsFileList();
 }
@@ -246,7 +248,23 @@ async function submitAddStudent() {
   const mobile      = get('as-mobile');
   const email       = get('as-email');
   const university  = get('as-university');
-  const agent       = get('as-agent');
+
+  // Channel Partner / Agent — the field is a dropdown of window.channelPartners
+  // (populated by populatePartnerDropdown() in script-additions.js). Its value
+  // is the partner's Firestore doc id, "__other__" for the free-text fallback,
+  // or "" if nothing was picked. Resolve that into a readable name (AGENT) and
+  // keep the real partnerId link alongside it.
+  const agentSelVal = get('as-agent');
+  let agent = '';
+  let partnerId = null;
+  if (agentSelVal === '__other__') {
+    agent = get('as-agent-manual');
+  } else if (agentSelVal) {
+    const matchedPartner = (window.channelPartners || []).find(p => p.id === agentSelVal);
+    agent = matchedPartner?.name || agentSelVal;
+    partnerId = agentSelVal;
+  }
+
   const submittedBy = get('as-submitted-by') || window.staff?.name || '';
   const notes       = get('as-notes');
 
@@ -256,6 +274,15 @@ async function submitAddStudent() {
   if (!sid)   missing.push('Student ID');
   if (!level) missing.push('Level');
   if (!course) missing.push('Course');
+
+  // Guard against submitting mid-generation (generateStudentId() is async;
+  // this only matters if someone clicks Add Student in the first instant
+  // after opening the modal, before the id field finishes filling in).
+  if (sid === 'Generating…') {
+    errEl.textContent   = 'Student ID is still generating — try again in a second.';
+    errEl.style.display = 'block';
+    return;
+  }
 
   if (missing.length) {
     errEl.textContent    = 'Please fill in: ' + missing.join(', ');
@@ -311,6 +338,9 @@ async function submitAddStudent() {
       'NOTES'        : notes,
       'ADDED DATE'   : new Date().toISOString().slice(0, 10),
       'ADDED BY'     : window.staff?.name || 'CRM',
+      partnerId      : partnerId,      // links to channelPartners/{id} — matches
+                                        // the field Channel Partner logins are
+                                        // scoped/filtered by elsewhere in the app
       documents      : uploadedDocs,   // [{name, url, type, uploadedAt}]
       createdAt      : firebase.firestore.FieldValue.serverTimestamp(),
       createdBy      : window.staff?.name || 'CRM'
